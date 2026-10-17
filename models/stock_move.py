@@ -34,6 +34,25 @@ Este override NO escribe inventario: solo LEE (``move_line_ids``, el lote
 exclusivo y la disponibilidad del quant). El motor
 ``x_product_dimensional_pricing`` NO se edita (se hereda); no hay
 ``cr.execute`` de escritura ni ``cr.commit``.
+
+Reparto ADITIVO multi-lote (H-037)
+----------------------------------
+El wizard en bloque solo sabía asignar **UN** lote por corrida: el protocolo del
+motor (``_pf_reassign_lot``) LIBERA la reserva entera y DESPUÉS reserva ⇒ llamarlo
+dos veces con dos lotes **borra el primero**. Por eso el 2.º tick del operador
+pisaba al 1.º (H-036) y no había forma de cubrir la demanda con varios lotes.
+
+La primitiva NATIVA (``stock.move._update_reserved_quantity``) **NO reemplaza**: si
+ya existe una ``stock.move.line`` con la misma clave ``(location, lot, package,
+owner)`` le **SUMA** a su ``quantity``; si no, crea una línea nueva. **Nunca borra
+las líneas de OTROS lotes** ⇒ llamada N veces con N lotes distintos, la reserva es
+**ACUMULATIVA**.
+
+El método ``_pf_reassign_lots`` de aquí abajo aprovecha eso: **UNA** liberación
+(``_pf_unreserve_reservation``, del motor) + **N** reservas ADITIVAS
+(``_pf_reserve_lot``, del motor), acotando por la demanda que falta. Es el MISMO
+protocolo que el camino de un lote; solo cambia el PATRÓN de llamadas (1 liberar +
+N sumar en vez de 1 liberar + 1 sumar). Cero escrituras nuevas contra la base.
 """
 
 from odoo import models
@@ -100,3 +119,54 @@ class StockMove(models.Model):
             self._recompute_state()
             return True
         return super()._assign_exclusive_lot()
+
+    # ══════════════════════════════════════════════════════════════════════
+    # REPARTO ADITIVO MULTI-LOTE (H-037 · UNA liberación + N reservas)
+    # ══════════════════════════════════════════════════════════════════════
+    def _pf_reassign_lots(self, lots):
+        """Reparte la demanda del movimiento entre VARIOS lotes, de forma ADITIVA.
+
+        Patrón: **UNA** liberación + **N** reservas acumulativas.
+
+        1. **Guardián** (espeja el filtro de ``_pf_unreserve_reservation`` del
+           motor y el del core): si el movimiento está ``picked`` o en
+           ``('done', 'cancel')`` ⇒ devuelve ``0.0``. No se pueden liberar y, por
+           tanto, tampoco se apilan reservas sobre lo ya en curso.
+        2. Libera la reserva actual con la primitiva del MOTOR
+           (``_pf_unreserve_reservation``) — UNA sola vez.
+        3. Recorre ``lots`` en el ORDEN recibido (el del plan declarado en la
+           tabla) reservando **ADITIVAMENTE** con ``_pf_reserve_lot`` (primitiva
+           del MOTOR, que usa ``_update_reserved_quantity``), acotando cada
+           reserva por la demanda que falta (``need - taken``) y cortando en
+           ``<= _EPS``.
+
+        NO borra los lotes ya reservados entre llamadas: la reserva es acumulativa
+        (una ``stock.move.line`` por lote). Un lote sin existencia disponible
+        devuelve ``0.0`` y el bucle **continúa** con el siguiente lote del plan.
+
+        Código sí, datos no: solo consume las primitivas NATIVAS del motor
+        (``_pf_unreserve_reservation`` / ``_pf_reserve_lot``); no hay
+        ``cr.execute`` ni ``cr.commit``, y el motor ``x_product_dimensional_pricing``
+        queda SIN CAMBIOS.
+
+        :param list lots: lotes a repartir, en el ORDEN del plan.
+        :rtype: float
+        """
+        self.ensure_one()
+        if not lots or self.product_id.tracking != 'lot':
+            return 0.0
+        # Guardián: si no se puede liberar (picked/done/cancel), no se apila.
+        if self.picked or self.state in ('done', 'cancel'):
+            return 0.0
+        need = self.product_uom_qty or 0.0
+        if need <= _EPS:
+            return 0.0
+        # UNA liberación (primitiva del MOTOR) + N reservas ADITIVAS.
+        self._pf_unreserve_reservation()
+        taken = 0.0
+        for lot in lots:
+            remaining = need - taken
+            if remaining <= _EPS:
+                break
+            taken += self._pf_reserve_lot(lot, remaining) or 0.0
+        return taken

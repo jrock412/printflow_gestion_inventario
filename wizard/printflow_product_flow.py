@@ -62,6 +62,14 @@ ROOT_CAUSE_SELECTION = [
     ('delivery', 'Entrega'),
 ]
 
+# Lista blanca EXPLÍCITA de tipos (``kind``) que admite el REPARTO multi-lote
+# (H-037). Espeja el alcance de la bandeja "Asignar lote en bloque": SOLO los
+# destinos que esa bandeja produce como resolubles (``missing_move`` = entrega por
+# movimiento; ``pending_order`` = entrega por albarán sin lote). Se declara como
+# tupla fija y se consulta con ``in`` (NUNCA ``getattr`` por convención): si un
+# ``kind`` no está aquí, el reparto devuelve ``0.0`` y no escribe nada.
+_SPLIT_KINDS = ('missing_move', 'pending_order')
+
 
 class PrintflowProductFlow(models.TransientModel):
     """Diagrama de flujo de un producto sin venta (solo lectura)."""
@@ -1050,6 +1058,70 @@ class PrintflowProductFlow(models.TransientModel):
         # Reasignación NATIVA: libera el lote viejo y reserva el nuevo.
         taken = move._pf_reassign_lot(lot, demand)
         return taken > _EPS
+
+    # ══════════════════════════════════════════════════════════════════════
+    # REPARTO MULTI-LOTE ELEGIDO POR EL OPERADOR (H-037)
+    #
+    # Orquestador HERMANO de ``_pf_assign_lot_to_document`` (el de UN lote, que NO
+    # se toca). Mismo módulo escritor, misma guardia de permisos y misma lista
+    # blanca explícita de ``kind``; la única diferencia es que aquí se reservan N
+    # lotes de forma ADITIVA sobre el MISMO movimiento (ver ``_pf_reassign_lots``).
+    # ══════════════════════════════════════════════════════════════════════
+    @api.model
+    def _pf_assign_lots_to_document(self, target_kind, res_model, res_id, lots,
+                                    product=None):
+        """Reparte VARIOS lotes entre la demanda del documento (guardia + escritura).
+
+        Sigue el MISMO protocolo NATIVO que el camino de un lote; solo cambia el
+        PATRÓN (1 liberación + N reservas ADITIVAS). No inventa escrituras: consume
+        ``stock.move._pf_reassign_lots`` (PrintFlow), que a su vez consume las
+        primitivas del motor ``_pf_unreserve_reservation`` / ``_pf_reserve_lot``.
+
+        :param str target_kind: tipo de ítem afectado (lista blanca ``_SPLIT_KINDS``).
+        :param str res_model: modelo del documento de la fila.
+        :param int res_id: id del documento de la fila.
+        :param list lots: lotes del plan, EN ORDEN (el de la tabla de candidatos).
+        :param product.product product: producto del documento (opcional).
+        :return: cantidad realmente reservada (``float``; ``0.0`` si no aplica).
+        :rtype: float
+        """
+        Remedy = self.env['printflow.stock.remedy']
+        Remedy._pf_assert_can_clean()
+        if not lots:
+            raise UserError(_('No se indicaron lotes para el reparto.'))
+        # Lista blanca EXPLÍCITA: un ``kind`` fuera de ella no escribe nada.
+        if (target_kind or '') not in _SPLIT_KINDS:
+            return 0.0
+        move = self._pf_split_target_move(res_model, res_id, product)
+        if not move:
+            return 0.0
+        # ``list(...)`` fija el ORDEN del plan sin ambigüedad del ORM.
+        return move._pf_reassign_lots(list(lots))
+
+    @api.model
+    def _pf_split_target_move(self, res_model, res_id, product):
+        """Resuelve el movimiento del destino del REPARTO (resolver PRIVADO propio).
+
+        Mismo camino que ``_pf_assign_lot_on_pending_order_doc`` (entrega por
+        ``stock.move`` directo o por ``stock.picking`` buscando el movimiento
+        activo del producto), pero SIN tocar el handler existente. Cualquier otro
+        modelo devuelve un recordset vacío.
+
+        :param str res_model: modelo del documento de la fila.
+        :param int res_id: id del documento de la fila.
+        :param product.product product: producto del documento.
+        :rtype: models.Model
+        """
+        Move = self.env['stock.move'].sudo()
+        if res_model == 'stock.move' and res_id:
+            return Move.browse(res_id).exists()
+        if res_model == 'stock.picking' and res_id and product:
+            return Move.search([
+                ('picking_id', '=', res_id),
+                ('product_id', '=', product.id),
+                ('state', 'not in', ('done', 'cancel')),
+            ], limit=1)
+        return Move
 
     def action_open_collect_causante(self):
         """Abre la Bandeja de Resolución del ESCÁNER para este producto.

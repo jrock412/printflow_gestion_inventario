@@ -21,6 +21,11 @@ documento (``picker_id``), cuelga del contenedor en bloque (``bulk_id``). El
 "padre" se generaliza con ``_pf_parent()`` para no duplicar la fila ni el
 cálculo de candidatos.
 
+La fila sirve a TRES superficies: el selector por documento, el modo ``single``
+del contenedor en bloque (selección ÚNICA con ``is_selected``) y el modo
+``split`` del MISMO contenedor (reparto multi-lote con ``is_in_split``, que NO
+entra en ``_pf_enforce_single_selection`` ⇒ admite VARIAS filas marcadas).
+
 Contrato::
 
     picker = env['printflow.flow.lot.picker']._pf_populate(product, ...)
@@ -96,6 +101,13 @@ class PrintflowFlowLotCandidate(models.TransientModel):
         help='Marca ESTA fila como el lote que el operador decide asignar. La '
              'selección es ÚNICA: al marcar una fila se desmarcan las demás y '
              'se espeja en el campo "Lote a asignar" del selector.')
+    is_in_split = fields.Boolean(
+        string='Incluir',
+        help='Marca ESTE lote para el REPARTO multi-lote (botón "Repartir '
+             'lotes"). A diferencia de "Elegir" (selección ÚNICA), "Incluir" '
+             'admite VARIAS filas: el reparto consume los lotes marcados en el '
+             'orden de la tabla. Solo se puede marcar si el lote tiene '
+             'Disponible.')
     is_picked = fields.Boolean(
         string='Elegido', compute='_compute_is_picked',
         help='Resaltado SOLO en el candidato marcado (espejo de la selección).')
