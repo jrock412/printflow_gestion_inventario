@@ -5,7 +5,10 @@
 - Servidor Odoo: odoo-impreven / http://localhost:8071
 - Base de Datos: Ciber Estudios 2015 RESTAURADA
 - Ruta del Módulo: C:\odoo_custom\printflow_gestion_inventario
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **12 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **13 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+  **17/10-c (Lote 1 · aviso fuera de alcance):** se ABRE **H-038** (el repo del **MOTOR**
+  `x_product_dimensional_pricing` tiene **143 entradas sin commitear** en `main`; riesgo de proceso, NO del módulo
+  — se reporta al dueño, no se toca desde aquí).
   **17/10-c (3.ª ronda · TAREA ABIERTA):** se ABRE **H-037** (el wizard en bloque **no tiene capacidad de
   REPARTO multi-lote**: su contrato declarado es "UN lote → N entregas" y el protocolo NATIVO del motor no es
   aditivo ⇒ llamar dos veces borra el primer lote). El dueño pide revisar el wizard; **tarea GRANDE abierta en
@@ -563,7 +566,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
 
 #### Lote 1 (T1–T3) — Núcleo: primitiva ADITIVA + orquestador + campo del candidato
 
-- [ ] **T1 — `models/stock_move.py`: primitiva ADITIVA `_pf_reassign_lots` (H-037).**
+- [x] **T1 — `models/stock_move.py`: primitiva ADITIVA `_pf_reassign_lots` (H-037).**
   - Extender el docstring del módulo (hoy documenta H-030) con un 2.º bloque: *"Reparto ADITIVO multi-lote
     (H-037): una liberación + N reservas"* y por qué el camino del motor no era aditivo (`_pf_reassign_lot`
     libera ANTES de reservar).
@@ -585,7 +588,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
   - **Verificación:** `python -m py_compile models/stock_move.py` OK; en el shell,
     `type(env['stock.move']).mro()` contiene la clase de PrintFlow y `hasattr(env['stock.move'],
     '_pf_reassign_lots')` es `True`; `git diff` de `C:\odoo_custom\x_product_dimensional_pricing` **vacío**.
-- [ ] **T2 — `wizard/printflow_product_flow.py`: orquestador del reparto (D4).**
+- [x] **T2 — `wizard/printflow_product_flow.py`: orquestador del reparto (D4).**
   - Constante de módulo `_SPLIT_KINDS = ('missing_move', 'pending_order')` (lista blanca explícita del reparto,
     espejo del alcance de la bandeja; comentario del por qué).
   - Nuevo `@api.model def _pf_assign_lots_to_document(self, target_kind, res_model, res_id, lots, product=None)`:
@@ -604,7 +607,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
     (el modo `single` debe quedar **byte a byte**).
   - **Verificación:** `py_compile` OK; `hasattr(env['printflow.product.flow'],
     '_pf_assign_lots_to_document')`; tests de lote existentes sin cambios de resultado.
-- [ ] **T3 — `wizard/printflow_flow_lot_candidate.py`: campo `is_in_split` (D1).**
+- [x] **T3 — `wizard/printflow_flow_lot_candidate.py`: campo `is_in_split` (D1).**
   - Agregar `is_in_split = fields.Boolean(string='Incluir', help='Marca ESTE lote para el REPARTO multi-lote
     (botón "Repartir lotes"). A diferencia de "Elegir" (selección ÚNICA), "Incluir" admite VARIAS filas: el
     reparto consume los lotes marcados en el orden de la tabla. Solo se puede marcar si el lote tiene
@@ -5633,3 +5636,41 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   sin error, con el motivo por entrega); (3) sigue en pie la **acción de DATOS (H-018)**: asignar lote a las 26
   entregas con un lote **CON existencia** (`666634` = 23 u) y el check de asignación parcial (demanda 30 u).
   **Regla respetada: código sí, datos no** — 0 registros de la BD de producción tocados.
+- [2026-10-17 · Odoo Dev] **Lote 1 (T1–T3) ejecutado** — núcleo del reparto multi-lote (H-037 / H-036).
+  Sesión NUEVA; no se retomó ninguna anterior. **(T1)** `models/stock_move.py`: docstring del módulo extendido
+  con el bloque *"Reparto ADITIVO multi-lote (H-037)"* (por qué el camino del motor `_pf_reassign_lot` no era
+  aditivo: libera ANTES de reservar) y método NUEVO `_pf_reassign_lots(self, lots)` en sección propia
+  `# REPARTO ADITIVO MULTI-LOTE`: `ensure_one()` → salida temprana si no hay lotes o `tracking != 'lot'` →
+  **guardián** (`self.picked or self.state in ('done','cancel')` ⇒ `0.0`) → `need = product_uom_qty` →
+  **UNA** `_pf_unreserve_reservation()` (primitiva del MOTOR) → bucle `for lot in lots` con
+  `remaining = need - taken`, corte en `<= _EPS` y `taken += self._pf_reserve_lot(lot, remaining)`
+  (primitiva del MOTOR, **ADITIVA** por `_update_reserved_quantity`). `_pf_keep_current_lot_reservation` y
+  `_assign_exclusive_lot` (H-030) quedan **INTACTOS**. **(T2)** `wizard/printflow_product_flow.py`: constante
+  de módulo `_SPLIT_KINDS = ('missing_move', 'pending_order')` (lista blanca explícita, se consulta con `in`,
+  **nunca `getattr`**) + `@api.model _pf_assign_lots_to_document(self, target_kind, res_model, res_id, lots,
+  product=None)` (guardia `_pf_assert_can_clean()` → `UserError` si `lots` vacío → `0.0` si el `kind` no está
+  en la lista blanca → resolver del movimiento → `move._pf_reassign_lots(list(lots))`) + resolver PRIVADO
+  propio `@api.model _pf_split_target_move(self, res_model, res_id, product)` (mismo camino que
+  `_pf_assign_lot_on_pending_order_doc` pero SIN tocar el handler existente: `stock.move` directo o
+  `stock.picking` filtrando el movimiento activo del producto, `limit=1`). `_pf_assign_lot_to_document`, el
+  mapa `handlers`, `_pf_assign_lot_on_*` y `_pf_reassign_move_lot` quedan **INTACTOS** (el modo `single` no
+  cambia: `git diff --stat` = **solo inserciones**, 0 borrados). **(T3)**
+  `wizard/printflow_flow_lot_candidate.py`: campo NUEVO `is_in_split = fields.Boolean(string='Incluir')` junto
+  a `is_selected`, con docstring del módulo extendido (la fila sirve a TRES superficies). NO se tocaron `write`,
+  `_pf_enforce_single_selection`, `_pf_parent`, `_compute_is_picked`, `_compute_is_recommended` ni
+  `_compute_is_elective` ⇒ la selección ÚNICA de `is_selected` sigue intacta (**H-036**: multi-tick
+  independiente). **Evidencia de sintaxis:** `python -m py_compile` de los 3 `.py` ⇒ **OK (exit 0)**.
+  **Evidencia estática (script de solo lectura):** los 3 métodos/campos nuevos existen; los candados del
+  lote anterior (`_pf_keep_current_lot_reservation`, `_assign_exclusive_lot`, `_pf_assign_lot_to_document`,
+  `_pf_reassign_move_lot`, `_pf_enforce_single_selection`, `is_selected`) **presentes**; sin `cr.execute(` ni
+  `cr.commit(` reales (solo menciones en docstrings). **NO se corrió la suite:** los tests del reparto son la
+  **T8 (Lote 3)** y requieren `-u printflow_gestion_inventario` ⇒ queda para el lote de tests / el Verificador
+  (esta sesión NO reinicia ni actualiza Odoo, §9). **Motor `x_product_dimensional_pricing`: NO tocado por esta
+  sesión** (`models/stock_move.py` del motor **fuera** de su `git status`; se consumen tal cual
+  `_pf_unreserve_reservation` / `_pf_reserve_lot`). **OBSERVACIÓN FUERA DE ALCANCE (no tocada, para el
+  Analista):** el repo del motor tiene un `git diff` **no vacío PRE-EXISTENTE** (22 archivos, ~2025+/1744−,
+  p. ej. `models/mrp_technical_sheet.py`, `wizard/mrp_quick_purchase_wizard.py`) ajeno a este lote; el plan
+  §3.6.3 dice "motor SIN CAMBIOS" ⇒ se reporta pero **no** se revierte ni se toca (el `stock_move.py` del
+  motor sí está limpio). **Regla respetada: código sí, datos no** — 0 registros de la BD `Ciber Estudios 2015
+  RESTAURADA` escritos. **Plan §3.11 Lote 1 (T1–T3) COMPLETO (0 pendientes).** Turno → **Odoo Dev**
+  (Lote 2: T4–T6, sesión NUEVA).
