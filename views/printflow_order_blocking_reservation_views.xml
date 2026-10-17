@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         LISTA "QUIÉN ME BLOQUEA" (Bloque II) — por ENTREGA/ALBARÁN.
+
+         Solo lectura: cada fila es una entrega que retiene reserva del
+         producto. Incluye POS sin pedido. Ordena por fecha comprometida y, en
+         su defecto, por antigüedad (el orden vive en el modelo).
+         ================================================================== -->
+    <record id="printflow_order_blocking_reservation_view_tree" model="ir.ui.view">
+        <field name="name">printflow.order.blocking.reservation.tree</field>
+        <field name="model">printflow.order.blocking.reservation</field>
+        <field name="arch" type="xml">
+            <tree create="false" delete="false">
+                <field name="source_label" string="Entrega / Pedido"/>
+                <field name="picking_id" string="Albarán" optional="show"/>
+                <field name="picking_name" optional="hide"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="partner_id" string="Cliente"/>
+                <field name="operation_type" optional="hide"/>
+                <field name="picking_state" string="Estado albarán" widget="badge"
+                       decoration-info="picking_state == 'assigned'"
+                       decoration-warning="picking_state in ('confirmed', 'waiting', 'partially_available')"/>
+                <field name="order_state" string="Estado pedido" optional="hide"/>
+                <field name="commitment_date" string="Fecha comprometida"/>
+                <field name="age_date" string="Antigüedad"/>
+                <field name="reserved_qty" string="Reservado" widget="float"
+                       options="{'digits': [16, 2]}"/>
+                <field name="uom_id" string="UdM" optional="hide"/>
+                <field name="is_pos" string="POS/sin pedido" optional="hide"/>
+                <!-- F7: se ELIMINA "Abrir entrega". El albarán de la fila se
+                     abre con el clic en la columna "Albarán" (``picking_id``,
+                     many2one navegable). -->
+                <button name="action_open_root" type="object"
+                        string="Resolver su raíz" class="btn-link"
+                        icon="fa-wrench"
+                        title="Guía al Nivel 1 del pedido bloqueante para resolver allí la causa raíz (no se le quita la reserva)"/>
+            </tree>
+        </field>
+    </record>
+
+</odoo>

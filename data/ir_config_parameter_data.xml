@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Parámetros de los tableros de GI sembrados de forma IDEMPOTENTE.
+
+             IMPORTANTE: las CLAVES conservan el namespace del addon principal
+             (`x_product_dimensional_pricing.*`) a propósito, para NO requerir
+             migración de datos (cero escritura). El addon principal ya no las
+             siembra: salen de su `data/ir_config_parameter_data.xml`.
+
+             `set_param(key, value)` hace upsert: crea si no existe y actualiza
+             si ya existe -> nunca viola la unicidad de `ir.config_parameter`. -->
+
+        <!-- Interruptor global del motor ``printflow.flow.pending``.
+             1 = activo (default); 0 = desactivado (el mapa devuelve vacío). -->
+        <function model="ir.config_parameter" name="set_param">
+            <value>x_product_dimensional_pricing.pf_node_pending_enabled</value>
+            <value>1</value>
+        </function>
+
+        <!-- Nodos habilitados (lista separada por comas). Fase 1:
+             purchase, receipt, production, delivery, sale. Los nodos de stock
+             (stock, stock_supply, stock_finished) delegan en stock.health. -->
+        <function model="ir.config_parameter" name="set_param">
+            <value>x_product_dimensional_pricing.pf_node_pending_nodes</value>
+            <value>purchase,receipt,production,delivery,sale</value>
+        </function>
+
+        <!-- Límite de documentos por corrida del motor (0 = sin límite). -->
+        <function model="ir.config_parameter" name="set_param">
+            <value>x_product_dimensional_pricing.pf_node_pending_limit</value>
+            <value>0</value>
+        </function>
+
+        <!-- Límite del catálogo de superficies (Fase 4/6). 0 = sin límite. -->
+        <function model="ir.config_parameter" name="set_param">
+            <value>x_product_dimensional_pricing.pf_catalog_limit</value>
+            <value>0</value>
+        </function>
+
+        <!-- Política ante una asignación de lote que NO es el lote PROPIO del
+             documento (selector "Elegir lote" de la bandeja gestionable):
+               `warn`           = solo avisar (sin fricción);
+               `confirm`        = exigir el check "Confirmo la excepción";
+               `confirm_reason` = exigir confirmación + motivo (DEFAULT).
+             El operador SIEMPRE puede elegir; la política solo agrega fricción
+             y registro (message_post en el chatter del documento). -->
+        <function model="ir.config_parameter" name="set_param">
+            <value>x_product_dimensional_pricing.pf_lot_assign_exception_policy</value>
+            <value>confirm_reason</value>
+        </function>
+
+        <!-- Fase 1 del patrón de fallas guiadas: FORZAR la bandeja genérica de
+             fallas (``printflow.flow.failure.tray``) para la falla huérfana
+             incluso en llamadas sin el producto explícito. Por defecto 0: el
+             diagrama ya la usa cuando la fila del panel trae el producto; el
+             parámetro en 1 la fuerza para CUALQUIER llamada. -->
+        <function model="ir.config_parameter" name="set_param">
+            <value>x_product_dimensional_pricing.pf_failure_guided_tray</value>
+            <value>0</value>
+        </function>
+    </data>
+</odoo>

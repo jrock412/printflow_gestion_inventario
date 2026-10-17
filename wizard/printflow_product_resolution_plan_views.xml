@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         BANDEJA DE RESOLUCIÓN: columnas "Causa" / "Qué hacer".
+
+         El detalle del plan del escáner (resumen + pasos + botones) vive ahora
+         en la vista BASE del escáner y en el diálogo
+         `printflow_product_diagnostic_finding_view_form`. Aquí solo se ajusta
+         la Bandeja para mostrar la acción de la raíz ("Qué hacer").
+         Ningún campo se almacena: cero migración.
+         ================================================================== -->
+    <record id="printflow_product_resolution_tray_view_tree_resolution" model="ir.ui.view">
+        <field name="name">printflow.product.diagnostic.evidence.resolution.tray.tree.resolution</field>
+        <field name="model">printflow.product.diagnostic.evidence</field>
+        <field name="inherit_id" ref="printflow_gestion_inventario.printflow_product_resolution_tray_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state_label']" position="after">
+                <field name="pf_solution_label" string="Qué hacer"/>
+                <field name="pf_cause" column_invisible="True"/>
+            </xpath>
+            <xpath expr="//button[@name='action_open']" position="attributes">
+                <attribute name="string">Acción</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="printflow_product_resolution_tray_view_form_resolution" model="ir.ui.view">
+        <field name="name">printflow.product.diagnostic.evidence.resolution.tray.form.resolution</field>
+        <field name="model">printflow.product.diagnostic.evidence</field>
+        <field name="inherit_id" ref="printflow_gestion_inventario.printflow_product_resolution_tray_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_name']" position="after">
+                <field name="pf_cause" string="Causa"/>
+                <field name="pf_solution_label" string="Qué hacer"/>
+            </xpath>
+            <xpath expr="//button[@name='action_open']" position="attributes">
+                <attribute name="string">Acción</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

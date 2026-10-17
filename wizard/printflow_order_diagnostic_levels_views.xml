@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         NIVELES del Diagnóstico de Pedido (aditivo).
+
+         La tabla "Fallas del producto" se ELIMINÓ del formulario: sus botones
+         (Ver el problema / Solucionar / Alternativa) y el detalle de cada falla
+         viven ahora en el PANEL del popover de CADA NODO del diagrama. Por eso
+         el `<xpath expr="//field[@name='focus_flow_failure_ids']/tree">` que
+         refinaba esa tabla también se retiró: si se dejara, apuntaría a un nodo
+         inexistente y el módulo NO cargaría.
+
+         Este archivo se mantiene (y sigue declarado en el manifest) como punto
+         de extensión futuro del Nivel 2; hoy no define registros.
+         ================================================================== -->
+
+</odoo>

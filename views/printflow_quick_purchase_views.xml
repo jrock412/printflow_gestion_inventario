@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         COMPRA RÁPIDA (PrintFlow): vista HEREDADA del asistente
+         `mrp.quick.purchase.wizard` del motor `x_product_dimensional_pricing`.
+
+         Dos cambios ADITIVOS (D4/D5), sin `position="replace"`:
+         1) Botón "Traer pedidos que requieren compra": importa a "Agrupar
+            pedidos" los pedidos con entrega pendiente del producto y sin compra
+            en trámite (`action_pf_import_requiring_orders` del bridge). Solo se
+            muestra cuando hay un producto de referencia.
+         2) Contexto del selector: activa "número − cliente" en el `sale_order_id`
+            del tree, gatillando el `_compute_display_name` heredado de
+            `sale.order` SOLO dentro de este selector.
+         ================================================================== -->
+    <record id="mrp_quick_purchase_wizard_form_pf" model="ir.ui.view">
+        <field name="name">mrp.quick.purchase.wizard.form.pf</field>
+        <field name="model">mrp.quick.purchase.wizard</field>
+        <field name="inherit_id" ref="x_product_dimensional_pricing.mrp_quick_purchase_wizard_form"/>
+        <field name="arch" type="xml">
+            <!-- Botón para traer, de una vez, los pedidos que requieren la compra.
+                 Va en su PROPIA fila de ancho completo (`div colspan="2"`): dentro del
+                 `<group string="Pedido">` (grid de 2 columnas) un contenedor con
+                 `colspan="2"` ocupa la fila entera (mismo patrón que los textos de ancho
+                 completo de la vista base del motor). Así el botón NO comparte celda con
+                 la tabla `order_line_ids`, que antes quedaba comprimida a media columna. -->
+            <xpath expr="//field[@name='order_line_ids']" position="before">
+                <div colspan="2" class="mb-2">
+                    <button name="action_pf_import_requiring_orders" type="object"
+                            string="Traer pedidos que requieren compra"
+                            class="btn-secondary"
+                            invisible="not product_id"/>
+                </div>
+            </xpath>
+            <!-- La tabla "Agrupar pedidos" ocupa el ancho COMPLETO del grupo
+                 (`colspan="2"`): recupera el reparto natural de columnas para que el
+                 selector `sale_order_id` ("número − cliente", D5) y el cliente se lean. -->
+            <xpath expr="//field[@name='order_line_ids']" position="attributes">
+                <attribute name="colspan">2</attribute>
+            </xpath>
+            <!-- Selector: "número de venta − cliente" (contexto de presentación). -->
+            <xpath expr="//field[@name='order_line_ids']/tree//field[@name='sale_order_id']"
+                   position="attributes">
+                <attribute name="context">{'pf_purchase_partner_label': True}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

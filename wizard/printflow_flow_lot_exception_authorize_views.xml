@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         MODAL: AUTORIZAR UN LOTE COMO EXCEPCIÓN DOCUMENTADA (PrintFlow)
+         Lo abre el botón de fila "Autorizar excepción" de la bandeja de lote.
+         Pide el MOTIVO y confirma; al aceptar delega en el motor
+         (`printflow.stock.health._pf_authorize_lot_exception`) y el lote deja de
+         reportarse como "lotes mezclados". NO reasigna: declara intencional la
+         asignación ACTUAL. Requiere jefe de taller/administrador (guardia en el
+         método `action_authorize`).
+         ================================================================== -->
+    <record id="printflow_flow_lot_exception_authorize_view_form"
+            model="ir.ui.view">
+        <field name="name">printflow.flow.lot.exception.authorize.form</field>
+        <field name="model">printflow.flow.lot.exception.authorize</field>
+        <field name="arch" type="xml">
+            <form string="Autorizar lote como excepción"
+                  create="false" delete="false">
+                <field name="lot_id" invisible="1"/>
+                <field name="source_model" invisible="1"/>
+                <field name="source_id" invisible="1"/>
+                <group>
+                    <group string="Lote">
+                        <field name="lot_name" readonly="1"/>
+                        <field name="product_id" readonly="1"/>
+                    </group>
+                    <group string="Documento origen">
+                        <field name="source_label" readonly="1"/>
+                    </group>
+                </group>
+                <group string="Motivo de la autorización" col="1">
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="¿Por qué se autoriza este lote como excepción?"/>
+                    <div class="text-muted">
+                        Al autorizar, el lote dejará de reportarse como "lotes
+                        mezclados". Se guardan juntos el motivo y quién autoriza.
+                        Puedes revocarlo en "Salud de Inventario → Excepciones de
+                        lote".
+                    </div>
+                </group>
+                <footer>
+                    <button name="action_authorize" type="object"
+                            string="Autorizar" class="btn-primary"
+                            icon="fa-check"
+                            title="Autoriza el lote como excepción documentada. Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

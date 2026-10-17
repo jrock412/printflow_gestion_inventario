@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         AJUSTES DE GI: parámetros de los tableros de Salud de Inventario
+         (pendientes por nodo y tope del catálogo Productos). Se inyectan en
+         la misma app de Ajustes que usa PrintFlow, en un bloque propio.
+         Los campos viven en models/res_config_settings.py de este addon.
+         ================================================================== -->
+    <record id="res_config_settings_view_form_inventory" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.gestion.inventario</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='sale_management']" position="inside">
+                <block title="Salud de inventario / Tableros"
+                       name="printflow_gestion_inventario_boards">
+                    <setting id="pg_inventory_node_pending"
+                             string="Pendientes por nodo"
+                             help="Controla el motor de pendientes que alimenta los tableros 'Pendientes' y 'Productos' y el diagrama de flujo: interruptor global, nodos considerados y tope de documentos por nodo.">
+                        <field name="pf_node_pending_enabled"/>
+                        <field name="pf_node_pending_nodes"/>
+                        <field name="pf_node_pending_limit"/>
+                    </setting>
+                    <setting id="pg_inventory_catalog_limit"
+                             string="Tablero Productos"
+                             help="Tope de productos que puebla el tablero 'Productos'. 0 = todos los productos del alcance configurado.">
+                        <field name="pf_catalog_limit"/>
+                    </setting>
+                    <setting id="pg_lot_assign_exception_policy"
+                             string="Asignación de lote por excepción"
+                             help="Qué exige PrintFlow cuando, en el selector 'Elegir lote' de la bandeja gestionable, el operador elige un lote que NO es el propio del documento: solo avisar; exigir confirmación; o exigir confirmación y motivo. El operador siempre puede elegir.">
+                        <field name="pf_lot_assign_exception_policy"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         SALUD DE INVENTARIO (Bloque IV §40)
+         Bandeja poblada BAJO DEMANDA al abrir: lista CUALQUIER producto con
+         problema de reserva (quant con libre < 0) o sobrepedido agregado, sin
+         depender del Tablero de Pedidos. Solo lectura + botones de remedio.
+         ================================================================== -->
+    <record id="printflow_inventory_health_view_list" model="ir.ui.view">
+        <field name="name">printflow.inventory.health.list</field>
+        <field name="model">printflow.inventory.health</field>
+        <field name="arch" type="xml">
+            <tree create="false" delete="false" edit="false"
+                  decoration-danger="state == 'physical'"
+                  decoration-warning="state == 'over_reserved'"
+                  decoration-info="state == 'contention'"
+                  decoration-muted="state == 'ok'">
+                <field name="severity_rank" column_invisible="True"/>
+                <field name="product_id"/>
+                <field name="default_code" optional="show"/>
+                <field name="state" string="Estado" widget="badge"
+                       decoration-danger="state == 'physical'"
+                       decoration-warning="state == 'over_reserved'"
+                       decoration-info="state == 'contention'"/>
+                <field name="nature" optional="hide"/>
+                <field name="on_hand" optional="show"/>
+                <field name="reserved" optional="show"/>
+                <field name="free_global" optional="show"/>
+                <field name="has_negative_quant" string="Quant neg." optional="hide"/>
+                <field name="deficit_qty" optional="show"/>
+                <field name="contention_qty" optional="show"/>
+                <field name="route_summary" optional="show"/>
+                <field name="lot_state" string="Lote" widget="badge"
+                       optional="show"
+                       decoration-danger="lot_state in ('lot_missing','lot_orphan_reservation','lot_no_stock')"
+                       decoration-warning="lot_state in ('lot_generic','lot_mixed')"
+                       decoration-info="lot_state == 'lot_unassigned_finished'"/>
+                <field name="lot_detail" optional="show"/>
+                <field name="location_id" optional="hide"/>
+                <field name="has_blocking" optional="hide"/>
+                <!-- F2-B/H4: huérfanos y guard de activación de lote. -->
+                <field name="has_orphan_moves" string="Huérfanos" optional="show"/>
+                <field name="orphan_move_count" optional="hide"/>
+                <field name="lot_activation_ready" string="Listo lote"
+                       optional="show"
+                       decoration-success="lot_activation_ready"/>
+                <field name="lot_activation_reason" optional="show"/>
+                <field name="needs_legacy_lot" optional="hide"/>
+                <field name="remedy_key" column_invisible="True"/>
+                <field name="remedy_kind" column_invisible="True"/>
+                <field name="remedy_target" column_invisible="True"/>
+                <field name="remedy_available" column_invisible="True"/>
+                <field name="remedy_label" string="Recomendación" optional="show"/>
+                <button name="action_apply_remedy" type="object"
+                        string="Aplicar recomendación" icon="fa-wrench"
+                        class="btn-link"
+                        invisible="not remedy_available"
+                        title="Ejecuta el remedio estructural recomendado para este producto"/>
+                <button name="action_cleanup_reservations" type="object"
+                        string="Sanear reservas" icon="fa-eraser"
+                        class="btn-link text-warning"
+                        invisible="not has_negative_quant"
+                        groups="mrp.group_mrp_manager,base.group_system"
+                        title="Suelta y re-asigna las reservas colgadas por reglas de Odoo (jefe de taller / administrador)"/>
+                <button name="action_purge_orphan_moves" type="object"
+                        string="Purgar huérfanos" icon="fa-trash"
+                        class="btn-link text-danger"
+                        invisible="not has_orphan_moves"
+                        groups="mrp.group_mrp_manager,base.group_system"
+                        title="Cancela/elimina los movimientos sin albarán, MO ni ajuste de inventario (jefe de taller / administrador)"/>
+                <button name="action_assign_legacy_lot" type="object"
+                        string="Lote legado" icon="fa-archive"
+                        class="btn-link"
+                        invisible="not needs_legacy_lot"
+                        groups="mrp.group_mrp_manager,base.group_system"
+                        title="Asigna el lote LEGADO-&lt;producto&gt; a las existencias internas sin lote"/>
+                <!-- F7: se ELIMINA el botón "Producto". La fila ES el producto:
+                     su gesto natural es el clic en la columna "Producto"
+                     (``product_id``, many2one navegable). -->
+            </tree>
+        </field>
+    </record>
+
+    <record id="printflow_inventory_health_view_form" model="ir.ui.view">
+        <field name="name">printflow.inventory.health.form</field>
+        <field name="model">printflow.inventory.health</field>
+        <field name="arch" type="xml">
+            <form create="false" edit="false" delete="false">
+                <!-- Campos que alimentan modificadores de los botones. -->
+                <field name="remedy_available" invisible="1"/>
+                <field name="has_negative_quant" invisible="1"/>
+                <field name="has_orphan_moves" invisible="1"/>
+                <field name="needs_legacy_lot" invisible="1"/>
+                <header>
+                    <button name="action_apply_remedy" type="object"
+                            string="Aplicar recomendación" class="btn-primary"
+                            icon="fa-wrench" invisible="not remedy_available"/>
+                    <button name="action_cleanup_reservations" type="object"
+                            string="Sanear reservas" class="btn-warning"
+                            icon="fa-eraser" invisible="not has_negative_quant"
+                            groups="mrp.group_mrp_manager,base.group_system"/>
+                    <button name="action_purge_orphan_moves" type="object"
+                            string="Purgar movimientos huérfanos" class="btn-danger"
+                            icon="fa-trash" invisible="not has_orphan_moves"
+                            groups="mrp.group_mrp_manager,base.group_system"/>
+                    <button name="action_assign_legacy_lot" type="object"
+                            string="Asignar lote legado" class="btn-secondary"
+                            icon="fa-archive" invisible="not needs_legacy_lot"
+                            groups="mrp.group_mrp_manager,base.group_system"/>
+                    <button name="action_open_product" type="object"
+                            string="Abrir producto" class="btn-secondary"
+                            icon="fa-cube"/>
+                    <button name="action_open_all_alerts" type="object"
+                            string="Ver todas las alertas" class="btn-secondary"
+                            icon="fa-th-list"
+                            title="Reabrir la bandeja completa de Salud de inventario, sin filtrar por producto"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="default_code"/>
+                            <field name="uom_id"/>
+                            <field name="state" widget="badge"
+                                   decoration-danger="state == 'physical'"
+                                   decoration-warning="state == 'over_reserved'"/>
+                            <field name="nature"/>
+                            <field name="route_summary"/>
+                            <field name="location_id"/>
+                        </group>
+                        <group>
+                            <field name="on_hand"/>
+                            <field name="reserved"/>
+                            <field name="free_global"/>
+                            <field name="has_negative_quant"/>
+                            <field name="deficit_qty"/>
+                            <field name="contention_qty"/>
+                            <field name="has_blocking"/>
+                        </group>
+                    </group>
+                    <group string="Recomendación">
+                        <field name="remedy_key"/>
+                        <field name="remedy_label"/>
+                        <field name="remedy_kind"/>
+                        <field name="remedy_target"/>
+                    </group>
+                    <group string="Lote / trazabilidad">
+                        <field name="lot_state"/>
+                        <field name="lot_detail"/>
+                        <field name="lot_remedy_key"/>
+                        <field name="lot_remedy_label"/>
+                        <field name="lot_remedy_kind"/>
+                        <field name="lot_remedy_target"/>
+                    </group>
+                    <group string="Movimientos huérfanos y activación de lote">
+                        <field name="has_orphan_moves"/>
+                        <field name="orphan_move_count"/>
+                        <field name="needs_legacy_lot"/>
+                        <field name="lot_activation_ready"/>
+                        <field name="lot_activation_reason"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="printflow_inventory_health_view_search" model="ir.ui.view">
+        <field name="name">printflow.inventory.health.search</field>
+        <field name="model">printflow.inventory.health</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <filter name="filter_alert" string="Solo alertas"
+                        domain="[('state', '!=', 'ok')]"/>
+                <separator/>
+                <filter name="filter_physical" string="Falta física"
+                        domain="[('state', '=', 'physical')]"/>
+                <filter name="filter_over_reserved" string="Sobre-reserva / colgada"
+                        domain="[('state', '=', 'over_reserved')]"/>
+                <filter name="filter_contention" string="Contención"
+                        domain="[('state', '=', 'contention')]"/>
+                <filter name="filter_no_route" string="Sin ruta"
+                        domain="[('state', '=', 'no_route')]"/>
+                <separator/>
+                <filter name="filter_negative" string="Con quant negativo"
+                        domain="[('has_negative_quant', '=', True)]"/>
+                <separator/>
+                <filter name="filter_lot_alert" string="Con problema de lote"
+                        domain="[('lot_state', '!=', 'lot_ok')]"/>
+                <filter name="filter_lot_missing" string="Sin lote"
+                        domain="[('lot_state', '=', 'lot_missing')]"/>
+                <filter name="filter_lot_orphan" string="Reserva huérfana"
+                        domain="[('lot_state', '=', 'lot_orphan_reservation')]"/>
+                <filter name="filter_lot_generic" string="Lote genérico"
+                        domain="[('lot_state', '=', 'lot_generic')]"/>
+                <filter name="filter_lot_no_stock" string="Lote sin existencia"
+                        domain="[('lot_state', '=', 'lot_no_stock')]"/>
+                <separator/>
+                <filter name="filter_orphan_moves" string="Con movimientos huérfanos"
+                        domain="[('has_orphan_moves', '=', True)]"/>
+                <filter name="filter_activation_ready" string="Listos para activar lote"
+                        domain="[('lot_activation_ready', '=', True)]"/>
+                <filter name="filter_activation_blocked" string="Falta limpiar para activar lote"
+                        domain="[('lot_activation_ready', '=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_state" string="Estado"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_nature" string="Naturaleza"
+                            context="{'group_by': 'nature'}"/>
+                    <filter name="group_lot_state" string="Estado de lote"
+                            context="{'group_by': 'lot_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Punto de entrada: puebla bajo demanda y abre la bandeja. -->
+    <record id="action_server_printflow_inventory_health" model="ir.actions.server">
+        <field name="name">Salud de inventario</field>
+        <field name="model_id" ref="model_printflow_inventory_health"/>
+        <field name="state">code</field>
+        <field name="code">action = model._pf_open_health()</field>
+    </record>
+
+    <!-- Saneamiento global (restringido a jefe de taller/admin). -->
+    <record id="action_server_printflow_cleanup_all_reservations" model="ir.actions.server">
+        <field name="name">Sanear todas las reservas colgadas</field>
+        <field name="model_id" ref="model_printflow_inventory_health"/>
+        <field name="state">code</field>
+        <field name="groups_id" eval="[(4, ref('mrp.group_mrp_manager')), (4, ref('base.group_system'))]"/>
+        <field name="code">action = model.action_cleanup_all()</field>
+    </record>
+
+    <!-- F2-B: lista de productos con movimientos huérfanos. -->
+    <record id="action_server_printflow_open_orphan_moves" model="ir.actions.server">
+        <field name="name">Movimientos huérfanos</field>
+        <field name="model_id" ref="model_printflow_inventory_health"/>
+        <field name="state">code</field>
+        <field name="groups_id" eval="[(4, ref('mrp.group_mrp_manager')), (4, ref('base.group_system'))]"/>
+        <field name="code">action = model.action_open_orphan_moves()</field>
+    </record>
+
+    <!-- F2-B: purga global de movimientos huérfanos (jefe de taller/admin). -->
+    <record id="action_server_printflow_purge_orphan_moves" model="ir.actions.server">
+        <field name="name">Purgar movimientos huérfanos</field>
+        <field name="model_id" ref="model_printflow_inventory_health"/>
+        <field name="state">code</field>
+        <field name="groups_id" eval="[(4, ref('mrp.group_mrp_manager')), (4, ref('base.group_system'))]"/>
+        <field name="code">action = model.action_purge_all_orphan_moves()</field>
+    </record>
+
+    <!-- ==================================================================
+         APP PROPIA "Salud de Inventario" (separada del PrintFlow principal).
+         Se define aquí porque este archivo se carga DESPUÉS de
+         views/mrp_technical_sheet_views.xml (donde vive menu_printflow_root).
+         El menú raíz va ANTES de los menús que lo referencian.
+         ================================================================== -->
+    <record id="menu_printflow_health_app" model="ir.ui.menu">
+        <field name="name">Salud de Inventario</field>
+        <field name="web_icon">printflow_gestion_inventario,static/description/icon.png</field>
+        <field name="sequence">46</field>
+        <field name="parent_id" eval="False"/>
+    </record>
+
+    <!-- Mantenimiento: saneamiento/purga global (jefe de taller/admin). -->
+    <menuitem id="menu_printflow_maintenance"
+              name="Mantenimiento"
+              parent="menu_printflow_health_app"
+              sequence="40"/>
+
+    <!-- Salud de inventario: bandeja principal de la app de salud. -->
+    <menuitem id="menu_printflow_inventory_health"
+              name="Salud de inventario"
+              parent="menu_printflow_health_app"
+              action="action_server_printflow_inventory_health"
+              sequence="5"/>
+
+    <menuitem id="menu_printflow_cleanup_all_reservations"
+              name="Sanear todas las reservas"
+              parent="menu_printflow_maintenance"
+              action="action_server_printflow_cleanup_all_reservations"
+              sequence="7"
+              groups="mrp.group_mrp_manager,base.group_system"/>
+
+    <menuitem id="menu_printflow_orphan_moves"
+              name="Movimientos huérfanos"
+              parent="menu_printflow_maintenance"
+              action="action_server_printflow_open_orphan_moves"
+              sequence="8"
+              groups="mrp.group_mrp_manager,base.group_system"/>
+
+    <menuitem id="menu_printflow_purge_orphan_moves"
+              name="Purgar movimientos huérfanos"
+              parent="menu_printflow_maintenance"
+              action="action_server_printflow_purge_orphan_moves"
+              sequence="9"
+              groups="mrp.group_mrp_manager,base.group_system"/>
+
+    <!-- LIMPIEZA (solo menú): el contenedor "Tableros" (menu_printflow_dashboards)
+         se creó por error en una fase anterior y ya no se define aquí. Se elimina
+         de forma SEGURA: en Odoo 17 un <delete> con xmlid inexistente solo registra
+         un warning (no rompe la instalación limpia). Va AL FINAL, cuando el menú ya
+         quedó sin hijos (parent_id es ondelete="restrict"). -->
+    <delete model="ir.ui.menu" id="x_product_dimensional_pricing.menu_printflow_dashboards"/>
+
+</odoo>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="printflow_product_diagnostic_wizard_view_form" model="ir.ui.view">
+        <field name="name">printflow.product.diagnostic.wizard.form</field>
+        <field name="model">printflow.product.diagnostic.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Diagnóstico de Producto">
+                <!-- Campos ocultos: alimentan modificadores y botones. -->
+                <field name="product_tmpl_id" invisible="1"/>
+                <field name="origin_action" invisible="1"/>
+                <!-- ================= ACCIONES =================
+                     El <footer> solo se renderiza cuando env.inDialog; el
+                     escáner abre a pantalla completa desde el diagnóstico de
+                     pedido, por eso los botones viven en el <header>, que se
+                     compila en `o_form_statusbar` y se ve en ambos modos. -->
+                <header>
+                    <button name="action_recalculate" type="object" string="Recalcular"
+                            class="btn-secondary" icon="fa-refresh"
+                            title="Volver a ejecutar el barrido con los datos actuales"/>
+                    <button name="action_open_resolution_tray" type="object"
+                            string="Recopilar todos" class="btn-secondary" icon="fa-inbox"
+                            title="Abrir la Bandeja de Resolución con los causantes de todo el barrido (solo lectura)"/>
+                    <button name="action_back_to_origin" type="object" string="Volver"
+                            class="btn-secondary" icon="fa-reply"
+                            invisible="not origin_action"
+                            title="Volver a la pantalla de origen"/>
+                </header>
+                <sheet>
+                    <!-- ================= ENCABEZADO ================= -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa fa-stethoscope fa-lg text-primary"/>
+                            <div>
+                                <div class="fs-5 fw-bold lh-1">Diagnóstico de Producto</div>
+                                <div class="text-muted small mt-1 d-flex align-items-center flex-wrap gap-2">
+                                    <span invisible="not origin_label">
+                                        <i class="fa fa-map-marker me-1"/>
+                                        <field name="origin_label" nolabel="1" class="d-inline"/>
+                                    </span>
+                                    <field name="product_id" nolabel="1" class="d-inline"
+                                           options="{'no_open': True}"
+                                           invisible="not product_id"/>
+                                    <field name="product_ids" widget="many2many_tags" nolabel="1"
+                                           invisible="product_id"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small text-uppercase">Resultado</div>
+                            <field name="overall_severity" widget="badge" nolabel="1"
+                                   decoration-success="overall_severity == 'ok'"
+                                   decoration-warning="overall_severity == 'warning'"
+                                   decoration-danger="overall_severity == 'error'"/>
+                        </div>
+                    </div>
+
+                    <!-- ================= CONTADORES ================= -->
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                        <span class="badge text-bg-light border">
+                            <i class="fa fa-list-ol me-1"/>
+                            <field name="check_total" nolabel="1" class="d-inline"/> chequeos ejecutados
+                        </span>
+                        <span class="badge text-bg-light border text-danger">
+                            <i class="fa fa-times-circle me-1"/>
+                            <field name="error_count" nolabel="1" class="d-inline"/> errores
+                        </span>
+                        <span class="badge text-bg-light border text-warning">
+                            <i class="fa fa-exclamation-triangle me-1"/>
+                            <field name="warning_count" nolabel="1" class="d-inline"/> advertencias
+                        </span>
+                    </div>
+
+                    <!-- ================= TITULAR ================= -->
+                    <div class="alert alert-danger d-flex align-items-start"
+                         invisible="overall_severity != 'error'">
+                        <i class="fa fa-exclamation-triangle me-2 mt-1"/>
+                        <div class="fw-bold"><field name="headline" nolabel="1" class="d-inline"/></div>
+                    </div>
+                    <div class="alert alert-warning d-flex align-items-start"
+                         invisible="overall_severity != 'warning'">
+                        <i class="fa fa-exclamation-circle me-2 mt-1"/>
+                        <div class="fw-bold"><field name="headline" nolabel="1" class="d-inline"/></div>
+                    </div>
+                    <div class="alert alert-success d-flex align-items-start"
+                         invisible="overall_severity != 'ok'">
+                        <i class="fa fa-check-circle me-2 mt-1"/>
+                        <div class="fw-bold"><field name="headline" nolabel="1" class="d-inline"/></div>
+                    </div>
+
+                    <!-- ================= HALLAZGOS ================= -->
+                    <group string="Hallazgos del barrido" col="1">
+                        <field name="finding_ids" nolabel="1">
+                            <!-- no_open: el clic de fila NO abre el form del
+                                 TransientModel; solo navegan los botones.
+                                 NINGÚN campo Text puede ser columna del árbol
+                                 (los pasos van al diálogo "Ver plan"). -->
+                            <tree create="false" delete="false" editable="false"
+                                  no_open="1"
+                                  decoration-danger="severity == 'error'"
+                                  decoration-warning="severity == 'warning'"
+                                  decoration-muted="severity in ('ok', 'info')">
+                                <!-- Campos técnicos: solo alimentan modificadores
+                                     y acciones (no se muestran como columna). -->
+                                <field name="sequence" column_invisible="True"/>
+                                <field name="res_model" column_invisible="True"/>
+                                <field name="res_id" column_invisible="True"/>
+                                <field name="nav_kind" column_invisible="True"/>
+                                <field name="pf_cause" column_invisible="True"/>
+                                <field name="pf_problem_kind" column_invisible="True"/>
+                                <field name="pf_problem_target" column_invisible="True"/>
+                                <field name="pf_problem_available" column_invisible="True"/>
+                                <field name="pf_solution_kind" column_invisible="True"/>
+                                <field name="pf_solution_target" column_invisible="True"/>
+                                <field name="pf_solution_available" column_invisible="True"/>
+                                <field name="pf_collect_kind" column_invisible="True"/>
+                                <field name="pf_collect_target" column_invisible="True"/>
+                                <field name="pf_collect_available" column_invisible="True"/>
+                                <field name="severity" string="Severidad" widget="badge"
+                                       decoration-danger="severity == 'error'"
+                                       decoration-warning="severity == 'warning'"
+                                       decoration-success="severity == 'ok'"/>
+                                <field name="title" string="Hallazgo"/>
+                                <field name="pf_plan_summary" string="Cómo resolverlo"/>
+                                <field name="detail" optional="hide"/>
+                                <field name="record_count" string="Nº" optional="hide"/>
+                                <field name="evidence_ids" nolabel="1" optional="show">
+                                    <tree create="false" delete="false" editable="false"
+                                          no_open="1">
+                                        <field name="nav_kind" invisible="1"/>
+                                        <field name="sale_order_id"/>
+                                        <field name="product_id" optional="hide"/>
+                                        <field name="detail" optional="hide"/>
+                                        <button name="action_open" type="object"
+                                                string="Ir" icon="fa-external-link"
+                                                class="btn-link"
+                                                invisible="nav_kind == 'none'"
+                                                title="Abrir el registro de esta evidencia"/>
+                                    </tree>
+                                </field>
+                                <button name="action_open_problem" type="object"
+                                        string="Ir al problema" icon="fa-search-plus"
+                                        class="btn-link"
+                                        invisible="not pf_problem_available"
+                                        title="Abrir el SÍNTOMA: dónde se observa el hallazgo (solo navegación)"/>
+                                <button name="action_open_solution" type="object"
+                                        string="Aplicar solución" icon="fa-wrench"
+                                        class="btn-link"
+                                        invisible="not pf_solution_available"
+                                        title="Abrir la RAÍZ: dónde se corrige el hallazgo (solo navegación)"/>
+                                <button name="action_open_collect" type="object"
+                                        string="Recopilar" icon="fa-inbox"
+                                        class="btn-link"
+                                        invisible="not pf_collect_available"
+                                        title="Abrir la RAÍZ EN CONJUNTO: la lista agregada de causantes (solo navegación)"/>
+                                <button name="action_open_plan_detail" type="object"
+                                        icon="fa-list" class="btn-link"
+                                        title="Ver el plan de resolución completo (resumen y pasos)"/>
+                                <field name="pf_remedy_available" invisible="1"/>
+                                <button name="action_apply_remedy" type="object"
+                                        string="Recomendación" icon="fa-lightbulb-o"
+                                        class="btn-link"
+                                        invisible="not pf_remedy_available"
+                                        title="Ejecuta el remedio estructural recomendado para este hallazgo"/>
+                                <!-- Bloque III §28: saneamiento disponible aunque el
+                                     tablero esté 'ok', si el producto tiene un quant
+                                     con libre negativo (reserva colgada). -->
+                                <field name="pf_has_stuck_reservations" invisible="1"/>
+                                <button name="action_cleanup_reservations" type="object"
+                                        string="Sanear" icon="fa-eraser"
+                                        class="btn-link text-warning"
+                                        invisible="not pf_has_stuck_reservations"
+                                        groups="mrp.group_mrp_manager,base.group_system"
+                                        title="Suelta y re-asigna las reservas colgadas del producto (jefe de taller / administrador)"/>
+                            </tree>
+                        </field>
+                        <div class="text-muted small mt-1">
+                            <i class="fa fa-info-circle me-1"/>Este diagnóstico NO corrige nada por sí solo:
+                            "Ir al problema" muestra el síntoma, "Aplicar solución" lleva a la raíz y "Recopilar"
+                            reúne los causantes. Todos son navegación consciente del operador.
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <!-- "Cerrar" (special="cancel") solo aplica en diálogo;
+                         en pantalla completa se sale con el breadcrumb o "Volver". -->
+                    <button string="Cerrar" class="btn-primary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

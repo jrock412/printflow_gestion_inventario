@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         BANDEJA GESTIONABLE DE LOTE (PrintFlow)
+         Al pulsar "Solucionar" en la fila de un hallazgo de lote, NO se ejecuta
+         el remedio directo: se ABRE esta bandeja con UNA fila por ítem afectado
+         (lote sin existencia, movimiento sin lote, reserva huérfana, lote
+         genérico/mezclado, MO terminada sin lote). La corrección tiene DOS vías:
+           * POR FILA, "Elegir lote": el operador VE la existencia por lote,
+             ELIGE uno y lo ASIGNA (decisión consciente). No aplica a la reserva
+             huérfana, que no admite elección (botón oculto).
+           * DE CABECERA, "Corrección automática": el remedio del motor sobre la
+             selección (opción automática SECUNDARIA; necesaria para la reserva
+             huérfana). Pasa por el guardia de permisos (jefe de taller/admin).
+         Solo lectura + navegación; la escritura pasa por el selector (con
+         guardia) o por el remedio automático.
+         ================================================================== -->
+    <record id="printflow_flow_lot_tray_view_tree" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.tray.tree</field>
+        <field name="model">printflow.flow.lot.tray</field>
+        <field name="arch" type="xml">
+            <tree string="Bandeja de lote"
+                  create="false" delete="false" edit="false">
+                <!-- display="always": la corrección se decide con o sin
+                     selección (sin selección aplica a TODAS las filas de la
+                     bandeja, que ya está acotada a un producto y un estado). -->
+                <header>
+                    <!-- VÍA PRIMARIA (F5): autorizar el HALLAZGO FORMAL de las
+                         filas seleccionadas (MO sin lote incluida). NO toca el
+                         inventario. -->
+                    <button name="action_authorize_selected_findings" type="object"
+                            string="Autorizar excepción" class="btn-primary"
+                            icon="fa-check-circle" display="selection"
+                            title="Autoriza los hallazgos formales de las filas seleccionadas como excepción (una vez por hallazgo). NO modifica el inventario. Requiere jefe de taller/administrador"/>
+                    <!-- Puente con el patrón de LOTE compartido del addon
+                         principal (autoriza el lote concreto de la fila). -->
+                    <button name="action_authorize_selected" type="object"
+                            string="Autorizar lotes" class="btn-secondary"
+                            icon="fa-check" display="selection"
+                            title="Autoriza los lotes de las filas seleccionadas como excepción documentada (patrón de lote compartido). Omite las ya autorizadas o no autorizables. NO modifica el inventario. Requiere jefe de taller/administrador"/>
+                    <!-- ASIGNACIÓN DE LOTE EN BLOQUE (P1/H-021): acción sobre la
+                         SELECCIÓN. Abre UN wizard que pregunta UN lote (tabla
+                         de candidatos con Existencia · Reservado · Disponible ·
+                         Rol) + UN motivo y lo asigna a las ENTREGAS sin lote
+                         seleccionadas ("Elegir lote" en bloque). -->
+                    <button name="action_assign_lot_bulk" type="object"
+                            string="Asignar lote" class="btn-primary"
+                            icon="fa-tags" display="selection"
+                            title="Asigna UN lote (con un motivo) a las entregas sin lote seleccionadas. ESCRIBE inventario por la vía NATIVA (reserva). Requiere jefe de taller/administrador"/>
+                    <!-- SECUNDARIAS que TOCAN inventario: van con AVISO. -->
+                    <button name="action_confirm_create_suggested_lots" type="object"
+                            string="Crear lote sugerido" class="btn-secondary"
+                            icon="fa-magic" display="selection"
+                            title="SECUNDARIA: crea/asigna el lote sugerido (&lt;pedido&gt;-L&lt;línea&gt;) en las OF terminadas sin lote seleccionadas. ESCRIBE inventario y trazabilidad; exige confirmación con motivo. Si el problema es FORMAL, prefiere &quot;Autorizar excepción&quot;. Requiere jefe de taller/administrador"/>
+                    <!-- display="always": la corrección se decide con o sin
+                         selección (sin selección aplica a TODAS las filas de la
+                         bandeja, que ya está acotada a un producto y un estado). -->
+                    <button name="action_confirm_apply_correction" type="object"
+                            string="Corrección automática" class="btn-secondary"
+                            icon="fa-wrench" display="always"
+                            title="SECUNDARIA: ejecuta el remedio del motor sobre los ítems seleccionados (o todos). ESCRIBE inventario y trazabilidad; exige confirmación con motivo. Si el problema es FORMAL, prefiere &quot;Autorizar excepción&quot;. Requiere jefe de taller/administrador"/>
+                </header>
+
+                <!-- Campos técnicos: alimentan los botones de fila y las
+                     condiciones de columna (invisible por fila). -->
+                <field name="kind" column_invisible="True"/>
+                <field name="res_model" column_invisible="True"/>
+                <field name="res_id" column_invisible="True"/>
+                <field name="remedy_target" column_invisible="True"/>
+                <!-- lot_action_mode: computado (create/assign/reconcile). Se
+                     incluye (oculto) para poder evaluar las condiciones
+                     invisibles de las columnas, que son POR FILA. -->
+                <field name="lot_action_mode" column_invisible="True"/>
+
+                <!-- Datos mínimos para decidir: Documento + Cliente + Lote
+                     propio/sugerido (+existencia) + Lote usado (+existencia,
+                     +disponible) + Albarán (referencia corta). El resto va
+                     OCULTO por defecto. -->
+                <field name="partner_id" string="Cliente"/>
+                <field name="document_ref" string="Documento" readonly="1"/>
+                <!-- Mismo campo, DOS rótulos mutuamente excluyentes por fila:
+                     "Lote sugerido" al CREAR (unassigned_mo con sugerido) y
+                     "Lote propio" al ASIGNAR. Odoo 17 CE SÍ permite repetir un
+                     campo en el <tree> (el parser de lista los indexa como
+                     name_0/name_1 y evalúa 'invisible' por fila). -->
+                <field name="own_lot_name" string="Lote sugerido"
+                       invisible="lot_action_mode != 'create'"
+                       optional="show"/>
+                <field name="own_lot_name" string="Lote propio"
+                       invisible="lot_action_mode != 'assign'"
+                       optional="show"/>
+                <!-- Existencias SOLO al ASIGNAR un lote existente (no al crear
+                     el sugerido ni al reconciliar la reserva). -->
+                <field name="own_lot_qty" string="Existencia sugerida"
+                       invisible="lot_action_mode != 'assign'"
+                       optional="show"/>
+                <field name="lot_name" string="Lote usado" optional="show"/>
+                <field name="used_lot_qty" string="Existencia usada"
+                       invisible="lot_action_mode != 'assign'"
+                       optional="show"/>
+                <field name="used_lot_available" string="Disponible usado"
+                       invisible="lot_action_mode != 'assign'"
+                       optional="show"/>
+                <field name="picking_id" string="Albarán" optional="show"/>
+                <!-- Secundarios: OCULTOS por defecto (no ensucian la decisión). -->
+                <field name="product_id" optional="hide"/>
+                <field name="label" string="Afectado" optional="hide"/>
+                <field name="lot_name_actual" string="Lote actual"
+                       optional="hide"/>
+                <field name="lot_is_authorized" string="Autorizado"
+                       optional="hide"/>
+                <field name="qty" string="Cantidad" optional="hide"/>
+                <field name="state_label" string="Estado" optional="hide"/>
+                <field name="scheduled_date" string="Fecha" optional="hide"/>
+                <field name="sale_name" string="Pedido" optional="hide"/>
+                <!-- Campos de apoyo (invisibles): alimentan los botones. -->
+                <field name="location_id" column_invisible="True"/>
+                <field name="demand_qty" column_invisible="True"/>
+                <field name="can_choose_lot" column_invisible="True"/>
+                <field name="lot_id" column_invisible="True"/>
+                <field name="can_authorize" column_invisible="True"/>
+                <field name="can_correct_doc" column_invisible="True"/>
+                <field name="own_lot_id" column_invisible="True"/>
+                <!-- Autorización FORMAL del hallazgo (F4/F5). -->
+                <field name="finding_code" column_invisible="True"/>
+                <field name="can_authorize_finding" column_invisible="True"/>
+                <field name="finding_is_authorized" column_invisible="True"/>
+                <!-- Decisión consciente: elegir un lote con existencia. Oculta
+                     para la reserva huérfana, para las filas informativas (un
+                     lote sin documento activo que lo respalde) y cuando el
+                     documento ya está validado (no se puede corregir).
+                     En una OF terminada sin lote (unassigned_mo) CON lote
+                     sugerido determinable (own_lot_name) NO se ofrece "Elegir
+                     lote": la solución del caso es CREAR el lote sugerido con la
+                     corrección de cabecera ("Reparar el lote del terminado").
+                     "Elegir lote" solo permanece como salida de EMERGENCIA
+                     cuando la OF NO tiene lote sugerido (p. ej. sin pedido). -->
+                <button name="action_open_lot_picker" type="object"
+                        string="Elegir lote" icon="fa-search-plus"
+                        class="btn-link"
+                        invisible="not can_choose_lot or kind == 'orphan_quant' or not can_correct_doc or (kind == 'unassigned_mo' and own_lot_name)"
+                        title="Ver la existencia por lote, elegir uno con disponibilidad y asignarlo a este documento (decisión consciente)"/>
+                <!-- A (F5): autorizar el HALLAZGO FORMAL de esta fila (incluye la
+                     MO terminada sin lote). NO toca el inventario. Es la vía
+                     PRIMARIA; el lote se autoriza con el botón "Autorizar lote"
+                     (patrón de lote compartido del addon principal). -->
+                <button name="action_authorize_finding" type="object"
+                        string="Autorizar excepción" icon="fa-check-circle"
+                        class="btn-link"
+                        invisible="not can_authorize_finding"
+                        title="Autorizar el hallazgo formal de esta fila como excepción (dejará de reportarse). Pide el motivo y guarda quién autoriza. NO modifica el inventario. Requiere jefe de taller/administrador"/>
+                <!-- Autorizar el LOTE de ESTA fila (patrón de lote compartido):
+                     NO reasigna, solo declara intencional el uso del lote. -->
+                <button name="action_authorize_lot" type="object"
+                        string="Autorizar lote" icon="fa-check"
+                        class="btn-link"
+                        invisible="not can_authorize or lot_is_authorized"
+                        title="Autorizar este lote como excepción documentada (patrón de lote compartido). Pide el motivo y guarda quién autoriza. NO modifica el inventario. Requiere jefe de taller/administrador"/>
+                <!-- F7: se ELIMINA "Abrir documento". El gesto natural de abrir
+                     el documento de la fila es el clic en la columna "Documento"
+                     (``document_ref``), que ya existe y es navegable. -->
+            </tree>
+        </field>
+    </record>
+
+    <record id="printflow_flow_lot_tray_view_form" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.tray.form</field>
+        <field name="model">printflow.flow.lot.tray</field>
+        <field name="arch" type="xml">
+            <form string="Ítem afectado por el lote" create="false"
+                  edit="false" delete="false">
+                <!-- Campos técnicos: alimentan el botón de navegación y las
+                     condiciones de rótulo/visibilidad. -->
+                <field name="res_model" invisible="1"/>
+                <field name="res_id" invisible="1"/>
+                <field name="can_choose_lot" invisible="1"/>
+                <field name="can_authorize" invisible="1"/>
+                <field name="can_correct_doc" invisible="1"/>
+                <field name="lot_action_mode" invisible="1"/>
+                <field name="can_authorize_finding" invisible="1"/>
+                <field name="finding_is_authorized" invisible="1"/>
+
+                <header>
+                    <!-- A (F5): autorizar el HALLAZGO FORMAL de este ítem (incluye
+                         la MO terminada sin lote). NO toca el inventario. -->
+                    <button name="action_authorize_finding" type="object"
+                            string="Autorizar excepción" class="btn-primary"
+                            icon="fa-check-circle"
+                            invisible="not can_authorize_finding"
+                            title="Autorizar el hallazgo formal de este ítem como excepción. Pide el motivo y guarda quién autoriza. NO modifica el inventario. Requiere jefe de taller/administrador"/>
+                    <button name="action_open_lot_picker" type="object"
+                            string="Elegir lote" class="btn-secondary"
+                            icon="fa-search-plus"
+                            invisible="not can_choose_lot or kind == 'orphan_quant' or not can_correct_doc or (kind == 'unassigned_mo' and own_lot_name)"
+                            title="Ver la existencia por lote, elegir uno con disponibilidad y asignarlo a este documento (decisión consciente)"/>
+                    <button name="action_authorize_lot" type="object"
+                            string="Autorizar lote" class="btn-secondary"
+                            icon="fa-check"
+                            invisible="not can_authorize or lot_is_authorized"
+                            title="Autorizar este lote como excepción documentada (patrón de lote compartido). NO modifica el inventario. Requiere jefe de taller/administrador"/>
+                    <button name="action_open" type="object"
+                            string="Ir al registro real" class="btn-secondary"
+                            icon="fa-external-link"
+                            invisible="not res_id"
+                            title="Abrir el registro real del ítem afectado (solo navegación)"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Ítem afectado">
+                            <field name="kind"/>
+                            <field name="label"/>
+                            <field name="product_id"/>
+                        </group>
+                        <group string="Datos">
+                            <field name="document_ref"/>
+                            <field name="lot_name"/>
+                            <field name="lot_is_authorized"/>
+                            <field name="qty"/>
+                            <field name="state_label"/>
+                            <field name="picking_id"/>
+                            <field name="partner_id"/>
+                            <field name="scheduled_date"/>
+                            <!-- Mismo campo, dos rótulos mutuamente excluyentes
+                                 por fila (ver comentario del <tree>): "Lote
+                                 sugerido" al crear, "Lote propio" al asignar. -->
+                            <field name="own_lot_name" string="Lote sugerido"
+                                   invisible="lot_action_mode != 'create'"/>
+                            <field name="own_lot_name" string="Lote propio"
+                                   invisible="lot_action_mode != 'assign'"/>
+                            <field name="sale_name"/>
+                            <field name="lot_name_actual"/>
+                        </group>
+                    </group>
+                    <group string="Detalle" col="1">
+                        <field name="detail" nolabel="1"/>
+                    </group>
+                    <group string="Corrección">
+                        <field name="lot_state"/>
+                        <field name="remedy_target"/>
+                        <field name="remedy_label"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="printflow_flow_lot_tray_view_search" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.tray.search</field>
+        <field name="model">printflow.flow.lot.tray</field>
+        <field name="arch" type="xml">
+            <search string="Bandeja de lote">
+                <field name="product_id" string="Producto"/>
+                <field name="label" string="Afectado"/>
+                <field name="lot_name" string="Lote"/>
+                <field name="document_ref" string="Documento"/>
+
+                <separator/>
+
+                <!-- Filtros por MODO de la fila (create/assign/reconcile). El
+                     dominio usa el campo computado 'lot_action_mode', cuya
+                     traducción a kind/own_lot_name vive en el modelo
+                     (_pf_search_lot_action_mode): el modo es la ÚNICA fuente de
+                     verdad. NO reemplazan a los filtros por 'kind'. -->
+                <filter string="Crear lote sugerido" name="t_mode_create"
+                        domain="[('lot_action_mode', '=', 'create')]"/>
+                <filter string="Asignar/elegir lote" name="t_mode_assign"
+                        domain="[('lot_action_mode', '=', 'assign')]"/>
+                <filter string="Reconciliar reserva" name="t_mode_reconcile"
+                        domain="[('lot_action_mode', '=', 'reconcile')]"/>
+
+                <separator/>
+
+                <filter string="Lotes sin existencia" name="t_no_stock"
+                        domain="[('kind', '=', 'no_stock_lot')]"/>
+                <filter string="Movimientos sin lote" name="t_missing"
+                        domain="[('kind', '=', 'missing_move')]"/>
+                <filter string="Reservas huérfanas" name="t_orphan"
+                        domain="[('kind', '=', 'orphan_quant')]"/>
+                <filter string="Lotes genéricos" name="t_generic"
+                        domain="[('kind', '=', 'generic_lot')]"/>
+                <filter string="Lotes mezclados" name="t_mixed"
+                        domain="[('kind', '=', 'mixed_lot')]"/>
+                <filter string="MO sin lote" name="t_mo"
+                        domain="[('kind', '=', 'unassigned_mo')]"/>
+
+                <group expand="0" string="Agrupar por">
+                    <filter string="Tipo de ítem" name="group_kind"
+                            context="{'group_by': 'kind'}"/>
+                    <filter string="Estado de lote" name="group_state"
+                            context="{'group_by': 'lot_state'}"/>
+                    <filter string="Producto" name="group_product"
+                            context="{'group_by': 'product_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

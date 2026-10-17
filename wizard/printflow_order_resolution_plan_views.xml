@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         PLAN DE ACCIÓN DEL PEDIDO (aditivo, solo vistas).
+
+         En la versión por NIVELES se retira de la UI el radio de rutas
+         (`resolution_route` de 7 opciones) y los botones `action_apply_route`
+         / `action_apply_plan`: el diagnóstico es de SOLO LECTURA y navega por
+         niveles. El backend de rutas se conserva como código deprecado.
+
+         Este archivo conserva su xmlid y solo ajusta los textos de la tabla de
+         productos del Nivel 1 (mismo dominio y mismos cálculos).
+         ================================================================== -->
+    <record id="printflow_order_diagnostic_wizard_view_form_resolution" model="ir.ui.view">
+        <field name="name">printflow.order.diagnostic.wizard.form.resolution</field>
+        <field name="model">printflow.order.diagnostic.wizard</field>
+        <field name="inherit_id" ref="printflow_gestion_inventario.printflow_order_diagnostic_wizard_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Tabla de productos (Nivel 1): solo los textos de las columnas.
+                 El xpath se acota a `product_line_ids` para no afectar la
+                 tabla de componentes del Nivel 3. -->
+            <xpath expr="//field[@name='product_line_ids']/tree//field[@name='contention_qty']"
+                   position="attributes">
+                <attribute name="string">Apartado para otros pedidos</attribute>
+            </xpath>
+            <xpath expr="//field[@name='product_line_ids']/tree//field[@name='deficit_qty']"
+                   position="attributes">
+                <attribute name="string">Falta en almacén (comprar/fabricar)</attribute>
+            </xpath>
+            <xpath expr="//field[@name='product_line_ids']/tree//field[@name='warehouse_free_qty']"
+                   position="attributes">
+                <attribute name="string">Libre para este pedido</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- FASE 5: Bandeja de Resolución del PEDIDO (solo lectura + navegar).
+         Comparte el esquema con la bandeja del escáner vía el mixin
+         printflow.diagnostic.causante.mixin. -->
+    <record id="printflow_order_diagnostic_evidence_view_tree" model="ir.ui.view">
+        <field name="name">printflow.order.diagnostic.evidence.tree</field>
+        <field name="model">printflow.order.diagnostic.evidence</field>
+        <field name="arch" type="xml">
+            <tree create="false" edit="false" delete="false">
+                <field name="sequence" invisible="1"/>
+                <field name="causante_type"/>
+                <field name="label"/>
+                <field name="ref_name"/>
+                <field name="origin_group"/>
+                <field name="partner_name"/>
+                <field name="qty"/>
+                <field name="qty_secondary"/>
+                <field name="state_label"/>
+                <button name="action_open" type="object" string="Abrir"
+                        class="btn-primary"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_printflow_order_diagnostic_evidence" model="ir.actions.act_window">
+        <field name="name">Bandeja de Resolución del pedido</field>
+        <field name="res_model">printflow.order.diagnostic.evidence</field>
+        <field name="view_mode">tree</field>
+    </record>
+</odoo>

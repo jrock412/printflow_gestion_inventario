@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Nivel 1 del Diagnóstico de Pedido: el NOMBRE del producto es un enlace
+         que abre la línea de tiempo (action_open_product). -->
+    <t t-name="x_product_dimensional_pricing.PrintflowOpenTimelineField">
+        <a href="#" role="button" class="o_pf_open_timeline"
+           t-on-click.prevent.stop="onClick">
+            <t t-esc="displayName"/>
+        </a>
+    </t>
+
+</templates>

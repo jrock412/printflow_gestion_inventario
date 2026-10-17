@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         MODAL: CONFIRMAR CORRECCIÓN QUE TOCA INVENTARIO (PrintFlow · F5)
+         Lo abren los botones SECUNDARIOS "Crear lote sugerido" y "Corrección
+         automática" de la bandeja de lote. Exige motivo (aviso) antes de
+         ejecutar. La vía PRIMARIA para un formalismo es "Autorizar excepción".
+         ================================================================== -->
+    <record id="printflow_lot_risk_confirm_view_form" model="ir.ui.view">
+        <field name="name">printflow.lot.risk.confirm.form</field>
+        <field name="model">printflow.lot.risk.confirm</field>
+        <field name="arch" type="xml">
+            <form string="Confirmar corrección de inventario"
+                  create="false" delete="false">
+                <field name="action_key" invisible="1"/>
+                <field name="product_id" invisible="1"/>
+                <field name="lot_state" invisible="1"/>
+                <group>
+                    <group string="Producto">
+                        <field name="product_id" readonly="1"/>
+                    </group>
+                </group>
+                <group col="1">
+                    <field name="message" nolabel="1" readonly="1"
+                           class="text-danger"/>
+                </group>
+                <group string="Motivo de la corrección" col="1">
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="¿Por qué se ejecuta una corrección que toca el inventario?"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object"
+                            string="Ejecutar corrección" class="btn-danger"
+                            icon="fa-exclamation-triangle"
+                            title="Ejecuta la corrección (ESCRIBE inventario). Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

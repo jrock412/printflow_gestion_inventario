@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         EXCEPCIONES FORMALES (PrintFlow · F4)
+         Superficie de GESTIÓN del modelo PERSISTENTE
+         `printflow.finding.exception` (definido en GI). Aquí se VE el detalle y
+         se REVOCA (archiva) o REACTIVA la autorización. NO se crean a mano:
+         nacen del botón "Autorizar excepción" de las bandejas. NO se toca el
+         inventario.
+         ================================================================== -->
+
+    <!-- Lista: ver y (des)activar autorizaciones. -->
+    <record id="printflow_finding_exception_view_tree" model="ir.ui.view">
+        <field name="name">printflow.finding.exception.tree</field>
+        <field name="model">printflow.finding.exception</field>
+        <field name="arch" type="xml">
+            <tree string="Excepciones formales" decoration-muted="not active">
+                <field name="finding_code"/>
+                <field name="target_label" optional="show"/>
+                <field name="target_model" optional="show"/>
+                <field name="product_id" optional="show"/>
+                <field name="reason" optional="show"/>
+                <field name="authorized_by_id" optional="show"/>
+                <field name="authorized_date" optional="show"/>
+                <field name="source_label" optional="hide"/>
+                <field name="active" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company"
+                       optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Formulario: detalle + botones Revocar / Reactivar. -->
+    <record id="printflow_finding_exception_view_form" model="ir.ui.view">
+        <field name="name">printflow.finding.exception.form</field>
+        <field name="model">printflow.finding.exception</field>
+        <field name="arch" type="xml">
+            <form string="Excepción formal" create="false" delete="false">
+                <header>
+                    <button name="action_pf_revoke" type="object"
+                            string="Revocar" class="btn-primary"
+                            invisible="not active"
+                            title="Archiva la autorización: la próxima lectura vuelve a pintar el hallazgo."/>
+                    <button name="action_pf_reactivate" type="object"
+                            string="Reactivar" class="btn-primary"
+                            invisible="active"
+                            title="Vuelve a autorizar el hallazgo."/>
+                    <field name="active" invisible="1"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Hallazgo autorizado">
+                            <field name="finding_code"/>
+                            <field name="target_label"/>
+                            <field name="target_model"/>
+                            <field name="target_id"/>
+                            <field name="lot_id" invisible="not lot_id"/>
+                            <field name="product_id"/>
+                        </group>
+                        <group string="Autorización">
+                            <field name="authorized_by_id"/>
+                            <field name="authorized_date"/>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Motivo">
+                        <field name="reason" nolabel="1"/>
+                    </group>
+                    <group string="Documento origen">
+                        <field name="source_label"/>
+                        <field name="source_model"/>
+                        <field name="source_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Búsqueda: activas / archivadas + agrupaciones. -->
+    <record id="printflow_finding_exception_view_search" model="ir.ui.view">
+        <field name="name">printflow.finding.exception.search</field>
+        <field name="model">printflow.finding.exception</field>
+        <field name="arch" type="xml">
+            <search string="Excepciones formales">
+                <field name="finding_code"/>
+                <field name="target_label"/>
+                <field name="product_id"/>
+                <field name="authorized_by_id"/>
+                <separator/>
+                <filter name="filter_active" string="Activas"
+                        domain="[('active', '=', True)]"/>
+                <filter name="filter_archived" string="Archivadas"
+                        domain="[('active', '=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Hallazgo" name="group_finding"
+                            context="{'group_by': 'finding_code'}"/>
+                    <filter string="Modelo" name="group_model"
+                            context="{'group_by': 'target_model'}"/>
+                    <filter string="Producto" name="group_product"
+                            context="{'group_by': 'product_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_printflow_finding_exception" model="ir.actions.act_window">
+        <field name="name">Excepciones formales</field>
+        <field name="res_model">printflow.finding.exception</field>
+        <field name="view_mode">tree,form</field>
+        <!-- ``active_test`` en falso: la lista muestra también las archivadas
+             (revocadas), que son las que el operador puede reactivar. -->
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Sin excepciones formales autorizadas
+            </p>
+            <p>
+                Aquí se ven y se revocan (archivan) los hallazgos formales
+                autorizados como excepción. Se autorizan desde el botón
+                "Autorizar excepción" de las bandejas de PrintFlow. Autorizar
+                NUNCA modifica el inventario.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú: cuelga del app "Salud de Inventario" (mismo dueño de módulo). -->
+    <menuitem id="menu_printflow_finding_exception"
+              name="Excepciones formales"
+              parent="menu_printflow_health_app"
+              action="action_printflow_finding_exception"
+              sequence="8"/>
+
+</odoo>

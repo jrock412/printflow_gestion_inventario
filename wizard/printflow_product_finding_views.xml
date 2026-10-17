@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         DETALLE DEL PLAN DEL HALLAZGO (diálogo "Ver plan", target='new').
+
+         Muestra el plan completo a ANCHO COMPLETO: resumen + pasos (Text en un
+         grupo de una columna con `o_pf_prewrap`, nunca en un <tree>) y las tres
+         acciones del contrato extendido. Se abre desde
+         `finding.action_open_plan_detail()`. Ningún campo se almacena.
+         ================================================================== -->
+    <record id="printflow_product_diagnostic_finding_view_form" model="ir.ui.view">
+        <field name="name">printflow.product.diagnostic.finding.form</field>
+        <field name="model">printflow.product.diagnostic.finding</field>
+        <field name="arch" type="xml">
+            <form string="Plan de resolución">
+                <!-- Banderas de visibilidad de los tres botones. -->
+                <field name="pf_problem_available" invisible="1"/>
+                <field name="pf_solution_available" invisible="1"/>
+                <field name="pf_collect_available" invisible="1"/>
+                <sheet>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="fa fa-list fa-lg text-primary"/>
+                        <field name="title" nolabel="1" class="fs-5 fw-bold"/>
+                    </div>
+                    <!-- Bloque de ancho completo: resumen y pasos. -->
+                    <group col="1">
+                        <field name="pf_plan_summary" nolabel="1" readonly="1"
+                               class="fw-bold"/>
+                        <field name="pf_plan_steps" nolabel="1" readonly="1"
+                               class="o_pf_prewrap"/>
+                    </group>
+                    <!-- Las tres acciones (solo navegación). La etiqueta de
+                         cada botón sale del playbook (campo calculado). -->
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button name="action_open_problem" type="object"
+                                class="btn-secondary"
+                                invisible="not pf_problem_available"
+                                title="Abrir el SÍNTOMA: dónde se observa el hallazgo">
+                            <field name="pf_problem_label" nolabel="1" readonly="1"/>
+                        </button>
+                        <button name="action_open_solution" type="object"
+                                class="btn-primary"
+                                invisible="not pf_solution_available"
+                                title="Abrir la RAÍZ: dónde se corrige el hallazgo">
+                            <field name="pf_solution_label" nolabel="1" readonly="1"/>
+                        </button>
+                        <button name="action_open_collect" type="object"
+                                class="btn-secondary"
+                                invisible="not pf_collect_available"
+                                title="Abrir la RAÍZ EN CONJUNTO: la lista agregada de causantes">
+                            <field name="pf_collect_label" nolabel="1" readonly="1"/>
+                        </button>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

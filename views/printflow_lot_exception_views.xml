@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         EXCEPCIONES DE LOTE (PrintFlow · Bloque V)
+         Superficie de GESTIÓN del modelo PERSISTENTE `printflow.lot.exception`
+         (definido en el addon principal `x_product_dimensional_pricing`). Aquí
+         solo se VE el detalle y se REVOCA (archiva) o REACTIVA la autorización.
+         NO se crean a mano: nacen del selector de lote, marcando "Autorizar
+         este lote como excepción documentada".
+         ================================================================== -->
+
+    <!-- Lista: ver y (des)activar autorizaciones. -->
+    <record id="printflow_lot_exception_view_tree" model="ir.ui.view">
+        <field name="name">printflow.lot.exception.tree</field>
+        <field name="model">printflow.lot.exception</field>
+        <field name="arch" type="xml">
+            <tree string="Excepciones de lote" decoration-muted="not active">
+                <field name="lot_id"/>
+                <field name="product_id" optional="show"/>
+                <field name="reason" optional="show"/>
+                <field name="authorized_by_id" optional="show"/>
+                <field name="authorized_date" optional="show"/>
+                <field name="source_label" optional="hide"/>
+                <field name="active" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company"
+                       optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Formulario: detalle + botones Revocar / Reactivar. -->
+    <record id="printflow_lot_exception_view_form" model="ir.ui.view">
+        <field name="name">printflow.lot.exception.form</field>
+        <field name="model">printflow.lot.exception</field>
+        <field name="arch" type="xml">
+            <form string="Excepción de lote" create="false" delete="false">
+                <header>
+                    <button name="action_pf_revoke" type="object"
+                            string="Revocar" class="btn-primary"
+                            invisible="not active"
+                            title="Archiva la autorización: el lote vuelve a evaluarse como mezcla."/>
+                    <button name="action_pf_reactivate" type="object"
+                            string="Reactivar" class="btn-primary"
+                            invisible="active"
+                            title="Vuelve a autorizar el lote."/>
+                    <field name="active" invisible="1"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Lote autorizado">
+                            <field name="lot_id" readonly="1"/>
+                            <field name="product_id"/>
+                        </group>
+                        <group string="Autorización">
+                            <field name="authorized_by_id"/>
+                            <field name="authorized_date"/>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Motivo">
+                        <field name="reason" nolabel="1"/>
+                    </group>
+                    <group string="Documento origen">
+                        <field name="source_label"/>
+                        <field name="source_model"/>
+                        <field name="source_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Búsqueda: activas / archivadas. -->
+    <record id="printflow_lot_exception_view_search" model="ir.ui.view">
+        <field name="name">printflow.lot.exception.search</field>
+        <field name="model">printflow.lot.exception</field>
+        <field name="arch" type="xml">
+            <search string="Excepciones de lote">
+                <field name="lot_id"/>
+                <field name="product_id"/>
+                <field name="authorized_by_id"/>
+                <separator/>
+                <filter name="filter_active" string="Activas"
+                        domain="[('active', '=', True)]"/>
+                <filter name="filter_archived" string="Archivadas"
+                        domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_printflow_lot_exception" model="ir.actions.act_window">
+        <field name="name">Excepciones de lote</field>
+        <field name="res_model">printflow.lot.exception</field>
+        <field name="view_mode">tree,form</field>
+        <!-- ``active_test`` en falso: la lista muestra también las archivadas
+             (revocadas), que son las que el operador puede reactivar. -->
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Sin excepciones de lote autorizadas
+            </p>
+            <p>
+                Aquí se ven y se revocan (archivan) los lotes autorizados a
+                usarse en varios pedidos. Se autorizan desde el selector de
+                lote, marcando "Autorizar este lote como excepción documentada".
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú: cuelga del app "Salud de Inventario" (mismo dueño de módulo). -->
+    <menuitem id="menu_printflow_lot_exception"
+              name="Excepciones de lote"
+              parent="menu_printflow_health_app"
+              action="action_printflow_lot_exception"
+              sequence="7"/>
+
+</odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Botones de diagnóstico en la ficha del producto (página PrintFlow).
+         Hereda la vista PrintFlow de este mismo módulo para garantizar que la
+         página ya exista. Incluye:
+           * Diagnóstico BOM kit  -> FASE 1 (reubicado, mismo xmlid).
+           * Escanear producto    -> FASE 2 (escáner completo, popup). -->
+    <record id="product_template_only_form_view_dim_bom_diag" model="ir.ui.view">
+        <field name="name">product.template.form.dim.diagnostic</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="x_product_dimensional_pricing.product_template_only_form_view_dim"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='printflow']" position="inside">
+                <div class="d-flex flex-wrap gap-3 mt-3">
+                    <button name="action_open_bom_archive_diagnostic"
+                            type="object"
+                            string="Diagnóstico BOM kit"
+                            icon="fa-stethoscope"
+                            class="btn btn-link text-primary fw-bold p-0"
+                            help="Explica por qué las BOM tipo kit de este producto no se pueden archivar y lista las ventas que las bloquean."/>
+                    <button name="action_scan_product_diagnostic"
+                            type="object"
+                            string="Escanear producto"
+                            icon="fa-search"
+                            class="btn btn-link text-primary fw-bold p-0"
+                            help="Ejecuta el escáner de diagnóstico: inventario, kit, BOM, reglas de reorden, UdM, rutas, ventas, fabricación y ficha."/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

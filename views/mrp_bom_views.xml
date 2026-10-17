@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Botón de diagnóstico en la ficha de la BOM: solo para kits activos,
+         que son los únicos que el core restringe al archivar. -->
+    <record id="mrp_bom_form_view_printflow_diagnostic" model="ir.ui.view">
+        <field name="name">mrp.bom.form.printflow.diagnostic</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_bom_archive_diagnostic"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-stethoscope"
+                        invisible="type != 'phantom' or not active">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Diagnóstico<br/>Archivado</span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

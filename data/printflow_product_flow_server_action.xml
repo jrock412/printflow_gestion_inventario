@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         SERVER ACTION "Ver diagrama de flujo" (Fase 5) en la ficha del
+         PRODUCTO. Solo NAVEGA: abre el wizard ``printflow.product.flow`` a
+         pantalla completa. Usa el HOOK ``_pf_product_flow_action`` (stub en
+         ``models/`` + override en ``diagnostic/``) para respetar la dirección
+         de dependencias (models/ nunca importa diagnostic/).
+         ================================================================== -->
+    <record id="action_server_printflow_product_flow" model="ir.actions.server">
+        <field name="name">Ver diagrama de flujo (PrintFlow)</field>
+        <field name="model_id" ref="product.model_product_product"/>
+        <field name="binding_model_id" ref="product.model_product_product"/>
+        <field name="binding_view_types">form</field>
+        <field name="state">code</field>
+        <field name="code">action = env['printflow.inventory.catalog']._pf_product_flow_action(env['product.product'].browse(env.context.get('active_id')))</field>
+    </record>
+
+</odoo>

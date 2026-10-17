@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         PENDIENTES (Fase 4b) — LISTA REAL + selección nativa
+         Rediseño v2: se elimina la pestaña o2m del Centro de Salud. La lista
+         se abre como acción real (con su barra de búsqueda y selección nativa)
+         y la validación masiva de entregas vive en una server action NATIVA
+         (binding_model_id + binding_view_types='list'). SIN booleano
+         ``pf_selected`` ni ``center_id``.
+         Se cargan DESPUÉS de ``printflow_inventory_health_views.xml`` (donde
+         vive ``menu_printflow_health_app``) y ANTES del catálogo.
+         ================================================================== -->
+
+    <!-- ── Lista REAL de pendientes (sin columna booleana) ────────────── -->
+    <record id="printflow_node_pending_line_view_list" model="ir.ui.view">
+        <field name="name">printflow.node.pending.line.list</field>
+        <field name="model">printflow.node.pending.line</field>
+        <field name="arch" type="xml">
+            <tree create="false" edit="false" delete="false"
+                  decoration-success="is_bulk"
+                  decoration-muted="not is_bulk">
+                <field name="is_bulk" column_invisible="True"/>
+                <field name="node_key"/>
+                <field name="document_ref" string="Documento"/>
+                <field name="name" optional="hide"/>
+                <field name="product_id" optional="show"/>
+                <field name="state_label" string="Estado"/>
+                <field name="scheduled_date" optional="show"/>
+                <field name="res_model" column_invisible="True"/>
+                <field name="res_id" column_invisible="True"/>
+                <field name="bulk_action_xmlid" column_invisible="True"/>
+                <!-- F7: se ELIMINA el botón "Abrir". El gesto natural de abrir
+                     el documento de la fila es el clic en la columna "Documento"
+                     (``document_ref``, Reference navegable). -->
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Form de solo lectura (respaldo del modo form) ──────────────── -->
+    <record id="printflow_node_pending_line_view_form" model="ir.ui.view">
+        <field name="name">printflow.node.pending.line.form</field>
+        <field name="model">printflow.node.pending.line</field>
+        <field name="arch" type="xml">
+            <form create="false" edit="false" delete="false">
+                <header>
+                    <button name="action_pf_dispatch" type="object"
+                            string="Abrir documento" class="btn-primary"
+                            icon="fa-external-link"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="node_key"/>
+                            <field name="name"/>
+                            <field name="state_label"/>
+                            <field name="product_id"/>
+                            <field name="scheduled_date"/>
+                        </group>
+                        <group>
+                            <field name="res_model" readonly="1"/>
+                            <field name="res_id" readonly="1"/>
+                            <field name="bulk_action_xmlid" readonly="1"/>
+                            <field name="is_bulk" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Búsqueda de la lista de pendientes ─────────────────────────── -->
+    <record id="printflow_node_pending_line_view_search" model="ir.ui.view">
+        <field name="name">printflow.node.pending.line.search</field>
+        <field name="model">printflow.node.pending.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="product_id"/>
+                <filter name="filter_bulk" string="Validables (entregas)"
+                        domain="[('is_bulk', '=', True)]"/>
+                <separator/>
+                <filter name="filter_delivery" string="Entregas"
+                        domain="[('node_key', '=', 'delivery')]"/>
+                <filter name="filter_receipt" string="Recepciones"
+                        domain="[('node_key', '=', 'receipt')]"/>
+                <filter name="filter_production" string="Fabricación"
+                        domain="[('node_key', '=', 'production')]"/>
+                <filter name="filter_purchase" string="Compras"
+                        domain="[('node_key', '=', 'purchase')]"/>
+                <filter name="filter_sale" string="Ventas"
+                        domain="[('node_key', '=', 'sale')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_node" string="Nodo"
+                            context="{'group_by': 'node_key'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Acción de ventana (lista real) ─────────────────────────────── -->
+    <record id="action_printflow_pending" model="ir.actions.act_window">
+        <field name="name">Pendientes</field>
+        <field name="res_model">printflow.node.pending.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="printflow_node_pending_line_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay documentos pendientes.
+            </p>
+            <p>
+                La lista se puebla con los documentos pendientes de cada nodo
+                del flujo. Selecciona entregas y usa "Validar entregas
+                seleccionadas" en el engranaje.
+            </p>
+        </field>
+    </record>
+
+    <!-- ==================================================================
+         ACCIONES DE SERVIDOR
+         ================================================================== -->
+    <!-- Entry point del menú: puebla TODOS los nodos y abre la lista. -->
+    <record id="action_server_printflow_open_pending" model="ir.actions.server">
+        <field name="name">Pendientes</field>
+        <field name="model_id" ref="model_printflow_node_pending_line"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_pending()</field>
+    </record>
+
+    <!-- Validación NATIVA de entregas sobre la selección de la lista. -->
+    <record id="action_server_printflow_validate_selected" model="ir.actions.server">
+        <field name="name">PrintFlow: Validar entregas seleccionadas</field>
+        <field name="model_id" ref="model_printflow_node_pending_line"/>
+        <field name="binding_model_id" ref="model_printflow_node_pending_line"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+action = env['printflow.node.pending.line'].action_pf_validate_selected()
+        </field>
+    </record>
+
+    <!-- Dispatcher: abre el primer documento seleccionado. -->
+    <record id="action_server_printflow_node_pending_dispatch" model="ir.actions.server">
+        <field name="name">PrintFlow: Abrir documento pendiente</field>
+        <field name="model_id" ref="model_printflow_node_pending_line"/>
+        <field name="binding_model_id" ref="model_printflow_node_pending_line"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+lines = env['printflow.node.pending.line'].browse(env.context.get('active_ids') or [])
+action = lines[:1].action_pf_dispatch() if lines else False
+        </field>
+    </record>
+
+    <!-- ==================================================================
+         MENÚ (app "Salud de Inventario")
+         ================================================================== -->
+    <menuitem id="menu_printflow_pending"
+              name="Pendientes"
+              parent="menu_printflow_health_app"
+              action="action_server_printflow_open_pending"
+              sequence="7"/>
+
+    <!-- ==================================================================
+         RETIRO del Centro de Salud v1 (form + notebook).
+         El modelo ``printflow.health.center`` ya NO existe en Python. Sus
+         registros (vistas, acción de servidor y menú) SÍ están cargados en la
+         BD de las versiones .54/.55, así que se ELIMINAN con <delete>. En una
+         instalación limpia el xmlid no existe y Odoo solo registra un warning.
+         ================================================================== -->
+    <delete model="ir.ui.view" id="x_product_dimensional_pricing.printflow_health_center_view_form"/>
+    <delete model="ir.ui.view" id="x_product_dimensional_pricing.printflow_health_center_view_list"/>
+    <delete model="ir.actions.server" id="x_product_dimensional_pricing.action_server_printflow_health_center"/>
+    <delete model="ir.ui.menu" id="x_product_dimensional_pricing.menu_printflow_health_center"/>
+
+</odoo>

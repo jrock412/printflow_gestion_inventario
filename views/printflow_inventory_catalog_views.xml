@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         PRODUCTOS (Fase 6) — TABLERO lista/kanban con búsqueda
+         Índice de productos (una fila por producto) con semáforo, tipo de
+         flujo, estado de inventario y pendientes por nodo. Al accionar un
+         producto se abre su DIAGRAMA DE FLUJO (Fase 5). Se carga DESPUÉS de
+         las vistas de salud/pendientes (usa ``menu_printflow_health_app``).
+         ================================================================== -->
+
+    <!-- ── Lista (vista por defecto) ──────────────────────────────────── -->
+    <record id="printflow_inventory_catalog_view_list" model="ir.ui.view">
+        <field name="name">printflow.inventory.catalog.list</field>
+        <field name="model">printflow.inventory.catalog</field>
+        <field name="arch" type="xml">
+            <tree create="false" edit="false" delete="false"
+                  decoration-danger="severity == 'danger'"
+                  decoration-warning="severity == 'warning'"
+                  decoration-info="severity == 'info'"
+                  decoration-muted="severity == 'ok'">
+                <field name="severity_rank" column_invisible="True"/>
+                <field name="severity" string="Semáforo" widget="badge"
+                       decoration-danger="severity == 'danger'"
+                       decoration-warning="severity == 'warning'"
+                       decoration-info="severity == 'info'"/>
+                <field name="flow_type" string="Tipo" widget="badge"
+                       optional="show"/>
+                <field name="product_id" widget="printflow_open_timeline"
+                       options="{'action': 'action_open_flow'}"/>
+                <field name="default_code" optional="show"/>
+                <field name="uom_id" optional="hide"/>
+                <field name="state" string="Inventario" widget="badge"
+                       decoration-danger="state in ('physical', 'no_route')"
+                       decoration-warning="state in ('over_reserved', 'contention')"/>
+                <field name="lot_state" string="Lote" widget="badge"
+                       optional="hide"
+                       decoration-danger="lot_state in ('lot_missing', 'lot_orphan_reservation', 'lot_no_stock')"
+                       decoration-warning="lot_state in ('lot_generic', 'lot_mixed', 'lot_unassigned_finished')"/>
+                <field name="node_pending_total" string="Pendientes"/>
+                <field name="pending_by_node" optional="show"/>
+                <field name="has_alert" column_invisible="True"/>
+                <field name="has_pending" column_invisible="True"/>
+                <!-- F7: se ELIMINA el botón "Ver diagrama" de la lista. El
+                     drill-down se hace con el clic en ``product_id``: el widget
+                     ``printflow_open_timeline`` (options.action =
+                     ``action_open_flow``) abre el DIAGRAMA DE FLUJO del
+                     producto. El botón "Producto" (``action_open_product``)
+                     queda como acceso secundario a la ficha. -->
+                <button name="action_open_alerts" type="object"
+                        string="Ver alertas" icon="fa-exclamation-triangle"
+                        class="btn-link"
+                        invisible="not has_alert"
+                        title="Abrir la bandeja de alertas filtrada a este producto"/>
+                <button name="action_open_product" type="object"
+                        string="Producto" icon="fa-cube" class="btn-link"
+                        title="Abrir la ficha del producto"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Kanban (vista alternativa) ─────────────────────────────────── -->
+    <record id="printflow_inventory_catalog_view_kanban" model="ir.ui.view">
+        <field name="name">printflow.inventory.catalog.kanban</field>
+        <field name="model">printflow.inventory.catalog</field>
+        <field name="arch" type="xml">
+            <kanban create="false" class="o_kanban_mobile">
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <field name="severity"/>
+                <field name="flow_type"/>
+                <field name="state"/>
+                <field name="has_alert"/>
+                <field name="has_pending"/>
+                <field name="node_pending_total"/>
+                <field name="pending_by_node"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="product_id"/>
+                                    </strong>
+                                    <span class="text-muted">
+                                        <field name="default_code"/>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <span class="badge rounded-pill text-bg-secondary me-1">
+                                    <field name="flow_type"/>
+                                </span>
+                                <span class="badge rounded-pill text-bg-secondary">
+                                    <field name="state"/>
+                                </span>
+                                <div t-if="record.pending_by_node.raw_value"
+                                     class="text-muted mt-1">
+                                    <i class="fa fa-clock-o"/> <field name="pending_by_node"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    <span t-if="record.has_pending.raw_value"
+                                          class="badge text-bg-info me-1">
+                                        <field name="node_pending_total"/>
+                                    </span>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <button name="action_open_flow" type="object"
+                                            class="btn btn-sm btn-primary"
+                                            icon="fa-sitemap"
+                                            title="Ver diagrama de flujo">
+                                        Ver diagrama
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ── Búsqueda (campos + filtros + agrupaciones) ─────────────────── -->
+    <record id="printflow_inventory_catalog_view_search" model="ir.ui.view">
+        <field name="name">printflow.inventory.catalog.search</field>
+        <field name="model">printflow.inventory.catalog</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_id"/>
+                <field name="default_code"/>
+                <filter name="filter_alert" string="Solo alertas"
+                        domain="[('severity', '!=', 'ok')]"/>
+                <filter name="filter_critical" string="Críticos"
+                        domain="[('severity', '=', 'danger')]"/>
+                <separator/>
+                <filter name="filter_pending" string="Con pendientes"
+                        domain="[('node_pending_total', '&gt;', 0)]"/>
+                <separator/>
+                <filter name="filter_manufacture" string="Fabricación"
+                        domain="[('flow_type', '=', 'manufacture')]"/>
+                <filter name="filter_purchase" string="Compra"
+                        domain="[('flow_type', '=', 'purchase')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_severity" string="Semáforo"
+                            context="{'group_by': 'severity'}"/>
+                    <filter name="group_flow_type" string="Tipo de flujo"
+                            context="{'group_by': 'flow_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Acción de ventana: lista por defecto, kanban disponible ────── -->
+    <record id="action_printflow_catalog" model="ir.actions.act_window">
+        <field name="name">Productos</field>
+        <field name="res_model">printflow.inventory.catalog</field>
+        <field name="view_mode">list,kanban</field>
+        <field name="search_view_id" ref="printflow_inventory_catalog_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay productos en el catálogo.
+            </p>
+            <p>
+                El tablero se puebla con todos los productos del alcance.
+                Al accionar un producto se abre su diagrama de flujo.
+            </p>
+        </field>
+    </record>
+
+    <!-- ── Server action del menú: puebla y abre el tablero ───────────── -->
+    <record id="action_server_printflow_open_catalog" model="ir.actions.server">
+        <field name="name">Productos</field>
+        <field name="model_id" ref="model_printflow_inventory_catalog"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_catalog()</field>
+    </record>
+
+    <!-- ── Menú "Productos" (app "Salud de Inventario") ───────────────── -->
+    <menuitem id="menu_printflow_catalog"
+              name="Productos"
+              parent="menu_printflow_health_app"
+              action="action_server_printflow_open_catalog"
+              sequence="6"/>
+
+</odoo>

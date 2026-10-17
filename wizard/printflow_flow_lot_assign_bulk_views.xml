@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         MODAL: ASIGNAR UN LOTE EN BLOQUE (PrintFlow)
+         Lo abre el botón de ACCIÓN SOBRE LA SELECCIÓN ("Asignar lote") de la
+         bandeja de lote (``printflow.flow.lot.tray``). Pregunta UN lote —con la
+         tabla de candidatos: Lote · Existencia · Reservado · Disponible · Rol—
+         y UN motivo, y lo asigna a TODAS las ENTREGAS SIN LOTE seleccionadas.
+
+         Reutiliza la fila de candidato del selector por documento
+         (``printflow.flow.lot.candidate``: su tree por defecto es
+         ``printflow_flow_lot_candidate_view_tree``) y deja que el contenedor
+         haga la escritura por la vía NATIVA (reserva). Requiere jefe de
+         taller/administrador (guardia en ``_pf_assert_can_clean``).
+
+         La cabecera lista los DESTINOS (una fila por entrega seleccionada) y
+         muestra si el lote alcanza para la DEMANDA SUMADA; las que no alcancen
+         quedan parciales u omitidas y SE REPORTAN (nunca revientan el lote).
+         ================================================================== -->
+    <record id="printflow_flow_lot_assign_bulk_view_form" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.assign.bulk.form</field>
+        <field name="model">printflow.flow.lot.assign.bulk</field>
+        <field name="arch" type="xml">
+            <!-- NO se pone edit="false": esta superficie ES una decisión (el
+                 operador marca la casilla de la fila del lote y escribe el
+                 motivo); con edit="false" Odoo 17 abriría el registro en
+                 mode="readonly" y NINGÚN campo se podría usar. -->
+            <form string="Asignar lote en bloque" create="false" delete="false">
+                <!-- Campos técnicos: alimentan el dominio del desplegable y el
+                     aviso de disponibilidad AGREGADA. -->
+                <field name="candidate_lot_ids" invisible="1"/>
+                <field name="multi_location" invisible="1"/>
+
+                <group string="Selección">
+                    <group>
+                        <field name="product_id" readonly="1"/>
+                        <field name="source_label" readonly="1"/>
+                        <field name="total_demand" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="location_id" readonly="1"/>
+                        <field name="assignable_count" readonly="1"/>
+                        <field name="omitted_count" string="Filas omitidas"
+                               readonly="1"/>
+                    </group>
+                </group>
+
+                <!-- Aviso VISIBLE: sin una única ubicación efectiva la
+                     disponibilidad mostrada es AGREGADA (suma de todas las
+                     ubicaciones). La reserva real la decide cada entrega con las
+                     reglas NATIVAS de Odoo al asignar. -->
+                <div class="alert alert-warning" colspan="2"
+                     invisible="not multi_location">
+                    Los destinos NO comparten una única ubicación: el lote muestra
+                    su disponibilidad <b>AGREGADA</b> (suma de todas las
+                    ubicaciones). La reserva real la decide cada entrega al
+                    asignar; la que no alcance queda parcial u omitida.
+                </div>
+
+                <group string="Decisión">
+                    <field name="lot_id" options="{'no_create': True}"/>
+                    <div class="text-muted" colspan="2" invisible="lot_id">
+                        Elige el lote: marca la casilla de una fila en la tabla de
+                        abajo, o usa este desplegable. Solo se pueden marcar los
+                        lotes con Disponible.
+                    </div>
+                    <field name="confirm_partial"/>
+                    <div class="text-muted" colspan="2"
+                         invisible="not lot_id or total_demand &lt;= 0">
+                        Si el disponible del lote en la ubicación es menor que la
+                        demanda de la selección, marca la casilla para asignar lo
+                        disponible: las entregas que no alcancen quedarán
+                        parciales.
+                    </div>
+                    <field name="confirm_exception"/>
+                    <div class="text-muted" colspan="2"
+                         invisible="not confirm_exception">
+                        Confirmas la excepción configurada en la política vigente
+                        (el lote no es el esperado por los documentos).
+                    </div>
+                </group>
+
+                <group string="Lotes" col="1">
+                    <div class="text-muted" colspan="2">
+                        Marca la casilla de la fila del lote que quieras asignar a
+                        TODA la selección. La fila marcada queda resaltada y el
+                        lote se refleja en "Lote a asignar".
+                    </div>
+                    <field name="candidate_ids" nolabel="1"/>
+                </group>
+
+                <group string="Destinos" col="1">
+                    <div class="text-muted" colspan="2">
+                        Se asignan los destinos ASIGNABLES (entregas sin lote). Los
+                        demás (OF, insumos, reserva huérfana, duplicados) se OMITEN
+                        y se reportan: no abortan el resto.
+                    </div>
+                    <field name="line_ids" nolabel="1" readonly="1">
+                        <tree create="false" delete="false" editable="false"
+                              decoration-success="result == 'assigned'"
+                              decoration-warning="result == 'partial'"
+                              decoration-muted="result == 'skipped'"
+                              decoration-danger="result == 'error'">
+                            <field name="seq" string="#"/>
+                            <field name="label" string="Destino"/>
+                            <field name="kind" string="Tipo"/>
+                            <field name="demand_qty" string="Demanda"/>
+                            <field name="location_id" string="Ubicación"/>
+                            <field name="result" string="Resultado"/>
+                        </tree>
+                    </field>
+                </group>
+
+                <group string="Motivo de la asignación" col="1">
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="¿Por qué se asigna este lote a estas entregas?"/>
+                    <div class="text-muted">
+                        El motivo es OBLIGATORIO y queda en la bitácora de cada
+                        documento. La asignación requiere jefe de
+                        taller/administrador y ESCRIBE inventario por la vía NATIVA
+                        (reasignación de reserva).
+                    </div>
+                </group>
+
+                <footer>
+                    <button name="action_assign_lot_bulk" type="object"
+                            string="Asignar lote" class="btn-primary"
+                            icon="fa-tags"
+                            title="Asigna el lote elegido a TODAS las entregas sin lote seleccionadas. ESCRIBE inventario por la vía NATIVA (reserva). Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

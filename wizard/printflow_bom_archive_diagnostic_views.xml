@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="printflow_bom_archive_diagnostic_wizard_view_form" model="ir.ui.view">
+        <field name="name">printflow.bom.archive.diagnostic.wizard.form</field>
+        <field name="model">printflow.bom.archive.diagnostic.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Diagnóstico de Archivado de BOM (kit)">
+                <!-- Campos ocultos: solo alimentan modificadores y el snapshot. -->
+                <field name="bom_ids" invisible="1"/>
+                <field name="product_tmpl_id" invisible="1"/>
+                <field name="product_ids" invisible="1"/>
+                <field name="is_blocked" invisible="1"/>
+                <field name="guard_state" invisible="1"/>
+                <field name="blocking_count" invisible="1"/>
+                <field name="core_reference" invisible="1"/>
+                <sheet>
+                    <!-- ============ ENCABEZADO ============ -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa fa-stethoscope fa-lg text-primary"/>
+                            <div>
+                                <div class="fs-5 fw-bold lh-1">BOM tipo kit (phantom)</div>
+                                <div class="text-muted small mt-1 d-flex align-items-center flex-wrap gap-1">
+                                    <i class="fa fa-cubes"/>
+                                    <field name="product_tmpl_id" nolabel="1" readonly="1"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small text-uppercase">Estado del guardián</div>
+                            <field name="guard_state" widget="badge" nolabel="1"
+                                   decoration-success="guard_state == 'free'"
+                                   decoration-danger="guard_state in ('blocked', 'desync_core_stricter')"
+                                   decoration-warning="guard_state == 'desync_core_laxer'"
+                                   decoration-info="guard_state == 'no_kit_bom'"/>
+                        </div>
+                    </div>
+
+                    <!-- ============ ALERTA ROJA: BLOQUEO CONFIRMADO ============ -->
+                    <div class="alert alert-danger d-flex align-items-start"
+                         invisible="guard_state != 'blocked'">
+                        <i class="fa fa-exclamation-triangle me-2 mt-1"/>
+                        <div>
+                            <div class="fw-bold">
+                                <field name="root_cause_headline" nolabel="1" class="d-inline"/>
+                            </div>
+                            <div class="mt-1">
+                                Bloqueada por
+                                <field name="blocking_count" nolabel="1" class="d-inline fw-bold"/>
+                                línea(s) de venta pendientes de entregar o facturar.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============ ALERTA AMARILLA: DESINCRONIZACIÓN ============ -->
+                    <div class="alert alert-warning d-flex align-items-start"
+                         invisible="guard_state not in ('desync_core_stricter', 'desync_core_laxer')">
+                        <i class="fa fa-chain-broken me-2 mt-1"/>
+                        <div>
+                            <strong>La regla del core cambió; revisa
+                                <field name="core_reference" nolabel="1" class="d-inline"/>
+                            </strong>
+                            <div class="mt-1">
+                                <field name="root_cause_detail" nolabel="1"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============ RESULTADO LIBRE / SIN KIT ============ -->
+                    <div class="alert alert-success d-flex align-items-start"
+                         invisible="guard_state not in ('free', 'no_kit_bom')">
+                        <i class="fa fa-check-circle me-2 mt-1"/>
+                        <div>
+                            <field name="root_cause_headline" nolabel="1" class="d-inline"/>
+                        </div>
+                    </div>
+
+                    <!-- ============ DESGLOSE POR BOM ============ -->
+                    <group string="Desglose por BOM" col="1">
+                        <field name="bom_line_ids" nolabel="1">
+                            <tree create="false" delete="false" editable="false"
+                                  decoration-danger="is_blocked">
+                                <field name="bom_id"/>
+                                <field name="product_scope"/>
+                                <field name="variant_count"/>
+                                <field name="is_blocked"/>
+                                <field name="blocking_line_count"/>
+                            </tree>
+                        </field>
+                    </group>
+
+                    <!-- ============ LÍNEAS BLOQUEANTES ============ -->
+                    <group string="Líneas de venta que bloquean" col="1">
+                        <field name="blocking_line_ids" nolabel="1">
+                            <tree create="false" delete="false" editable="false"
+                                  decoration-danger="delivery_status == 'pending'">
+                                <field name="order_name"/>
+                                <field name="partner_id"/>
+                                <field name="product_id"/>
+                                <field name="product_uom_qty"/>
+                                <field name="qty_delivered"/>
+                                <field name="delivery_status"/>
+                                <field name="invoice_status"/>
+                                <field name="order_state"/>
+                                <button name="action_open_sale_order" type="object"
+                                        string="Ver pedido" icon="fa-external-link"
+                                        class="btn-link" title="Abrir el pedido real"/>
+                            </tree>
+                        </field>
+                        <div class="text-muted small mt-1">
+                            <i class="fa fa-info-circle me-1"/>Estas líneas son las que la regla del core
+                            considera bloqueantes. Ábrelas para entregarlas, facturarlas o cancelarlas;
+                            archivar la BOM no cambia nada de ellas.
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_recalculate" type="object" string="Recalcular"
+                            class="btn-secondary" icon="fa-refresh"
+                            title="Volver a calcular el diagnóstico con los datos actuales"/>
+                    <button string="Cerrar" class="btn-primary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

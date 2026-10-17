@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         BANDEJA GESTIONABLE DE INSUMOS (PrintFlow)
+         Al pulsar "Solucionar" en el hito ALMACÉN DE INSUMOS NO se ejecuta un
+         remedio ciego: se ABRE esta bandeja con UNA fila por INSUMO/ALMACÉN
+         afectado (componente de la BOM reservado de más, sin existencia,
+         apartado por otros pedidos o sin forma de reponer). Ofrece TRES vías de
+         solución ABIERTAS al operador:
+           * "Traslado": crea un traslado interno en BORRADOR (no se valida);
+           * "Comprar": abre la Compra Rápida prellenada con el insumo;
+           * "Ajustar": abre las existencias del insumo en modo ajuste.
+         La decisión AUTOMÁTICA ("Corrección automática") es SECUNDARIA y conserva
+         el guardia de permisos (jefe de taller/admin).
+         ================================================================== -->
+    <record id="printflow_flow_supply_tray_view_tree" model="ir.ui.view">
+        <field name="name">printflow.flow.supply.tray.tree</field>
+        <field name="model">printflow.flow.supply.tray</field>
+        <field name="arch" type="xml">
+            <tree string="Bandeja de insumos"
+                  create="false" delete="false" edit="false">
+                <!-- display="always": la corrección se decide con o sin
+                     selección (sin selección aplica a TODAS las filas de la
+                     bandeja, que ya está acotada a un producto). -->
+                <header>
+                    <button name="action_apply_correction" type="object"
+                            string="Corrección automática" class="btn-secondary"
+                            icon="fa-wrench" display="always"
+                            title="Opción automática SECUNDARIA: ejecuta el remedio del motor sobre los insumos seleccionados (o todos). Requiere jefe de taller/administrador"/>
+                </header>
+
+                <!-- Campos técnicos: alimentan los botones de fila. -->
+                <field name="res_model" column_invisible="True"/>
+                <field name="res_id" column_invisible="True"/>
+                <field name="state" column_invisible="True"/>
+
+                <field name="component_id" string="Insumo"/>
+                <field name="location_name" string="Almacén" optional="show"/>
+                <field name="on_hand" string="Existencia" optional="show"/>
+                <field name="reserved" string="Reservado" optional="hide"/>
+                <field name="free" string="Libre" optional="show"/>
+                <field name="need" string="Necesario" optional="show"/>
+                <field name="state_label" string="Estado" optional="show"/>
+
+                <!-- Solución abierta al operador (ACL nativa de Inventario/
+                     Compras). El traslado crea un borrador que NO se valida. -->
+                <button name="action_transfer" type="object"
+                        string="Traslado" icon="fa-exchange" class="btn-link"
+                        title="Crear un traslado interno en BORRADOR del insumo (no se valida; el operador decide)"/>
+                <button name="action_buy" type="object" string="Comprar"
+                        icon="fa-shopping-cart" class="btn-link"
+                        title="Abrir la Compra Rápida prellenada con el insumo"/>
+                <button name="action_adjust" type="object" string="Ajustar"
+                        icon="fa-sliders" class="btn-link"
+                        title="Abrir las existencias del insumo en modo ajuste"/>
+                <!-- F7: se ELIMINA "Ir". El gesto natural de abrir el registro
+                     del insumo es el clic en la columna "Insumo"
+                     (``component_id``, many2one navegable). -->
+            </tree>
+        </field>
+    </record>
+
+    <record id="printflow_flow_supply_tray_view_form" model="ir.ui.view">
+        <field name="name">printflow.flow.supply.tray.form</field>
+        <field name="model">printflow.flow.supply.tray</field>
+        <field name="arch" type="xml">
+            <form string="Insumo afectado" create="false"
+                  edit="false" delete="false">
+                <!-- Campos técnicos: alimentan los botones. -->
+                <field name="res_model" invisible="1"/>
+                <field name="res_id" invisible="1"/>
+                <field name="state" invisible="1"/>
+
+                <header>
+                    <button name="action_transfer" type="object"
+                            string="Traslado" class="btn-primary"
+                            icon="fa-exchange"
+                            title="Crear un traslado interno en BORRADOR del insumo (no se valida)"/>
+                    <button name="action_buy" type="object" string="Comprar"
+                            class="btn-secondary" icon="fa-shopping-cart"
+                            title="Abrir la Compra Rápida prellenada con el insumo"/>
+                    <button name="action_adjust" type="object" string="Ajustar"
+                            class="btn-secondary" icon="fa-sliders"
+                            title="Abrir las existencias del insumo en modo ajuste"/>
+                    <button name="action_open" type="object"
+                            string="Ir al registro real" class="btn-secondary"
+                            icon="fa-external-link"
+                            invisible="not res_id"
+                            title="Abrir el registro real (solo navegación)"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Insumo">
+                            <field name="component_id"/>
+                            <field name="component_name"/>
+                            <field name="location_name"/>
+                        </group>
+                        <group string="Existencia">
+                            <field name="on_hand"/>
+                            <field name="reserved"/>
+                            <field name="free"/>
+                            <field name="need"/>
+                        </group>
+                    </group>
+                    <group string="Estado" col="1">
+                        <field name="state_label" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="printflow_flow_supply_tray_view_search" model="ir.ui.view">
+        <field name="name">printflow.flow.supply.tray.search</field>
+        <field name="model">printflow.flow.supply.tray</field>
+        <field name="arch" type="xml">
+            <search string="Bandeja de insumos">
+                <field name="component_name" string="Insumo"/>
+                <field name="location_name" string="Almacén"/>
+
+                <separator/>
+
+                <filter string="Reservado de más" name="t_over_reserved"
+                        domain="[('state', '=', 'over_reserved')]"/>
+                <filter string="No hay existencia" name="t_physical"
+                        domain="[('state', '=', 'physical')]"/>
+                <filter string="Apartado por otros pedidos" name="t_contention"
+                        domain="[('state', '=', 'contention')]"/>
+                <filter string="Sin forma de reponer" name="t_no_route"
+                        domain="[('state', '=', 'no_route')]"/>
+
+                <group expand="0" string="Agrupar por">
+                    <filter string="Insumo" name="group_component"
+                            context="{'group_by': 'component_id'}"/>
+                    <filter string="Almacén" name="group_location"
+                            context="{'group_by': 'location_id'}"/>
+                    <filter string="Estado" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         MODAL: AUTORIZAR LOTES EN BLOQUE (PrintFlow)
+         Lo abre el botón de ACCIÓN SOBRE LA SELECCIÓN ("Autorizar excepción")
+         de la bandeja de lote. Pide UN motivo y autoriza de una sola vez los
+         lotes de las filas seleccionadas (uno por lote distinto), omitiendo los
+         ya autorizados y los no autorizables. Requiere jefe de taller/admin
+         (guardia en `action_authorize`).
+         ================================================================== -->
+    <record id="printflow_flow_lot_exception_authorize_bulk_view_form"
+            model="ir.ui.view">
+        <field name="name">printflow.flow.lot.exception.authorize.bulk.form</field>
+        <field name="model">printflow.flow.lot.exception.authorize.bulk</field>
+        <field name="arch" type="xml">
+            <form string="Autorizar excepciones en bloque"
+                  create="false" delete="false">
+                <field name="skipped" invisible="1"/>
+                <group>
+                    <group string="Lotes a autorizar">
+                        <field name="lot_ids" widget="many2many_tags"
+                               readonly="1"/>
+                    </group>
+                    <group string="Origen">
+                        <field name="source_label" readonly="1"/>
+                        <field name="skipped" string="Filas omitidas"
+                               readonly="1"/>
+                    </group>
+                </group>
+                <group string="Motivo de la autorización" col="1">
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="¿Por qué se autorizan estos lotes como excepción?"/>
+                    <div class="text-muted">
+                        Se autorizan todos los lotes listados como excepción
+                        documentada. Los ya autorizados o no autorizables se
+                        omiten. Puedes revocarlos en "Salud de Inventario →
+                        Excepciones de lote".
+                    </div>
+                </group>
+                <footer>
+                    <button name="action_authorize" type="object"
+                            string="Autorizar" class="btn-primary"
+                            icon="fa-check"
+                            title="Autoriza los lotes como excepción documentada. Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

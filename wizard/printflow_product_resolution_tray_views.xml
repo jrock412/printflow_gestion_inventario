@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         BANDEJA DE RESOLUCIÓN (v1) — solo lectura.
+         Reúne los causantes recolectables (collectible = True) de un hallazgo
+         o de todo el barrido. v1 = listar + seleccionar + navegar: NINGUNA
+         acción de esta vista modifica datos (action_kind = 'none').
+         ================================================================== -->
+    <record id="printflow_product_resolution_tray_view_tree" model="ir.ui.view">
+        <field name="name">printflow.product.diagnostic.evidence.resolution.tray.tree</field>
+        <field name="model">printflow.product.diagnostic.evidence</field>
+        <field name="arch" type="xml">
+            <tree string="Bandeja de Resolución"
+                  create="false" delete="false" edit="false">
+                <!-- Botones de cabecera. "Abrir seleccionados" solo aparece con
+                     selección (display por defecto = 'selection'); "Volver al
+                     diagnóstico" siempre visible. Ambos son de SOLO navegación. -->
+                <header>
+                    <button name="action_open_selected" type="object"
+                            string="Abrir seleccionados" icon="fa-external-link"
+                            class="btn-primary"
+                            title="Abrir en una lista los registros reales de las filas seleccionadas (solo navegación)"/>
+                    <button name="action_back_to_scanner" type="object"
+                            string="Volver al diagnóstico" icon="fa-reply"
+                            class="btn-secondary" display="always"
+                            title="Reabrir el escáner de diagnóstico de producto"/>
+                </header>
+
+                <!-- Campos técnicos: alimentan modificadores y acciones. -->
+                <field name="collectible" column_invisible="True"/>
+                <field name="nav_kind" column_invisible="True"/>
+                <field name="action_kind" column_invisible="True"/>
+                <field name="res_model" column_invisible="True"/>
+                <field name="res_id" column_invisible="True"/>
+                <field name="scanner_id" column_invisible="True"/>
+                <field name="finding_id" column_invisible="True"/>
+                <field name="area" column_invisible="True"/>
+                <field name="severity" column_invisible="True"/>
+
+                <field name="causante_type" string="Tipo" widget="badge"
+                       decoration-info="causante_type == 'sale_order'"
+                       decoration-warning="causante_type in ('bom', 'orderpoint')"
+                       decoration-danger="causante_type in ('component', 'quant')"
+                       decoration-primary="causante_type in ('mo', 'product')"/>
+                <field name="ref_name" string="Referencia"/>
+                <field name="product_id" string="Producto"/>
+                <field name="partner_name" string="Cliente / proveedor / almacén"/>
+                <field name="qty" string="Cantidad"/>
+                <field name="qty_secondary" string="Secundaria"/>
+                <field name="state_label" string="Estado"/>
+                <field name="date_ref" string="Fecha"/>
+                <field name="detail" optional="hide"/>
+                <button name="action_open" type="object" string="Ir"
+                        icon="fa-external-link" class="btn-link"
+                        invisible="nav_kind == 'none'"
+                        title="Abrir el registro real del causante (solo navegación)"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="printflow_product_resolution_tray_view_search" model="ir.ui.view">
+        <field name="name">printflow.product.diagnostic.evidence.resolution.tray.search</field>
+        <field name="model">printflow.product.diagnostic.evidence</field>
+        <field name="arch" type="xml">
+            <search string="Bandeja de Resolución">
+                <field name="ref_name" string="Referencia"/>
+                <field name="product_id" string="Producto"/>
+                <field name="partner_name" string="Cliente / proveedor / almacén"/>
+                <field name="scanner_id" string="Escáner"/>
+                <field name="finding_id" string="Hallazgo"/>
+
+                <!-- Filtros por tipo de causante. -->
+                <filter string="Pedidos" name="t_sale_order"
+                        domain="[('causante_type', '=', 'sale_order')]"/>
+                <filter string="Líneas de pedido" name="t_sale_line"
+                        domain="[('causante_type', '=', 'sale_line')]"/>
+                <filter string="BOM" name="t_bom"
+                        domain="[('causante_type', '=', 'bom')]"/>
+                <filter string="Componentes" name="t_component"
+                        domain="[('causante_type', '=', 'component')]"/>
+                <filter string="Existencias" name="t_quant"
+                        domain="[('causante_type', '=', 'quant')]"/>
+                <filter string="Reglas de reorden" name="t_orderpoint"
+                        domain="[('causante_type', '=', 'orderpoint')]"/>
+                <filter string="Órdenes de fabricación" name="t_mo"
+                        domain="[('causante_type', '=', 'mo')]"/>
+                <filter string="Productos" name="t_product"
+                        domain="[('causante_type', '=', 'product')]"/>
+
+                <separator/>
+
+                <!-- Filtros por severidad del hallazgo de origen. -->
+                <filter string="Errores" name="sev_error"
+                        domain="[('severity', '=', 'error')]"/>
+                <filter string="Advertencias" name="sev_warning"
+                        domain="[('severity', '=', 'warning')]"/>
+
+                <group expand="0" string="Agrupar por">
+                    <filter string="Tipo de causante" name="group_causante"
+                            context="{'group_by': 'causante_type'}"/>
+                    <filter string="Hallazgo" name="group_finding"
+                            context="{'group_by': 'finding_id'}"/>
+                    <filter string="Área" name="group_area"
+                            context="{'group_by': 'area'}"/>
+                    <filter string="Severidad" name="group_severity"
+                            context="{'group_by': 'severity'}"/>
+                    <filter string="Escáner" name="group_scanner"
+                            context="{'group_by': 'scanner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ==================================================================
+         FORMULARIO LIMPIO DE LA EVIDENCIA (PrintFlow Diagnostic).
+         La Bandeja es una lista no editable; como un <tree> standalone NO
+         admite (RNG) impedir el clic-de-fila, el clic abre este form. Por eso
+         aquí NO hay campos técnicos visibles: solo el causante y sus datos,
+         más los botones de navegación. Un form NO pasa por RNG, así que no
+         tiene restricciones de esquema.
+         ================================================================== -->
+    <record id="printflow_product_resolution_tray_view_form" model="ir.ui.view">
+        <field name="name">printflow.product.diagnostic.evidence.resolution.tray.form</field>
+        <field name="model">printflow.product.diagnostic.evidence</field>
+        <field name="arch" type="xml">
+            <form string="Causante del hallazgo">
+                <!-- Campos técnicos: alimentan el botón de navegación. -->
+                <field name="nav_kind" invisible="1"/>
+                <field name="res_model" invisible="1"/>
+                <field name="res_id" invisible="1"/>
+                <field name="scanner_id" invisible="1"/>
+                <field name="finding_id" invisible="1"/>
+
+                <header>
+                    <button name="action_open" type="object"
+                            string="Ir al registro real" class="btn-primary"
+                            icon="fa-external-link"
+                            invisible="nav_kind == 'none'"
+                            title="Abrir el registro real del causante (solo navegación)"/>
+                    <button name="action_back_to_resolution_tray" type="object"
+                            string="Volver a la bandeja" class="btn-secondary"
+                            icon="fa-inbox"
+                            title="Reabrir la Bandeja de Resolución de este hallazgo"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Causante">
+                            <field name="causante_type"/>
+                            <field name="ref_name"/>
+                            <field name="product_id"/>
+                            <field name="partner_name"/>
+                        </group>
+                        <group string="Datos del causante">
+                            <field name="qty"/>
+                            <field name="qty_secondary"/>
+                            <field name="state_label"/>
+                            <field name="date_ref"/>
+                        </group>
+                    </group>
+                    <group string="Detalle" col="1">
+                        <field name="detail" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

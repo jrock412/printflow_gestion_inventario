@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         SELECTOR DE LOTE POR DOCUMENTO (PrintFlow)
+         Lo abre el botón de fila "Elegir lote" de la bandeja gestionable. NO
+         ejecuta el remedio automático: muestra el lote propio, el lote actual y
+         los LOTES CON EXISTENCIA, y deja que el operador ELIJA uno y lo ASIGNE.
+         El disparo real es ``action_assign_lot`` (con guardia de permisos y
+         política de excepción). Todo el microcopy y los campos son del
+         TransientModel ``printflow.flow.lot.picker`` (el payload del canvas no
+         cambia).
+         ================================================================== -->
+    <!-- Tree de candidatos: alimenta el One2many del formulario (default). -->
+    <record id="printflow_flow_lot_candidate_view_tree" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.candidate.tree</field>
+        <field name="model">printflow.flow.lot.candidate</field>
+        <field name="arch" type="xml">
+            <!-- Tabla MÍNIMA para decidir: Lote · Existencia · Reservado ·
+                 Disponible · Rol. El resto de datos queda OCULTO por defecto
+                 (optional="hide") por si el operador los necesita. -->
+            <tree string="Lotes"
+                  create="false" delete="false" editable="bottom"
+                  decoration-success="is_own_lot and is_elective"
+                  decoration-warning="is_current_lot"
+                  decoration-info="is_picked"
+                  decoration-muted="is_occupied or not is_elective">
+                <!-- Check de fila: marcar ESTA fila elige su lote. La selección
+                     es ÚNICA (el modelo desmarca las demás al guardar) y se
+                     espeja en "Lote a asignar" del selector. NO es marcable si
+                     el lote no tiene libre aquí (available_here <= 0). -->
+                <field name="is_selected" string="Asignar"
+                       readonly="not is_elective"/>
+                <field name="lot_name" string="Lote"/>
+                <field name="qty_on_hand" string="Existencia"/>
+                <field name="reserved" string="Reservado"/>
+                <field name="available" string="Disponible"/>
+                <field name="role_label" string="Rol"/>
+                <!-- Secundarios: OCULTOS por defecto (no ensucian la decisión). -->
+                <field name="available_here" string="Libre aquí"
+                       optional="hide"/>
+                <field name="covers_demand" string="¿Alcanza?"
+                       optional="hide"/>
+                <field name="holder_names" string="Reservado por"
+                       optional="hide"/>
+                <field name="location_names" string="Ubicaciones"
+                       optional="hide"/>
+                <field name="is_generic" string="Genérico" optional="hide"/>
+                <field name="hint" string="Señal" optional="hide"/>
+                <field name="is_recommended" string="Sugerido" optional="hide"/>
+                <!-- Campos de apoyo (invisibles): alimentan el rol, el readonly y
+                     las decoraciones. -->
+                <field name="is_own_lot" column_invisible="True"/>
+                <field name="is_current_lot" column_invisible="True"/>
+                <field name="is_authorized" column_invisible="True"/>
+                <field name="is_elective" column_invisible="True"/>
+                <field name="is_occupied" column_invisible="True"/>
+                <field name="is_picked" column_invisible="True"/>
+                <field name="lot_id" column_invisible="True"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="printflow_flow_lot_candidate_view_search" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.candidate.search</field>
+        <field name="model">printflow.flow.lot.candidate</field>
+        <field name="arch" type="xml">
+            <search string="Lotes candidatos">
+                <field name="lot_name" string="Lote"/>
+                <field name="location_names" string="Ubicaciones"/>
+                <filter name="c_only_own" string="Solo el lote propio"
+                        domain="[('is_own_lot', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="printflow_flow_lot_picker_view_form" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.picker.form</field>
+        <field name="model">printflow.flow.lot.picker</field>
+        <field name="arch" type="xml">
+            <!-- El selector ES una superficie de decisión: DEBE ser editable
+                 (el operador elige el lote y, si aplica, confirma la excepción
+                 y escribe el motivo). Con edit="false", Odoo 17 abre el
+                 registro existente en mode="readonly" y NINGÚN campo se puede
+                 usar (ni el desplegable). Por eso NO se pone edit="false". -->
+            <form string="Elegir lote" create="false" delete="false">
+                <!-- Campos técnicos: alimentan la política y el despacho. -->
+                <field name="product_id" invisible="1"/>
+                <field name="target_kind" invisible="1"/>
+                <field name="res_model" invisible="1"/>
+                <field name="res_id" invisible="1"/>
+                <field name="is_exception" invisible="1"/>
+                <field name="is_current_selection" invisible="1"/>
+                <field name="is_correction" invisible="1"/>
+                <field name="exception_policy" invisible="1"/>
+                <field name="candidate_lot_ids" invisible="1"/>
+                <field name="can_correct" invisible="1"/>
+                <field name="correction_block_reason" invisible="1"/>
+                <field name="document_in_progress" invisible="1"/>
+                <field name="current_lot_is_authorized" invisible="1"/>
+                <field name="own_lot_id" invisible="1"/>
+                <field name="current_lot_id" invisible="1"/>
+
+                <sheet>
+                    <!-- Resumen del documento: lote ORIGINAL (propio) y lote EN
+                         USO (actual) con su existencia · reservado · disponible. -->
+                    <group string="Resumen del documento">
+                        <group>
+                            <field name="doc_label" string="Afectado"
+                                   readonly="1"/>
+                            <field name="product_id" readonly="1"/>
+                            <field name="target_kind" readonly="1"/>
+                            <field name="sale_name"
+                                   invisible="not sale_name"/>
+                            <field name="location_id" readonly="1"/>
+                            <field name="demand_qty" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="own_lot_name"
+                                   string="Tu lote original" readonly="1"/>
+                            <field name="own_lot_summary"
+                                   string="Detalle original" readonly="1"/>
+                            <field name="lot_name_actual"
+                                   string="Lote que estás usando" readonly="1"/>
+                            <field name="current_lot_summary"
+                                   string="Detalle en uso" readonly="1"/>
+                            <field name="current_lot_is_authorized"
+                                   string="Lote en uso autorizado"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Decisión">
+                        <!-- NO llevar `required`: el candado real es del servidor
+                             (action_assign_lot) y así marcar el check de la tabla
+                             (que guarda el form) no se bloquea antes de fijar el
+                             lote. -->
+                        <field name="lot_id" options="{'no_create': True}"/>
+                        <div class="text-muted" colspan="2"
+                             invisible="lot_id">
+                            Elige un lote: marca la casilla de una fila en la
+                            tabla de abajo, o usa este desplegable.
+                        </div>
+                        <field name="is_exception" readonly="1"/>
+                        <!-- Aviso de CORRECCIÓN: el lote elegido es distinto al
+                             que el documento ya tiene. -->
+                        <div class="text-muted" colspan="2"
+                             invisible="not is_correction">
+                            Vas a <b>CORREGIR</b> el lote del documento
+                            <field name="correction_summary" nolabel="1"
+                                   readonly="1" class="oe_inline"/>.
+                        </div>
+                        <div class="text-danger" colspan="2"
+                             invisible="not is_correction or can_correct">
+                            <field name="correction_block_reason" nolabel="1"
+                                   readonly="1"/>
+                        </div>
+                        <field name="confirm_correction"
+                               invisible="not is_correction or not document_in_progress"/>
+                        <div class="text-muted" colspan="2"
+                             invisible="not is_correction or not document_in_progress">
+                            La validación de este documento ya comenzó: confirma
+                            la corrección e indica el motivo.
+                        </div>
+                        <!-- Aviso de disponibilidad: la asignación puede quedar
+                             parcial si el lote no cubre la demanda. -->
+                        <field name="confirm_partial"
+                               invisible="not lot_id or demand_qty &lt;= 0"/>
+                        <div class="text-muted" colspan="2"
+                             invisible="not lot_id or demand_qty &lt;= 0">
+                            Si el disponible del lote en la ubicación del
+                            documento es menor que la demanda, marca la casilla
+                            para asignar lo disponible (la entrega quedará
+                            parcial).
+                        </div>
+                    </group>
+
+                    <group string="Lotes" col="1">
+                        <div class="text-muted" colspan="2">
+                            Marca la casilla de la fila del lote que quieras
+                            asignar. La fila marcada queda resaltada y el lote
+                            se refleja en "Lote a asignar". Solo se pueden marcar
+                            los lotes con Disponible en la ubicación del
+                            documento.
+                        </div>
+                        <field name="candidate_ids" nolabel="1"/>
+                    </group>
+
+                    <!-- Confirmación ÚNICA de excepción/autorización: agrupa el
+                         motivo + el check que AUTORIZA el lote (deja de
+                         reportarse como "lotes mezclados"). Aparece cuando el
+                         lote elegido NO es el propio (excepción) o cuando ES el
+                         que el documento ya tiene (autorizar sin reasignar). La
+                         fricción fina la impone la política configurable
+                         (warn/confirm/confirm_reason). -->
+                    <group string="Excepción / Autorización" col="1"
+                           invisible="not is_exception and not is_current_selection">
+                        <div class="text-muted" colspan="2"
+                             invisible="not is_exception">
+                            El lote elegido no es el lote esperado (propio o
+                            actual) del documento. Esta asignación queda
+                            registrada como excepción, con su motivo y quién la
+                            autoriza.
+                        </div>
+                        <div class="text-muted" colspan="2"
+                             invisible="not is_current_selection">
+                            El lote elegido ES el que el documento ya tiene.
+                            Marca "Autorizar…" para dejar constancia de que la
+                            asignación actual es intencional: NO se reasignará
+                            nada.
+                        </div>
+                        <field name="confirm_exception"
+                               invisible="not is_exception or exception_policy == 'warn'"/>
+                        <field name="exception_reason"
+                               placeholder="Motivo de la excepción"/>
+                        <field name="authorize_shared_lot"/>
+                        <div class="text-muted" colspan="2"
+                             invisible="not authorize_shared_lot">
+                            Con este check, el lote dejará de reportarse como
+                            "lotes mezclados" en el inventario: se guardan
+                            juntos el motivo y quién autoriza. Puedes revocarlo
+                            en "Salud de Inventario → Excepciones de lote".
+                        </div>
+                        <!-- Revocar la autorización del lote ANTERIOR cuando se
+                             corrige un lote que estaba autorizado. -->
+                        <field name="revoke_prior_authorization"
+                               invisible="not current_lot_is_authorized or not is_correction"/>
+                        <div class="text-muted" colspan="2"
+                             invisible="not current_lot_is_authorized or not is_correction">
+                            El lote actual está autorizado como excepción. Marca
+                            la casilla para REVOCAR esa autorización anterior al
+                            corregir a otro lote.
+                        </div>
+                    </group>
+                </sheet>
+
+                <footer>
+                    <button name="action_assign_lot" type="object"
+                            string="Asignar lote" class="btn-primary"
+                            icon="fa-check"
+                            title="Asigna el lote elegido al documento. Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

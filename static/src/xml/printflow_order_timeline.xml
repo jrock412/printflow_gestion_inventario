@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Diagrama de línea de tiempo del Diagnóstico de Pedido — centro de
+         operaciones. Canvas secuencial COMPLETO del producto (compra o
+         fabricación -> recepción -> inventario/fabricación -> entrega ->
+         cliente). Cada nodo es clicable y abre un POPOVER con el detalle del
+         área (panel) y las acciones DIRECTAS. El SVG lleva
+         `pointer-events:none` y NO intercepta clics. -->
+    <t t-name="x_product_dimensional_pricing.PrintflowOrderTimelineField">
+        <div class="o_pf_timeline" t-ref="root">
+            <!-- "STAGE": columna del lienzo. En escritorio el panel de
+                 explicación va a la DERECHA; en pantallas angostas, ABAJO. -->
+            <div class="o_pf_stage">
+            <!-- "Fit": el lienzo se ESCALA (transform) para caber completo en
+                 una sola pantalla. Su alto lo fija el componente (ya escalado)
+                 y el `transform-origin: top left` vive en SCSS. -->
+            <div class="o_pf_fit" t-ref="fit"
+                 t-attf-style="height: {{ state.fit.height }}px;">
+            <div class="o_pf_flow_canvas" t-on-click="() => this.closePopover()"
+                 t-attf-style="width: {{ svg.width }}px; height: {{ svg.height }}px; transform: translateX({{ state.fit.offsetX }}px) scale({{ state.fit.scale }});">
+
+                <!-- Capa SVG de aristas (por debajo de las formas). -->
+                <svg class="o_pf_flow_svg" t-attf-width="{{ svg.width }}"
+                     t-attf-height="{{ svg.height }}"
+                     t-attf-viewBox="0 0 {{ svg.width }} {{ svg.height }}">
+                    <defs>
+                        <marker t-attf-id="o_pf-arrow-flow-{{ uid }}"
+                                viewBox="0 0 10 10" refX="9" refY="5"
+                                markerWidth="7" markerHeight="7" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#198754"/>
+                        </marker>
+                        <marker t-attf-id="o_pf-arrow-branch-{{ uid }}"
+                                viewBox="0 0 10 10" refX="9" refY="5"
+                                markerWidth="7" markerHeight="7" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#198754"/>
+                        </marker>
+                        <marker t-attf-id="o_pf-arrow-error-{{ uid }}"
+                                viewBox="0 0 10 10" refX="9" refY="5"
+                                markerWidth="7" markerHeight="7" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#dc3545"/>
+                        </marker>
+                    </defs>
+                    <t t-foreach="edges" t-as="edge" t-key="edge.id">
+                        <path t-attf-class="o_pf_flow_edge o_pf_flow_edge--{{ edge.type }} {{ edge.dashed ? 'o_pf_flow_edge--dashed' : '' }} {{ edge.highlighted ? 'is-highlighted' : '' }}"
+                              t-att-d="edge.d"
+                              t-att-marker-end="edge.marker"/>
+                    </t>
+                </svg>
+
+                <!-- Píldoras de rótulo de las aristas (error). -->
+                <t t-foreach="edges" t-as="edge" t-key="edge.id">
+                    <div t-if="edge.pill"
+                         t-attf-class="o_pf_flow_pill o_pf_flow_pill--{{ edge.pill.type }} tone-{{ edge.pill.tone }}"
+                         t-attf-style="left: {{ edge.pill.x }}px; top: {{ edge.pill.y }}px;">
+                        <t t-esc="edge.pill.text"/>
+                    </div>
+                </t>
+
+                <!-- Nodos del canvas: cada uno es clicable -> popover. -->
+                <t t-foreach="shapes" t-as="shape" t-key="shape.key">
+                    <div role="button" tabindex="0"
+                         t-att-data-pf-key="shape.key"
+                         t-attf-class="o_pf_node_button o_pf_timeline_shape o_pf_timeline_node o_pf_timeline_node--{{ shape.tone }} role--{{ shape.roleClass }} kind--{{ shape.kind }} {{ shape.highlighted ? 'is-highlighted' : '' }}"
+                         t-attf-style="left: {{ shape.x }}px; top: {{ shape.y }}px; width: {{ shape.w }}px; height: {{ shape.h }}px;"
+                         t-on-click="(ev) => this.onNodeClick(shape, ev)"
+                         t-on-mouseenter="() => this.onNodeEnter(shape)"
+                         t-on-mouseleave="() => this.onNodeLeave(shape)"
+                         t-att-aria-expanded="state.openKey === shape.key ? 'true' : 'false'"
+                         t-att-title="shape.label">
+                        <!-- Terminal cliente: óvalo verde. -->
+                        <div t-if="shape.kind === 'terminal'"
+                             class="o_pf_shape o_pf_shape--end h-100">
+                            <t t-esc="shape.label"/>
+                        </div>
+                        <!-- Nodo de proceso: tarjeta clicable. -->
+                        <div t-else="" class="o_pf_node_card card h-100 border-0 shadow-sm">
+                            <span class="o_pf_node_break" t-if="shape.role === 'root'"/>
+                            <span class="o_pf_node_break_tag badge bg-danger"
+                                  t-if="shape.role === 'root'">RAÍZ</span>
+                            <!-- Chip de descubrimiento: el hito cobija fallas de
+                                 otros componentes/venta. Absoluto: NO agranda la
+                                 celda (CELL_H fijo). -->
+                            <span class="o_pf_node_extra_chip badge text-bg-primary"
+                                  t-if="shape.extraCount"
+                                  title="Incluye fallas de componentes u otros orígenes (no del propio producto)">
+                                +<t t-esc="shape.extraCount"/> de componentes/venta
+                            </span>
+                            <div class="card-body p-1 d-flex flex-column align-items-center text-center">
+                                <div class="o_pf_timeline_seq text-uppercase fw-bold small text-muted">
+                                    <t t-esc="shape.seq"/>. <t t-esc="shape.label"/>
+                                </div>
+                                <span t-attf-class="o_pf_timeline_light tone-{{ shape.tone }}"
+                                      t-att-title="shape.statusLabel"/>
+                                <!-- Nodo SANO/N/A: comunica su estado (Recibido /
+                                     Disponible / Entregado / OF en proceso...).
+                                     Si hay `summary` de falla, manda el summary. -->
+                                <span class="o_pf_node_status small text-muted mt-1"
+                                      t-if="!shape.summary"
+                                      t-att-title="shape.statusLabel">
+                                    <t t-esc="shape.statusLabel"/>
+                                </span>
+                                <span class="o_pf_node_summary small text-muted mt-1"
+                                      t-if="shape.summary"
+                                      t-att-title="shape.summary">
+                                    <t t-esc="shape.summary"/><t t-if="shape.summaryMore"> +<t t-esc="shape.summaryMore"/></t>
+                                </span>
+                                <span class="badge text-bg-warning mt-1"
+                                      t-if="shape.role === 'consequence'"
+                                      title="Depende de la raíz de la cadena">Consecuencia</span>
+                                <span class="badge text-bg-secondary mt-1"
+                                      t-if="shape.role === 'independent'"
+                                      title="Traba paralela: no depende de la raíz">Independiente</span>
+                                <!-- Fase 3.3: BADGE informativo del conteo de
+                                     pendientes. La ACCIÓN de verlos vive ahora
+                                     en el POPOVER del nodo (lista `actions[]`,
+                                     acción "Ver pendientes (N)"), no en la
+                                     tarjeta. `pendingAction` se conserva en el
+                                     payload y en `get nodes()` por compatibilidad
+                                     de tests, pero ya no se cablea aquí. -->
+                                <span class="badge text-bg-info mt-1"
+                                      t-if="shape.pending > 0"
+                                      title="Pendientes acumulados: ábrelos en las acciones del nodo (clic en la tarjeta)">
+                                    <i class="fa fa-info-circle me-1"/>
+                                    <t t-esc="shape.pending"/> <t t-esc="shape.pendingLabel"/>
+                                </span>
+                                <!-- D1: MAGNITUD del faltante del hito. El nodo
+                                     Compras roto pinta su `summary` (no el
+                                     `statusLabel`), por eso la cifra va en un
+                                     badge ADITIVO propio: "Faltan comprar N".
+                                     Solo aparece cuando el déficit es > 0. -->
+                                <span class="badge text-bg-danger mt-1"
+                                      t-if="shape.shortfallQty > 0"
+                                      title="Falta comprar esta cantidad para cubrir la demanda">
+                                    <i class="fa fa-shopping-cart me-1"/>
+                                    <t t-esc="shape.shortfallLabel"/> <t t-esc="shape.shortfallQty"/>
+                                </span>
+                                <!-- F1: reserva colgada (anomalía detectada por
+                                     el backend, sin depender de la cadena de
+                                     fallas). Badge ámbar; la ACCIÓN de saneo
+                                     vive en el popover del nodo. -->
+                                <span class="badge text-bg-warning mt-1" t-if="shape.anomaly"
+                                      title="Reserva colgada: hay una reserva enganchada a una ubicación sin existencia. Abre el nodo para sanear.">
+                                    <i class="fa fa-eraser me-1"/>Reserva colgada
+                                </span>
+                                <div class="o_pf_node_tip">
+                                    <div><strong t-esc="shape.label"/></div>
+                                    <div t-esc="shape.statusLabel"/>
+                                    <div t-if="shape.summary">
+                                        <t t-esc="shape.summary"/><t t-if="shape.summaryMore"> (+<t t-esc="shape.summaryMore"/>)</t>
+                                    </div>
+                                    <div t-if="shape.role !== 'none'">
+                                        <t t-esc="shape.roleLabel"/>
+                                        <t t-if="shape.parentLabel"> · depende de <t t-esc="shape.parentLabel"/></t>
+                                    </div>
+                                    <div class="o_pf_node_tip_hint">
+                                        <i class="fa fa-hand-pointer-o me-1"/>Clic para ver acciones
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+            </div>
+            </div>
+
+            <!-- PANEL DE EXPLICACIÓN: REEMPLAZA al popover flotante. Es hermano
+                 de `.o_pf_stage` (a la derecha en escritorio, abajo en angosto)
+                 y vive SIEMPRE en el DOM: SIN nodo muestra una guía; CON nodo
+                 fusiona la explicación + las MISMAS acciones/panel/tray que
+                 ofrecía el popover. -->
+            <div class="o_pf_flow_explain_panel"
+                 t-on-click="(ev) => ev.stopPropagation()">
+                <!-- Rama VACÍA: guía al usuario a elegir un nodo. -->
+                <div t-if="!openNode" class="o_pf_explain_empty">
+                    <i class="fa fa-hand-pointer-o me-1"/>Selecciona un nodo del diagrama
+                </div>
+                <!-- Rama CON nodo: cabecera + explicación + acciones + detalle. -->
+                <t t-if="openNode">
+                    <div class="o_pf_flow_explain_head">
+                        <t t-esc="openNode.label"/>
+                    </div>
+                    <div class="o_pf_flow_explain_diag">
+                        <t t-esc="openNode.statusLabel"/>
+                        <t t-if="openNode.role !== 'none'"> · <t t-esc="openNode.roleLabel"/></t>
+                        <t t-if="openNode.summary"> · <t t-esc="openNode.summary"/><t t-if="openNode.summaryMore"> +<t t-esc="openNode.summaryMore"/></t></t>
+                    </div>
+                    <!-- EXPLICACIÓN humana del nodo: headline + what + why[] +
+                         how[] (los pasos son TEXTO, no botones). -->
+                    <div t-if="openNode.explain" class="o_pf_flow_explain">
+                        <div class="o_pf_explain_headline"><t t-esc="openNode.explain.headline"/></div>
+                        <div t-if="openNode.explain.what" class="o_pf_explain_what"><t t-esc="openNode.explain.what"/></div>
+                        <ul t-if="openNode.explain.why.length" class="o_pf_explain_why">
+                            <li t-foreach="openNode.explain.why" t-as="reason" t-key="reason_index"><t t-esc="reason"/></li>
+                        </ul>
+                        <div t-if="openNode.explain.how.length" class="o_pf_explain_how">
+                            <div class="o_pf_explain_how_title"><i class="fa fa-list-ol me-1"/>Cómo resolverlo</div>
+                            <ol>
+                                <li t-foreach="openNode.explain.how" t-as="step" t-key="step_index"><t t-esc="step"/></li>
+                            </ol>
+                        </div>
+                    </div>
+                    <!-- Consecuencia: enlace a la raíz (no ofrece solución). -->
+                    <button t-if="openNode.rootLink" type="button"
+                            class="o_pf_flow_action o_pf_flow_action--root_link"
+                            t-on-click="(ev) => this.onRootLinkClick(openNode, ev)">
+                        <i class="fa fa-arrow-circle-left me-1"/>
+                        <t t-esc="openNode.rootLink.label"/>
+                    </button>
+                    <!-- Acciones DIRECTAS del nodo: la SOLUCIÓN (primary) va
+                         primera y se pinta como HERO con su subtítulo; el resto
+                         quedan secundarias. -->
+                    <div class="o_pf_flow_actions">
+                        <t t-foreach="openNode.actions" t-as="action" t-key="action.key">
+                            <button type="button"
+                                    t-attf-class="o_pf_flow_action o_pf_flow_action--{{ action.key }} {{ action.primary ? 'o_pf_flow_action--primary' : '' }}"
+                                    t-att-disabled="!action.enabled"
+                                    t-on-click="(ev) => this.onActionClick(openNode, action, ev)">
+                                <span class="o_pf_flow_action_label"><t t-esc="action.label"/></span>
+                                <span t-if="action.sublabel" class="o_pf_flow_action_sublabel"><t t-esc="action.sublabel"/></span>
+                            </button>
+                        </t>
+                    </div>
+                    <!-- PANEL: detalle del área (Nivel 3 fusionado). Cada fila
+                         trae sus PROPIAS acciones (Ver el problema / Solucionar
+                         / Alternativa) y el microcopy de cadena y plan. -->
+                    <div t-if="openNode.panel.length" class="o_pf_flow_panel">
+                        <t t-foreach="openNode.panel" t-as="row" t-key="row.failure_id">
+                            <div t-attf-class="o_pf_flow_panel_row tone-{{ row.tone }}">
+                                <div class="o_pf_flow_panel_label">
+                                    <t t-esc="row.label"/>
+                                    <span t-if="row.origin" class="text-muted"> · <t t-esc="row.origin"/></span>
+                                </div>
+                                <div t-if="row.chain_note" class="o_pf_flow_panel_note">
+                                    <i class="fa fa-sitemap me-1"/><t t-esc="row.chain_note"/>
+                                </div>
+                                <div class="o_pf_flow_panel_detail"><t t-esc="row.detail"/></div>
+                                <div t-if="row.plan_summary" class="o_pf_flow_panel_plan">
+                                    <i class="fa fa-lightbulb-o me-1"/><t t-esc="row.plan_summary"/>
+                                </div>
+                                <div t-if="row.actions.length" class="o_pf_flow_panel_actions">
+                                    <t t-foreach="row.actions" t-as="act" t-key="act.key">
+                                        <button type="button"
+                                                t-attf-class="o_pf_flow_row_action o_pf_flow_row_action--{{ act.key }} {{ act.primary ? 'o_pf_flow_row_action--primary' : '' }}"
+                                                t-att-disabled="!act.enabled"
+                                                t-on-click="(ev) => this.onActionClick(row, act, ev)">
+                                            <span class="o_pf_flow_row_action_label"><t t-esc="act.label"/></span>
+                                            <span t-if="act.sublabel" class="o_pf_flow_row_action_sublabel"><t t-esc="act.sublabel"/></span>
+                                        </button>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                    <!-- TRAY: Bandeja de Resolución como contenido (nodo raíz). -->
+                    <div t-if="openNode.tray.length" class="o_pf_flow_tray">
+                        <div class="o_pf_flow_tray_title">
+                            <i class="fa fa-inbox me-1"/><t t-esc="openNode.tray_title || 'Recopilar'"/>
+                        </div>
+                        <t t-foreach="openNode.tray" t-as="item" t-key="item_index">
+                            <button type="button" class="o_pf_flow_tray_item"
+                                    t-att-disabled="!item.res_model || !item.res_id"
+                                    t-on-click="(ev) => this.onTrayClick(item, ev)">
+                                <i class="fa fa-angle-right me-1"/>
+                                <t t-esc="item.label"/>
+                                <span t-if="item.state_label" class="text-muted"> · <t t-esc="item.state_label"/></span>
+                            </button>
+                        </t>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,74 @@
+# ============================================================================
+# .gitignore - Modulo: printflow_gestion_inventario (Odoo 17 CE)
+# Repo PROPIO de este modulo (github.com/jrock412/printflow_gestion_inventario)
+#
+# POR QUE EXISTE: este modulo tiene su propio repositorio Git, asi que el
+# exclude local del repo padre (C:\odoo_custom\.git\info\exclude) NO lo cubre.
+# Aqui si toca un .gitignore versionado.
+#
+# REGLA DE ORO: el .gitignore va ANTES del primer `git add`. Si la cache entra
+# al historial, se queda ahi para siempre (en git lo que entra no sale).
+# ============================================================================
+
+# --- Cache de Python (bytecode / __pycache__) --------------------------------
+# OJO: a proposito NO se usa el patron generico "*.py[cod]", porque "[cod]"
+# tambien atrapa los ".pyd", que NO son cache: son librerias binarias reales
+# (ej. las de python_libs/pymupdf en el repo padre). Aqui solo cache.
+__pycache__/
+*.pyc
+*.pyo
+*$py.class
+
+# --- Cache de herramientas de test / lint / cobertura ------------------------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+
+# --- Entornos virtuales y build ---------------------------------------------
+venv/
+.venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Variables de entorno y secretos (nunca al repo) -------------------------
+.env
+.env.*
+*.env
+!.env.example
+
+# --- Logs y temporales -------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+*~
+*.swp
+*.swo
+
+# --- Bases de datos locales y respaldos (son DATOS: jamas al repo) -----------
+*.sqlite3
+*.db
+*.dump
+
+# --- Editores / IDE ----------------------------------------------------------
+.vscode/
+.idea/
+*.sublime-*
+*.code-workspace
+
+# --- Sistema operativo -------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini

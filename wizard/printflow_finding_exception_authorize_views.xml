@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         MODAL: AUTORIZAR UN HALLAZGO FORMAL COMO EXCEPCIÓN (PrintFlow · F4)
+         Lo abre cualquier superficie de GI mediante
+         `printflow.finding.exception._pf_authorize_action(...)`. Pide el MOTIVO y
+         confirma; al aceptar crea/reusa el registro de excepción (no toca el
+         inventario). Requiere jefe de taller/administrador (guardia en el método
+         `action_authorize`).
+         ================================================================== -->
+    <record id="printflow_finding_exception_authorize_view_form"
+            model="ir.ui.view">
+        <field name="name">printflow.finding.exception.authorize.form</field>
+        <field name="model">printflow.finding.exception.authorize</field>
+        <field name="arch" type="xml">
+            <form string="Autorizar excepción" create="false" delete="false">
+                <field name="finding_code" invisible="1"/>
+                <field name="target_model" invisible="1"/>
+                <field name="target_id" invisible="1"/>
+                <group>
+                    <group string="Hallazgo">
+                        <field name="finding_label" readonly="1"/>
+                        <field name="target_label" readonly="1"/>
+                        <field name="lot_id" readonly="1"
+                               invisible="not lot_id"/>
+                    </group>
+                    <group string="Documento origen">
+                        <field name="source_label" readonly="1"/>
+                    </group>
+                </group>
+                <group string="Motivo de la autorización" col="1">
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="¿Por qué se autoriza este hallazgo como excepción?"/>
+                    <div class="text-muted">
+                        Al autorizar, el hallazgo deja de reportarse en las
+                        superficies de PrintFlow. Se guardan juntos el motivo y
+                        quién autoriza. El inventario NO se modifica. Puedes
+                        revocarlo en "Salud de Inventario → Excepciones formales".
+                    </div>
+                </group>
+                <footer>
+                    <button name="action_authorize" type="object"
+                            string="Autorizar" class="btn-primary"
+                            icon="fa-check"
+                            title="Autoriza el hallazgo como excepción formal. No modifica el inventario. Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ==================================================================
+         MODAL: AUTORIZAR VARIOS HALLAZGOS EN BLOQUE (PrintFlow · F4)
+         Lo abre una acción sobre la SELECCIÓN de una bandeja. Pide UN motivo y
+         autoriza de una vez todos los hallazgos listados.
+         ================================================================== -->
+    <record id="printflow_finding_exception_authorize_bulk_view_form"
+            model="ir.ui.view">
+        <field name="name">printflow.finding.exception.authorize.bulk.form</field>
+        <field name="model">printflow.finding.exception.authorize.bulk</field>
+        <field name="arch" type="xml">
+            <form string="Autorizar excepciones en bloque"
+                  create="false" delete="false">
+                <group>
+                    <group string="Origen">
+                        <field name="source_label" readonly="1"/>
+                    </group>
+                </group>
+                <field name="line_ids" readonly="1">
+                    <tree create="false" delete="false" edit="false">
+                        <field name="finding_label" string="Hallazgo"/>
+                        <field name="target_label" string="Registro afectado"/>
+                        <field name="target_model" string="Modelo"/>
+                        <field name="lot_id" string="Lote"/>
+                    </tree>
+                </field>
+                <group string="Motivo de la autorización" col="1">
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="¿Por qué se autorizan estos hallazgos como excepción?"/>
+                    <div class="text-muted">
+                        Se autorizan todos los hallazgos listados. El inventario
+                        NO se modifica. Puedes revocarlos en "Salud de Inventario
+                        → Excepciones formales".
+                    </div>
+                </group>
+                <footer>
+                    <button name="action_authorize" type="object"
+                            string="Autorizar" class="btn-primary"
+                            icon="fa-check"
+                            title="Autoriza los hallazgos como excepción formal. No modifica el inventario. Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>
