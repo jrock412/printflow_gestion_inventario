@@ -724,7 +724,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
 
 #### Lote 3 (T7–T8) — Botón de cabecera + test del reparto
 
-- [ ] **T7 — `wizard/printflow_flow_lot_tray_views.xml`: botón "Repartir lotes" (D-A).**
+- [x] **T7 — `wizard/printflow_flow_lot_tray_views.xml`: botón "Repartir lotes" (D-A).**
   - En el `<header>` (L28-63), **HERMANO** de "Asignar lote" y con el MISMO `display="selection"`:
     `<button name="action_split_lot_bulk" type="object" string="Repartir lotes" class="btn-secondary"
     icon="fa-random" display="selection" title="Reparte la demanda de las entregas sin lote seleccionadas entre
@@ -733,7 +733,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
   - **NO** tocar los botones existentes ni las columnas del tree (H-029/H-031/H-032 intactos).
   - **Verificación:** `-u printflow_gestion_inventario` sin error; con filas seleccionadas en la bandeja aparece
     el botón y abre el form del MODO reparto.
-- [ ] **T8 — Test del reparto: `tests/test_product_flow_lot_assign_bulk_split.py` (+ `tests/__init__.py`).**
+- [x] **T8 — Test del reparto: `tests/test_product_flow_lot_assign_bulk_split.py` (+ `tests/__init__.py`).**
   - **CREAR** el archivo partiendo de la MISMA base/helpers de `tests/test_product_flow_lot_assign_bulk.py`
     (`TransactionCase`; `@tagged('post_install', '-at_install')`; `_product`, `_lot`, `_stock`, `_outgoing`,
     `_open_tray`, `_user`, `_manager`; `PARAM_EXCEPTION_POLICY='warn'` en `setUpClass`) y agregar
@@ -5752,3 +5752,52 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071
   (`-u printflow_gestion_inventario`) para ver el botón **"Repartir lotes"** y el form del MODO reparto
   (el botón de cabecera es la **T7**, siguiente lote).
+
+- [2026-10-17 · Odoo Dev] **Lote 3 (T7–T8) ejecutado** (sesión NUEVA). Cierra el plan §3.11 de H-037/H-036.
+  **Archivos:**
+  *(T7)* MODIFICADO `wizard/printflow_flow_lot_tray_views.xml` — botón de cabecera **"Repartir lotes"**
+  (`name="action_split_lot_bulk"`, `type="object"`, `display="selection"`, `class="btn-secondary"`,
+  `icon="fa-random"`), **HERMANO** de "Asignar lote" sobre la MISMA selección; abre el contenedor en
+  `mode='split'`. **NO** se tocó ningún botón ni columna existente (H-029/H-031/H-032 intactos).
+  *(T8)* NUEVO `tests/test_product_flow_lot_assign_bulk_split.py` (`TestProductFlowLotAssignBulkSplit`);
+  MODIFICADO `tests/__init__.py` (registro junto a `test_product_flow_lot_assign_bulk_result`, motivo H-037/H-036).
+  Cubre CA-1, CA-2, CA-3, CA-4, CA-5, CA-6 y CA-8 + el candado de SQL crudo.
+  **Evidencia de carga + tests (BD de TEST `pf_picker_tests`, NUNCA la de producción):**
+  `odoo-bin -c odoo.conf -d pf_picker_tests -u printflow_gestion_inventario --data-dir=<temp>
+  --no-http --test-enable --test-tags /printflow_gestion_inventario:TestProductFlowLotAssignBulkSplit
+  --stop-after-init --logfile=<archivo>`
+  ⇒ **exit 0**, **0 failed / 0 error(s) de 8** (el lote nuevo, `TestProductFlowLotAssignBulkSplit`, **8/8 verde**).
+  La carga del módulo **terminó sin error** y `wizard/printflow_flow_lot_tray_views.xml` **cargó sin error**
+  (no aparece ningún `ERROR` tras su `loading`; los `External ID not found: x_product_dimensional_pricing.*`
+  del log son del **motor** en su paso "Skipping deletion for missing XML ID", **pre-existentes y ajenos**).
+  **Set de regresión del plan (§3.11) en UNA pasada — `--test-tags` con un spec por clase
+  (`/printflow_gestion_inventario:Clase`):** `TestProductFlowLotAssignBulkSplit` (8, NUEVO),
+  `TestProductFlowLotAssignBulk`, `TestProductFlowLotAssignBulkResult`, `TestProductFlowLotPendingOrderAssign`,
+  `TestProductFlowLotTray`, `TestProductFlowLotTrayOrders`, `TestProductFlowLotTrayDocument`,
+  `TestTrayAuthorizeCurrentLot`, `TestProductFlowLotPicker`, `TestProductFlowLotPickerCandidates`,
+  `TestProductFlowLotPickerUx`, `TestProductFlowLotCoupledChain`, `TestLotManagement`,
+  `TestPfBulkValidatePreservesLot`, `TestProductFlowOverReservationScoped`
+  ⇒ **exit 1** por **UN** rojo, **1 failed / 0 error(s) de 113** (= 110 del Lote 2 − 5 de
+  `TestProductFlowLotTrayAuthorizeBulk` + 8 del test NUEVO). **El ÚNICO rojo es PRE-EXISTENTE y AJENO
+  (delta = 0):** `TestProductFlowLotPickerUx.test_own_and_current_lots_are_listed_and_labeled`
+  (`test_product_flow_lot_picker_ux.py:143`, `AssertionError: 6.0 != 8.0`) — el MISMO rojo ya documentado en
+  §3.K · O-4 y en la entrada del Lote 2 (aritmética del propio test sobre existencias/reservas; **B1/O-5 no se
+  persigue**). Todos los demás candados citados **VERDES**.
+  **Regresión REAL de T1 (CA-1) COMPROBADA (no decorativa):** se revirtió TEMPORALMENTE el patrón aditivo de
+  `models/stock_move.py::_pf_reassign_lots` (se sustituyó "1 liberación + N reservas acotadas por `remaining`"
+  por "liberar+reservar la demanda completa por lote", que hace que el 2.º lote **pise** al 1.º) y se corrió
+  solo `TestProductFlowLotAssignBulkSplit.test_ca1_split_reserves_all_marked_lots`
+  ⇒ **exit 1**, `AssertionError: '1 asignadas' not found in '0 asignadas · 1 parciales · 0 omitidas · 0 con
+  error.'` (**1 failed / 0 error(s) de 1**). El archivo se **restauró con `git checkout -- models/stock_move.py`**
+  (diff vacío verificado): la reversión fue SOLO de diagnóstico, **en disco no quedó ningún cambio** ahí.
+  **NO se tocó** el motor `x_product_dimensional_pricing` (**solo lectura**: se consumen
+  `_pf_unreserve_reservation`/`_pf_reserve_lot` tal cual); sin `cr.execute` de escritura ni `cr.commit()`; la
+  **ÚNICA** escritura sigue siendo el protocolo **NATIVO** disparado por el operador (la reserva ADITIVA del
+  wizard). El candado del test nuevo audita los archivos TOCADOS por la tarea
+  (`wizard/printflow_flow_lot_assign_bulk.py`, `wizard/printflow_flow_lot_tray.py`, `models/stock_move.py`) vía
+  `get_module_path`, **no** al propio archivo de test (auditarse a sí mismo lo delataría por las agujas
+  literales). **Regla respetada: código sí, datos no** — 0 registros de `Ciber Estudios 2015 RESTAURADA` leídos
+  o escritos (toda la evidencia se tomó en la BD de test `pf_picker_tests`).
+  **Plan §3.11 Lote 3 (T7–T8) COMPLETO (0 pendientes).** Turno → **Odoo Verificador** (una sola pasada, al
+  cerrar todos los lotes). **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071
+  (`-u printflow_gestion_inventario`) para ver el botón **"Repartir lotes"** y el form del MODO reparto.
