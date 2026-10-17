@@ -92,13 +92,15 @@
   acción **"Asignar lote"**. Ver **§3.O** (contrato §3.3 completo + CA-1…CA-11 + qué se retira).
 - Tarea Activa: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
   **Lote 1 (T1–T3) `[motor]` ✅ CERRADO** (dev: T1–T3 `[x]`; 41/41 candados de bandeja/pending/**picker** verdes).
-  Lote en curso: **Lote 2 (T4–T5) `[pantalla]`**. Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR
-  (Lote 3) → adaptar (Lote 4)**; los rojos esperados entre lotes están declarados en §3.7.
+  **Lote 2 (T4–T5) `[pantalla]` ✅ CERRADO** (vistas: 1 solo form por unidad, form del reparto borrado, botón
+  re-rotulado; **sin verificación en vivo todavía** — la hace el Verificador al final). Lote en curso:
+  **Lote 3 (T6–T8) `[motor]`**. Añadida **T10 `[pantalla]` (Lote 5)** por **regresión de T4** (se perdió el campo
+  `confirm_exception`, que `action_assign_lot_bulk` exige con política ≠ `warn` ⇒ callejón sin salida; ver §3.7).
+  Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR (Lote 3) → adaptar (Lote 4) → T10 (Lote 5)**.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
-- Responsable Activo (Turno): **Odoo Vistas** (paso 4 · **Lote 2 `[pantalla]` T4–T5**). **Lote 1 `[motor]` cerrado**
-  (T1–T3 `[x]`; el dev dejó 4 archivos + su bitácora y una **desviación declarada D-1**: borró el botón
-  "Repartir lotes" en el Lote 1 porque **sin eso el módulo no carga**; esa mitad de T5 queda ✅). El **motor
-  `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
+- Responsable Activo (Turno): **Odoo Dev** (paso 4 · **Lote 3 `[motor]` T6–T8** = retiro del residuo + test nuevo
+  `test_product_flow_lot_assign_bulk_per_move.py` + retiro del test del `split`). **Lotes 1 y 2 cerrados.** El
+  **motor `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
 - (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
   en git; test nuevo `TestProductFlowLotAssignBulkSplit` **8/8 verde** y **regresión real de T1** comprobada
@@ -558,7 +560,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
 
 #### Lote 2 (T4–T5) — `[pantalla]` · Una sola pantalla de decisión por unidad + retiro de las superficies viejas
 
-- [ ] **T4 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: UN form (decisión lote ↔ unidad) y retiro del form
+- [x] **T4 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: UN form (decisión lote ↔ unidad) y retiro del form
       del reparto.**
   - **REESCRIBIR** el record `printflow_flow_lot_assign_bulk_view_form`
     (`printflow.flow.lot.assign.bulk.form`), `create="false" delete="false"`, con **una sola decisión** por
@@ -597,7 +599,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
     motivo; `env.ref('printflow_gestion_inventario.printflow_flow_lot_assign_bulk_view_form_split')` **ya no
     existe**. No se acciona el botón (BD de PRUEBA: solo abrir/leer).
 
-- [ ] **T5 — `wizard/printflow_flow_lot_tray_views.xml`: re-rotular "Asignar lote" (el borrado del botón YA está hecho).**
+- [x] **T5 — `wizard/printflow_flow_lot_tray_views.xml`: re-rotular "Asignar lote" (el borrado del botón YA está hecho).**
   - ✅ **BORRAR el `<button name="action_split_lot_bulk" … string="Repartir lotes">`: HECHO en el Lote 1** por
     **desviación declarada D-1** — sin ese borrado el módulo **no carga** (`ParseError: action_split_lot_bulk is not
     a valid action on printflow.flow.lot.tray`). Queda **UNA** sola acción de lote en bloque (CA-1).
@@ -697,6 +699,25 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
     pre-existentes (B1/O-5)**.
   - **Verificación:** suite de lote/bandeja **verde** (delta reportado en bitácora); `grep` de los símbolos
     retirados sobre `tests/` ⇒ **0**; el archivo NO contiene `cr.execute(`/`cr.commit(`.
+
+#### Lote 5 (T10) — `[pantalla]` · **Camino rápido (§4.1)**: restituir la confirmación de excepción (regresión de T4)
+
+- [ ] **T10 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: restituir el campo `confirm_exception`.**
+  - **Motivo (gap reportado por el Lote 2, verificado por el Analista):** el form **anterior** traía
+    `confirm_exception` (junto a `lot_id` y `confirm_partial`); el form **nuevo** de T4 **no lo pinta**, pero
+    `action_assign_lot_bulk` (T2) lo **exige** cuando la política de excepción ≠ `'warn'` (CA-6) ⇒ con una política
+    estricta el operador **no tiene cómo confirmar** desde la UI (**callejón sin salida**). `confirm_exception`
+    **NO** está en la lista de retiro (§3.3 · punto 6: se retira `confirm_partial`, no la confirmación de
+    excepción) ⇒ es una **regresión**: se restituye.
+  - **Qué:** dentro del `<group string="Motivo de la asignación" col="1">`, añadir
+    `<field name="confirm_exception"/>` **después** de `reason`, con `help` breve (*"La política vigente exige
+    confirmar la excepción."*). **Nada más**: no se toca ningún otro campo, grupo ni el `<footer>`.
+  - **NO** tocar `confirm_partial` (retirado **a propósito**: la parcial se reporta **por fila** y no se bloquea en
+    bloque; ver T6 y CA-7).
+  - **Verificación:** `xml.dom.minidom.parse` OK; `grep confirm_exception` sobre la vista ⇒ **1** ocurrencia;
+    `-u printflow_gestion_inventario` sin error; la casilla visible en el grupo "Motivo".
+  - **Camino rápido (§4.1):** **1 archivo, sin decisión de diseño** ⇒ se delega **directo** a `odoo-vistas` (sin
+    Planificador); el `odoo-verificador` lo mira al cerrar el ciclo, junto con **CA-6**.
 
 > **Riesgos y mitigaciones (de este plan).**
 > | # | Riesgo | Mitigación |
@@ -6363,4 +6384,68 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   **Turno → siguiente: Lote 2 (T4–T5) `[pantalla]` (`odoo-vistas`).** Entre este lote y el Lote 2 **la pantalla
   NO se usa** (estado intermedio declarado). **Pendiente del dueño:** `-u printflow_gestion_inventario` en el
   8071 cuando lo indique el Analista.
+- [2026-10-17 · Odoo Vistas] **§3.O · Lote 2 `[pantalla]` (T4–T5) COMPLETO.** Una sola pantalla de decisión por
+  **unidad** (un movimiento = una fila = su selector de lote) + retiro de la superficie del reparto.
+  Fuente: `odoo-impreven` / `Ciber Estudios 2015 RESTAURADA` (**solo lectura**; no se abrió la pantalla ni se
+  ejecutó `-u` desde este turno). Ruta escrita: `C:\odoo_custom\printflow_gestion_inventario`. Motor
+  `x_product_dimensional_pricing`: **SIN cambios** (no se abrió).
+  *Archivos (2):*
+  (1) `wizard/printflow_flow_lot_assign_bulk_views.xml` — **T4**: REESCRITO el record
+  `printflow_flow_lot_assign_bulk_view_form` (`form string="Asignar lote en bloque"`, `create="false"`,
+  `delete="false"`, **sin** `edit="false"` — la superficie ES una decisión): (a) técnicos ocultos
+  `candidate_lot_ids`, `multi_location`; (b) `<group string="Selección">` con `product_id`, `source_label`,
+  `total_demand` | `location_id`, `assignable_count`, `omitted_count`, `selection_note` (visible); (c) el
+  `alert-warning` de `multi_location` (texto ajustado a "las unidades", sin cambio de forma); (d)
+  `<group string="Unidades de la entrega" col="1">` con la guía *"Elige el lote de CADA unidad…"* y `line_ids` en
+  **`<tree editable="bottom" create="false" delete="false">`** con `seq`(#), `label`(Entrega),
+  `sale_order_name`(Pedido, `optional="hide"`), `sale_line_id`(Línea de pedido), `move_id`(Unidad),
+  `own_lot_name`(Lote propio), `own_lot_qty`(Existencia), `lot_id`(Lote a asignar,
+  `options={'no_create': True,'no_open': True}`, `readonly="not assignable"`), `demand_qty`(Demanda),
+  `result`(Resultado), `result_note`(Nota, `optional="show"`) y ocultos
+  `kind`/`res_model`/`res_id`/`assignable`/`location_id`, con decoraciones `success/warning/muted/danger`;
+  (e) `<group string="Lotes con existencia" col="1">` con la nota informativa y `candidate_ids` en **tree INLINE
+  de SOLO LECTURA** (`create="false" delete="false" editable="false"`) con Lote · Existencia · Reservado ·
+  Disponible · Rol (`lot_name`, `qty_on_hand`, `reserved`, `available`, `role_label`) + `is_own_lot`,
+  `is_elective`, `is_occupied` con `column_invisible="True"` — **sin ninguna columna de marca** (tabla
+  INFORMATIVA, §3.3·6); (f) `<group string="Motivo de la asignación" col="1">` con `reason` **required** +
+  microcopy; (g) `<footer>` con **"Asignar lote"** (`action_assign_lot_bulk`, `btn-primary`, `fa-tags`) +
+  "Cancelar" (`special="cancel"`). **BORRADO** el record `printflow_flow_lot_assign_bulk_view_form_split`
+  (el árbol del reparto, con su tabla de marcas `is_in_split` y su botón "Repartir lotes") — **sin residuo**.
+  **NO** se tocó el tree COMPARTIDO `printflow_flow_lot_candidate_view_tree` ni `__manifest__.py`.
+  (2) `wizard/printflow_flow_lot_tray_views.xml` — **T5**: `title` del botón `action_assign_lot_bulk`
+  actualizado al contrato nuevo (*"Elige el lote de CADA unidad (cada fila es un movimiento de la entrega).
+  ESCRIBE inventario por la vía NATIVA (reserva). Requiere jefe de taller/administrador"*). **NO** se tocó ningún
+  otro botón de cabecera ni las columnas del tree (H-029/H-031/H-032 intactos).
+  *Verificación (estática):* `xml.dom.minidom.parse` **OK** en los dos archivos; `grep` de
+  `action_split_lot_bulk|is_in_split|view_form_split|Repartir lotes|split_note` sobre `wizard/*.xml` ⇒ **0**
+  referencias de VISTA (los símbolos sobreviven solo en `.py`, que los retiran T6/T8); el record del reparto
+  `printflow_flow_lot_assign_bulk_view_form_split` **ya no existe**. No se accionó ningún botón (BD de PRUEBA:
+  abrir = lectura).
+  *Métricas de diseño (skill `odoo-view-design`, §2 + `VIEW-REVIEW-CHECKLIST.md` corrido):* form =
+  **6.548** caracteres, **4** `<div>`, **2** `colspan`, **6** `<group>`, **1** `<record>`. Referencia
+  hermana MEDIDA: el form del selector por documento
+  (`printflow_flow_lot_picker_views.xml`) = **9.649** caracteres / 10 `<div>` ⇒ el nuevo quedó **~32 % más
+  pequeño** que su vecino. El form roza el techo nativo ~6K: se **justifica y declara** porque es **DOS
+  tablas** (la de DECISIÓN con 12 columnas + la INFORMATIVA con 5), no texto; los **4 `<div>` son microcopy
+  mandado por §3.O** (aviso `multi_location`, guía de la tabla, nota informativa, microcopy del motivo). Del
+  checklist se corrigió un punto antes de entregar: se **quitaron los `colspan="2"` de los `<div>` que
+  colgaban de un `<group col="1">`** ("div colspan dentro de group col=1 haciendo de reja"); quedan **2**
+  `colspan` legítimos (la nota de selección dentro de un `<group>` de 2 columnas y el aviso a nivel de form).
+  *Restricciones:* OK solo `views/` (`.xml`) — **sin** tocar `models/` ni el motor; OK árbol compartido del
+  candidato intacto (CA-8 protegido); OK **código sí, datos no** — 0 escrituras en `Ciber Estudios 2015
+  RESTAURADA` (no se abrió la pantalla ni se ejecutó `-u`).
+  **Desviaciones declaradas:** (D-1) se **refrescó el comentario** del botón en la bandeja (T5 solo pedía el
+  `title`): dejarlo describiendo "UN lote a N entregas" era residuo engañoso; no se agregó/quitó ningún botón ni
+  columna. (D-2) El texto del `alert-warning` pasó de "los destinos" a "las unidades" (consecuencia declarada de
+  D1, mismo contenido, sin cambio de forma).
+  **Gap REPORTADO al Analista (no bloquea; NO se decide por cuenta propia):** el campo **`confirm_exception`** del
+  contenedor —que `action_assign_lot_bulk` exige cuando la política de excepción ≠ `warn` (CA-6)— **no aparece en
+  la lista de campos del form que fija T4**, así que la pantalla **no ofrece la casilla** para confirmar la
+  excepción. El módulo carga y el camino por defecto (`warn`) funciona; con la política en otro valor, el
+  operador **no podría confirmar desde la UI**. Queda a decisión del Analista (¿añadir la casilla al grupo
+  "Motivo" o aceptarlo así?). **No** se añadió por no decidir campos fuera del plan.
+  **Verificación en vivo: NO realizada en este turno** — es un lote `[pantalla]` y el plan (§3.O · "Verificación")
+  sitúa la **verificación en vivo del `odoo-verificador` una sola vez, al final del ciclo** (tras los lotes 3–4).
+  **Pendiente del dueño:** `-u printflow_gestion_inventario` en el 8071 (recarga de vistas) cuando lo indique el
+  Analista. **Turno → siguiente: Lote 3 (T6–T8) `[motor]` (`odoo-dev`).**
 

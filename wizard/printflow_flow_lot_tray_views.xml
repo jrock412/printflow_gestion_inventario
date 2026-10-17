@@ -39,15 +39,15 @@
                             string="Autorizar lotes" class="btn-secondary"
                             icon="fa-check" display="selection"
                             title="Autoriza los lotes de las filas seleccionadas como excepción documentada (patrón de lote compartido). Omite las ya autorizadas o no autorizables. NO modifica el inventario. Requiere jefe de taller/administrador"/>
-                    <!-- ASIGNACIÓN DE LOTE EN BLOQUE (P1/H-021): acción sobre la
-                         SELECCIÓN. Abre UN wizard que pregunta UN lote (tabla
-                         de candidatos con Existencia · Reservado · Disponible ·
-                         Rol) + UN motivo y lo asigna a las ENTREGAS sin lote
-                         seleccionadas ("Elegir lote" en bloque). -->
+                    <!-- ASIGNACIÓN DE LOTE POR UNIDAD (§3.O · H-039/H-040):
+                         ÚNICA acción de lote en bloque (el modo "single" y el
+                         botón "Repartir lotes" ya no existen). Abre el wizard
+                         que lista UNA fila por MOVIMIENTO (unidad / línea de
+                         pedido) con SU selector de lote y UN motivo. -->
                     <button name="action_assign_lot_bulk" type="object"
                             string="Asignar lote" class="btn-primary"
                             icon="fa-tags" display="selection"
-                            title="Asigna UN lote (con un motivo) a las entregas sin lote seleccionadas. ESCRIBE inventario por la vía NATIVA (reserva). Requiere jefe de taller/administrador"/>
+                            title="Elige el lote de CADA unidad (cada fila es un movimiento de la entrega). ESCRIBE inventario por la vía NATIVA (reserva). Requiere jefe de taller/administrador"/>
                     <!-- SECUNDARIAS que TOCAN inventario: van con AVISO. -->
                     <button name="action_confirm_create_suggested_lots" type="object"
                             string="Crear lote sugerido" class="btn-secondary"
