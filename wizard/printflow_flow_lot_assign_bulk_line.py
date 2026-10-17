@@ -2,21 +2,29 @@
 """LÍNEA de DESTINO de la asignación EN BLOQUE de lote (PrintFlow).
 
 ``TransientModel`` que representa UN destino de la acción en bloque
-(``printflow.flow.lot.assign.bulk``): una entrega SIN lote (``missing_move`` /
-``pending_order``) a la que el operador quiere asignar el lote elegido.
+(``printflow.flow.lot.assign.bulk``). El destino ya NO es "una entrega": es **UNA
+UNIDAD**, es decir **un ``stock.move``** (unidad = línea de pedido) de la entrega
+(H-039 / H-040 · grano por MOVIMIENTO).
 
 Por qué existe
 --------------
 A diferencia del selector POR DOCUMENTO (``printflow.flow.lot.picker``), la
-acción en bloque resuelve N documentos con UN motivo. Se necesita una fila por
-destino que guarde el SNAPSHOT de la selección (tipo, modelo/id, movimiento,
-demanda, ubicación, fecha) y el RESULTADO por destino (asignado / parcial /
-omitido / error), para poder reportar cuántas quedaron cubiertas y cuántas no
-(CA-3, CA-7, CA-9).
+acción en bloque resuelve N movimientos con UN motivo. Se necesita una fila por
+movimiento que guarde:
 
-Esta línea es SOLO un snapshot de LECTURA: NO escribe en ``stock.*``. La ÚNICA
-escritura del bloque es la reasignación NATIVA que dispara el contenedor por el
-orquestador ``printflow.product.flow._pf_assign_lot_to_document``.
+* el SNAPSHOT de la selección (tipo, modelo/id del **documento**, movimiento,
+  demanda de ESA unidad, ubicación, fecha);
+* el snapshot del **lote propio** de la unidad (``own_lot_name`` = ``<pedido>-
+  L<línea>`` con su existencia), para que el operador VEA si la caja del pedido
+  está vacía (D3/D4);
+* la **decisión del operador** para ESA unidad (``lot_id``: el lote a asignar);
+* el RESULTADO por fila (asignado / parcial / omitido / error), para reportar
+  cuántas unidades quedaron cubiertas y cuántas no (CA-3, CA-7, CA-9).
+
+Esta línea es SOLO un snapshot + la decisión del operador: NO escribe en
+``stock.*``. La ÚNICA escritura del bloque es la reasignación NATIVA que dispara
+el contenedor por el orquestador
+``printflow.product.flow._pf_assign_lots_to_document``.
 """
 
 from odoo import fields, models
@@ -43,8 +51,40 @@ class PrintflowFlowLotAssignBulkLine(models.TransientModel):
     res_model = fields.Char(string='Modelo')
     res_id = fields.Integer(string='Id del registro')
     move_id = fields.Many2one(
-        'stock.move', string='Movimiento', readonly=True,
-        help='``stock.move`` que respalda la entrega (se usa para reasignar).')
+        'stock.move', string='Unidad', readonly=True,
+        help='``stock.move`` que respalda esta UNIDAD de la entrega (una fila = '
+             'un movimiento = una unidad / línea de pedido). Es lo único que se '
+             'escribe al aplicar.')
+    lot_id = fields.Many2one(
+        'stock.lot', string='Lote a asignar',
+        domain="[('product_id', '=', bulk_id.product_id), "
+               "('id', 'in', bulk_id.candidate_lot_ids)]",
+        help='Lote que el operador decide asignar a ESTA unidad. El desplegable '
+             'solo lista lotes con existencia del producto (D4); la decisión es '
+             'fila por fila, no una caja para toda la selección.')
+    own_lot_id = fields.Many2one(
+        'stock.lot', string='Registro del lote propio', readonly=True,
+        help='Registro ``stock.lot`` del lote propio de la unidad, si existe. '
+             'Puede no existir: el nombre se muestra igual (con existencia '
+             '0.00) para que el operador vea que la caja del pedido está vacía.')
+    own_lot_name = fields.Char(
+        string='Lote propio', readonly=True,
+        help='Nombre del lote propio del pedido de ESTA unidad '
+             '(<pedido>-L<línea>): el que la Ley #1 espera. Es informativo: la '
+             'decisión se toma en "Lote a asignar".')
+    own_lot_qty = fields.Float(
+        string='Existencia del lote propio', readonly=True,
+        digits='Product Unit of Measure',
+        help='Existencia del lote propio de la unidad. En 0.00 confirma que la '
+             'caja del pedido está vacía (D4: elección consciente).')
+    sale_order_name = fields.Char(
+        string='Pedido', readonly=True,
+        help='Nombre de la orden de venta asociada a esta unidad (trazabilidad '
+             'del par caja ↔ pedido).')
+    sale_line_id = fields.Many2one(
+        'sale.order.line', string='Línea de pedido', readonly=True,
+        help='Línea de pedido de venta que originó esta unidad (el lote propio '
+             'se deriva de ella: <pedido>-L<línea>).')
     label = fields.Char(
         string='Destino', readonly=True,
         help='Etiqueta legible del destino (albarán/entrega).')

@@ -1046,7 +1046,7 @@ class PrintflowFlowLotTray(models.TransientModel):
 
     # ── ASIGNACIÓN DE LOTE EN BLOQUE (acción sobre la SELECCIÓN) ──────────
     def action_assign_lot_bulk(self):
-        """Abre el wizard que asigna UN lote a las ENTREGAS seleccionadas (D1).
+        """Abre el contenedor que asigna a CADA unidad su lote (grano = MOVIMIENTO).
 
         Método PÚBLICO a propósito (Odoo 17 rechaza invocar privados por RPC).
         Toma las filas seleccionadas (``self``) o, si llega vacío, el
@@ -1056,9 +1056,9 @@ class PrintflowFlowLotTray(models.TransientModel):
         1. guardia de permisos ``_pf_assert_can_clean`` (jefe de taller/admin);
         2. delega la traducción de la selección a filas en el helper COMPARTIDO
            ``_pf_bulk_rows`` (filtra las asignables; el resto se OMITE y se
-           cuenta; resuelve el ``stock.move`` con ``_pf_document_move`` —ya
-           soporta ``pending_order``—, DESCARTA las que no resuelven y DEDUPLICA
-           por ``move.id``, D5);
+           cuenta; EXPANDE cada entrega en UNA fila por movimiento activo del
+           producto —H-034/D1—, DESCARTA lo que no resuelve movimiento y
+           DEDUPLICA por ``move.id``, D5);
         3. delega la construcción del contenedor en
            ``printflow.flow.lot.assign.bulk._pf_populate`` (que reutiliza el
            cálculo de candidatos y la dedupe/orden) y abre su form a
@@ -1101,13 +1101,23 @@ class PrintflowFlowLotTray(models.TransientModel):
     def _pf_bulk_rows(self, records):
         """Prepara ``(product, rows, omitted)`` de una selección (SIN efectos).
 
-        Extracción BEHAVIOR-PRESERVING de ``action_assign_lot_bulk`` (T5): NO
-        notifica ni escribe; solo traduce la selección a las filas CRUDAS que
-        consume ``printflow.flow.lot.assign.bulk._pf_populate``. Filtra las filas
-        ASIGNABLES (``can_choose_lot`` y kind de entrega sin lote con producto),
-        resuelve el ``stock.move`` de cada una con ``_pf_document_move`` (ya
-        soporta ``pending_order``), DESCARTA las que no resuelven y DEDUPLICA por
-        ``move.id`` (D5). Las descartadas se suman a ``omitted``.
+        Traduce la selección a las filas CRUDAS que consume
+        ``printflow.flow.lot.assign.bulk._pf_populate``. NO notifica ni escribe.
+        Filtra las filas ASIGNABLES (``can_choose_lot`` y kind de entrega sin lote
+        con producto); el resto se OMITE y se cuenta.
+
+        GRANO = MOVIMIENTO (H-034/D1): cada fila ``pending_order`` (que apunta al
+        ALBARÁN) se EXPANDE en UNA fila por ``stock.move`` ACTIVO del producto en
+        ese albarán, con UNA sola búsqueda batch para todos los albaranes de la
+        selección (sin N+1). Las filas ``missing_move`` conservan su movimiento y
+        su documento. En las filas expandidas ``res_model``/``res_id`` siguen
+        siendo el DOCUMENTO (``stock.picking``), porque es lo que usa la bitácora
+        (``_pf_log_document``); el movimiento exacto viaja en ``move_id`` y es lo
+        único que se escribe (R-3).
+
+        Se DESCARTA lo que no resuelve movimiento y se DEDUPLICA por ``move.id``
+        (D5/R-2: ``missing_move`` y ``pending_order`` pueden apuntar al MISMO
+        movimiento). ``omitted`` cuenta las filas descartadas.
 
         Devuelve ``product`` VACÍO si no hay ninguna fila asignable, para que el
         llamador distinga ese caso del de "asignables pero sin movimiento".
@@ -1123,87 +1133,57 @@ class PrintflowFlowLotTray(models.TransientModel):
         if not candidates:
             return self.env['product.product'], [], omitted
         product = candidates[:1].product_id
+        # (1) UNA sola búsqueda batch: movimientos ACTIVOS del producto en los
+        # albaranes de las filas ``pending_order`` (grano = MOVIMIENTO).
+        picking_ids = {
+            rec.res_id for rec in candidates
+            if rec.kind == 'pending_order'
+            and rec.res_model == 'stock.picking' and rec.res_id}
+        moves_by_picking = {}
+        if picking_ids:
+            for move in self.env['stock.move'].sudo().search([
+                ('picking_id', 'in', list(picking_ids)),
+                ('product_id', '=', product.id),
+                ('state', 'not in', ('done', 'cancel')),
+            ], order='id asc'):
+                moves_by_picking.setdefault(
+                    move.picking_id.id, []).append(move)
         rows = []
         seen_moves = set()
         for rec in candidates:
-            move = self._pf_document_move(
-                rec.kind, rec.res_model, rec.res_id, product, rec.lot_name)
-            if not move or not move.id:
+            if rec.kind == 'pending_order' and rec.res_model == 'stock.picking':
+                moves = moves_by_picking.get(rec.res_id) or []
+            else:
+                moves = self._pf_document_move(
+                    rec.kind, rec.res_model, rec.res_id, product,
+                    rec.lot_name)[:1]
+            if not moves:
                 omitted += 1
                 continue
-            if move.id in seen_moves:
-                omitted += 1
-                continue
-            seen_moves.add(move.id)
-            rows.append({
-                'kind': rec.kind,
-                'res_model': rec.res_model,
-                'res_id': rec.res_id,
-                'picking_id': rec.picking_id.id or 0,
-                'move_id': move.id,
-                'label': rec.label or '',
-                'demand_qty': rec.demand_qty or 0.0,
-                'location_id': rec.location_id.id or 0,
-                'scheduled_date': rec.scheduled_date or False,
-                'own_lot_name': rec.own_lot_name or '',
-            })
+            for move in moves:
+                if move.id in seen_moves:
+                    omitted += 1
+                    continue
+                seen_moves.add(move.id)
+                sale_line = move.sale_line_id
+                rows.append({
+                    'kind': rec.kind,
+                    'res_model': rec.res_model,
+                    'res_id': rec.res_id,
+                    'picking_id': (
+                        rec.picking_id.id or move.picking_id.id or 0),
+                    'move_id': move.id,
+                    'label': rec.label or '',
+                    'demand_qty': move.product_uom_qty or 0.0,
+                    'location_id': rec.location_id.id or 0,
+                    'scheduled_date': rec.scheduled_date or False,
+                    'own_lot_name': (
+                        (sale_line._get_exclusive_lot_name() or '')
+                        if sale_line else (rec.own_lot_name or '')),
+                    'sale_order_name': (
+                        (sale_line.order_id.name or '') if sale_line else ''),
+                })
         return product, rows, omitted
-
-    def action_split_lot_bulk(self):
-        """Abre el wizard de REPARTO multi-lote de las ENTREGAS seleccionadas.
-
-        Método PÚBLICO a propósito (Odoo 17 rechaza invocar privados por RPC).
-        HERMANO de ``action_assign_lot_bulk``: sobre la MISMA selección, pero abre
-        el contenedor en ``mode='split'`` (varios lotes marcados con "Incluir").
-
-        Flujo:
-        1. guardia de permisos ``_pf_assert_can_clean`` (jefe de taller/admin);
-        2. toma las filas seleccionadas (``self``) o el ``active_domain`` del
-           contexto —igual que ``action_assign_lot_bulk``;
-        3. prepara las filas con el helper COMPARTIDO ``_pf_bulk_rows`` (misma
-           dedupe/orden y mismo conteo de omitidas que el modo ``single``);
-        4. delega la construcción del contenedor en
-           ``printflow.flow.lot.assign.bulk._pf_populate(..., mode='split')`` y
-           abre el FORM DEL MODO REPARTO (``views`` explícitos: se declaran para
-           abrir ESA vista y no la del modo ``single``).
-
-        NO escribe nada: el reparto lo ejecuta el wizard por la vía NATIVA.
-        """
-        self.env['printflow.stock.remedy']._pf_assert_can_clean()
-        records = self
-        if not records:
-            records = self.search(self.env.context.get('active_domain') or [])
-        records = records.exists()
-        if not records:
-            return self._pf_authorize_selected_notification(_(
-                'Selecciona al menos una entrega sin lote para repartir los '
-                'lotes.'))
-        product, rows, omitted = self._pf_bulk_rows(records)
-        if not product:
-            return self._pf_authorize_selected_notification(_(
-                'No había entregas sin lote asignables en la selección: se '
-                'omiten los ítems que no admiten elegir lote.'))
-        if not rows:
-            return self._pf_authorize_selected_notification(_(
-                'No había entregas con un movimiento activo en la selección.'))
-        bulk = self.env['printflow.flow.lot.assign.bulk']._pf_populate(
-            product, rows, omitted_count=omitted, mode='split')
-        if not bulk:
-            return self._pf_authorize_selected_notification(_(
-                'No se pudo preparar el reparto de lotes.'))
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Repartir lotes en bloque'),
-            'res_model': 'printflow.flow.lot.assign.bulk',
-            'res_id': bulk.id,
-            'view_mode': 'form',
-            # El form del MODO reparto se pasa EXPLÍCITO para no abrir el del
-            # modo 'single' (mismo modelo, otra superficie).
-            'views': [(self.env.ref(
-                'printflow_gestion_inventario.'
-                'printflow_flow_lot_assign_bulk_view_form_split').id, 'form')],
-            'target': 'new',
-        }
 
     # ── Excepción FORMAL de la fila (F4/F5): vía genérica, sin exigir lote ──
     def action_authorize_finding(self):

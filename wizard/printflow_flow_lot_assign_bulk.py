@@ -131,20 +131,21 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         help='Justificación COMÚN de la asignación en bloque (queda en la '
              'bitácora de cada documento).')
     omitted_count = fields.Integer(
-        string='Entregas omitidas', readonly=True,
-        help='Filas seleccionadas (ENTREGAS) que NO se asignan (no asignables, '
-             'sin movimiento, duplicadas o no elegibles).')
+        string='Filas omitidas', readonly=True,
+        help='Filas descartadas al preparar la selección (no asignables, sin '
+             'movimiento activo, duplicadas o no elegibles). No son unidades: es '
+             'un conteo de FILAS.')
     assignable_count = fields.Integer(
-        string='Entregas por asignar', compute='_compute_assignable_count',
-        help='Número de destinos (ENTREGAS = albaranes de salida) que SÍ '
-             'admiten la asignación en bloque. Es una cuenta de FILAS, no de '
-             'unidades.')
+        string='Unidades por asignar', compute='_compute_assignable_count',
+        help='Número de UNIDADES (movimientos = líneas de pedido) que SÍ '
+             'admiten la asignación en bloque: una entrega con N unidades '
+             'produce N filas.')
     selection_note = fields.Char(
         string='Resumen de la selección',
         compute='_compute_selection_note', readonly=True,
-        help='Texto VISIBLE que declara la UNIDAD de cada ranura: cada fila es '
-             'una ENTREGA (albarán de salida); las cifras de demanda van en '
-             'UNIDADES de producto (H-031).')
+        help='Texto VISIBLE que declara la UNIDAD de cada fila: cada fila es una '
+             'UNIDAD (un movimiento de la entrega = una línea de pedido); las '
+             'cifras de demanda van en UNIDADES de producto (H-031).')
     split_note = fields.Char(
         string='Orden del reparto',
         compute='_compute_split_note', readonly=True,
@@ -171,17 +172,19 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
 
     @api.depends('assignable_count', 'total_demand')
     def _compute_selection_note(self):
-        """Texto VISIBLE que declara la UNIDAD de cada ranura (H-031).
+        """Texto VISIBLE que declara la UNIDAD de cada fila (H-031).
 
-        Aclara que cada fila es una ENTREGA (albarán de salida) y que la demanda
-        va en UNIDADES de producto: N entregas por asignar = M unidades. Así el
-        operador no lee "26 vs 30" como una contradicción. Sin sufijos de unidad
-        en los campos: la palabra "unidades" va en la oración (D3).
+        Aclara que cada fila es una UNIDAD (un movimiento de la entrega = una
+        línea de pedido) y que la demanda va en UNIDADES de producto: N unidades
+        por asignar = M unidades a entregar. Así el operador no lee "26 vs 30"
+        como una contradicción. Sin sufijos de unidad en los campos: la palabra
+        "unidades" va en la oración (D3).
         """
         for rec in self:
             rec.selection_note = _(
-                'Cada fila es una entrega (albarán de salida). %(n)s entregas '
-                'por asignar = %(m)s unidades a entregar.') % {
+                'Cada fila es una unidad (un movimiento de la entrega = una '
+                'línea de pedido). %(n)s unidades por asignar = %(m)s unidades '
+                'a entregar.') % {
                 'n': rec.assignable_count or 0,
                 'm': '%.2f' % (rec.total_demand or 0.0),
             }
@@ -234,12 +237,18 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         :param list[dict] rows: filas CRUDAS de la bandeja (dicts con ``kind``,
             ``res_model``, ``res_id``, ``label``, ``demand_qty``, ``location_id``,
             ``scheduled_date``, ``own_lot_name`` y opcionalmente ``move_id``).
+            Cada fila es UN MOVIMIENTO (una unidad / línea de pedido).
         :param int omitted_count: filas ya descartadas por el llamador (tray).
         :param str mode: camino de decisión (``'single'`` por defecto ⇒ los
             llamadores actuales NO cambian; ``'split'`` ⇒ reparto multi-lote).
             El modo NO altera destinos ni candidatos, solo el camino de decisión
             que el operador verá en el form.
         :rtype: models.Model
+
+        Cada línea nace con el SNAPSHOT de su unidad (``move_id``, documento,
+        demanda, ``sale_line_id``/``sale_order_name``, lote propio con su
+        existencia) y con el ``lot_id`` **pre-llenado** solo cuando el lote
+        propio TIENE existencia efectiva (D3/CA-4); si no, queda vacío y visible.
         """
         product = product.exists() if product else self.env['product.product']
         if not product or not rows:
@@ -274,20 +283,49 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
             'holder_names': cand.get('holder_names', ''),
             'is_own_lot': cand['lot_id'] in own_lot_ids,
         }) for cand in candidates]
-        line_vals = [(0, 0, {
-            'seq': seq,
-            'kind': row['kind'],
-            'res_model': row['res_model'],
-            'res_id': row['res_id'],
-            'move_id': row['move_id'] or False,
-            'label': row['label'],
-            'demand_qty': row['demand_qty'],
-            'location_id': row['location_id'] or False,
-            'scheduled_date': row['scheduled_date'] or False,
-            'assignable': row['assignable'],
-            'result': row['result'],
-            'result_note': row['result_note'],
-        }) for seq, row in enumerate(prepared, start=1)]
+        # Existencia EFECTIVA por lote: la de la ubicación efectiva cuando es
+        # única (``available_here``) o la AGREGADA si hay varias ubicaciones
+        # (``available``), misma regla que la cobertura (D3/D4). Sale de la MISMA
+        # lectura de candidatos: sin N+1. Se usa para PRE-LLENAR el lote propio
+        # (D3/CA-4) y para informar su existencia en la fila.
+        effective_by_lot = {
+            cand['lot_id']: (
+                cand['available'] if multi_location else cand['available_here'])
+            for cand in candidates}
+        qty_by_lot = {
+            cand['lot_id']: cand['qty_on_hand'] for cand in candidates}
+        # El lote propio puede NO existir como ``stock.lot``: en ese caso no hay
+        # registro ni existencia (se muestra 0.00 y la fila queda SIN pre-llenar).
+        lot_by_name = {
+            cand['lot_name']: cand['lot_id'] for cand in candidates}
+        line_vals = []
+        for seq, row in enumerate(prepared, start=1):
+            own_lot_id = lot_by_name.get(row['own_lot_name'] or '') or 0
+            effective = (
+                effective_by_lot.get(own_lot_id, 0.0) if own_lot_id else 0.0)
+            line_vals.append((0, 0, {
+                'seq': seq,
+                'kind': row['kind'],
+                'res_model': row['res_model'],
+                'res_id': row['res_id'],
+                'move_id': row['move_id'] or False,
+                'label': row['label'],
+                'demand_qty': row['demand_qty'],
+                'location_id': row['location_id'] or False,
+                'scheduled_date': row['scheduled_date'] or False,
+                'assignable': row['assignable'],
+                'result': row['result'],
+                'result_note': row['result_note'],
+                'own_lot_id': own_lot_id or False,
+                'own_lot_name': row['own_lot_name'] or '',
+                'own_lot_qty': qty_by_lot.get(own_lot_id, 0.0),
+                'sale_order_name': row.get('sale_order_name') or '',
+                'sale_line_id': row.get('sale_line_id') or False,
+                # D3/CA-4: el lote propio se PRE-LLENA solo si tiene existencia
+                # efectiva; si está vacío (0.00) la fila llega SIN lote y visible.
+                'lot_id': own_lot_id if effective > _EPS else False,
+            }))
+
         skipped = len([row for row in prepared if not row['assignable']])
         return self.create({
             'mode': mode,
@@ -309,8 +347,9 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         Resuelve el ``stock.move`` de cada fila (para ``pending_order``, el
         movimiento activo del albarán) con UNA lectura batch, completa la
         ubicación/fecha efectivas con UNA lectura de los movimientos resueltos
-        (D2/D6), DEDUPLICA por ``move_id`` (D5: ``missing_move`` y
-        ``pending_order`` pueden apuntar al MISMO albarán) y ordena FIFO por
+        (D2/D6), resuelve el **lote propio de cada MOVIMIENTO** con la primitiva
+        del motor (sin N+1, R-4), DEDUPLICA por ``move_id`` (D5: ``missing_move``
+        y ``pending_order`` pueden apuntar al MISMO albarán) y ordena FIFO por
         fecha prevista ASC + id ASC (D6). Es una traducción PURA (sin escritura).
 
         :rtype: list[dict]
@@ -358,12 +397,13 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
             for item in raw:
                 if item['picking_id'] and not item['move_id']:
                     item['move_id'] = by_picking.get(item['picking_id'], 0)
-        # (2) UNA lectura batch: ubicación/fecha de los movimientos resueltos.
+        # (2) UNA lectura batch: ubicación/fecha/venta de los movimientos resueltos.
         move_ids = {item['move_id'] for item in raw if item['move_id']}
         move_info = {}
         if move_ids:
             for data in Move.browse(list(move_ids)).read(
-                    ['location_id', 'date', 'picking_id']):
+                    ['location_id', 'date', 'picking_id', 'product_uom_qty',
+                     'sale_line_id']):
                 move_info[data['id']] = data
         picking_for_date = set()
         for item in raw:
@@ -373,6 +413,9 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
             item['_move_date'] = info.get('date') or False
             pick_ref = info.get('picking_id') or False
             item['_move_picking'] = (pick_ref[0] if pick_ref else 0) or 0
+            sale_ref = info.get('sale_line_id') or False
+            item['_move_sale'] = (sale_ref[0] if sale_ref else 0) or 0
+            item['_move_qty'] = info.get('product_uom_qty') or 0.0
             if (not item['scheduled_date'] and not item['_move_date']
                     and item['_move_picking']):
                 picking_for_date.add(item['_move_picking'])
@@ -389,6 +432,33 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
                     item['_move_date']
                     or picking_dates.get(item['_move_picking'])
                     or False)
+        # (2.b) Lote PROPIO POR MOVIMIENTO (R-4): el lote propio se resuelve por
+        # UNIDAD con la MISMA primitiva del motor que usa la bandeja
+        # (``sale.order.line._get_exclusive_lot_name``) sobre UNA lectura batch de
+        # las líneas de pedido. El ``own_lot_name`` que trae la fila de la bandeja
+        # queda como RESPALDO cuando el movimiento no tiene línea de pedido.
+        sale_line_ids = {item['_move_sale'] for item in raw if item['_move_sale']}
+        sale_lines = (
+            self.env['sale.order.line'].sudo().browse(
+                list(sale_line_ids)).exists()
+            if sale_line_ids else self.env['sale.order.line'])
+        sale_lines.mapped('order_id')  # precarga (1 lectura) de los pedidos
+        sale_names = {
+            sale_line.id: (sale_line.order_id.name or '')
+            for sale_line in sale_lines}
+        own_names = {
+            sale_line.id: (sale_line._get_exclusive_lot_name() or '')
+            for sale_line in sale_lines}
+        for item in raw:
+            sale_id = item['_move_sale']
+            item['sale_line_id'] = sale_id or 0
+            item['sale_order_name'] = sale_names.get(sale_id) or ''
+            item['own_lot_name'] = (
+                own_names.get(sale_id) or item['own_lot_name'])
+            # La demanda de la fila ES la del movimiento (grano = MOVIMIENTO);
+            # el valor de la bandeja queda como respaldo si no llega.
+            if not item['demand_qty']:
+                item['demand_qty'] = item['_move_qty'] or 0.0
         # (3) Orden determinista FIFO (fecha ASC, id ASC; sin fecha al final).
         raw.sort(key=lambda item: (
             not bool(item['scheduled_date']),
@@ -545,18 +615,29 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
                 'repartir lo disponible.') % (free, demand))
 
     def action_assign_lot_bulk(self):
-        """Asigna el lote ELEGIDO a los destinos asignables (guardia + motivo).
+        """Asigna a CADA unidad el lote que el operador eligió EN SU FILA.
 
-        Pasos (D3/D8):
+        Contrato NUEVO (H-039/H-040 · D1/D2): un destino = UN MOVIMIENTO (una
+        unidad / línea de pedido) y cada fila lleva SU lote (``line.lot_id``):
+        el operador decide el par caja ↔ unidad en una sola pasada.
+
+        Pasos (D5/D6):
         1. guardia de permisos ``_pf_assert_can_clean`` (jefe de taller/admin);
-        2. ``reason`` obligatorio y política de excepción (cero hardcodeo);
-        3. validación de cobertura (bloquea ANTES de escribir);
-        4. por cada destino asignable (FIFO), delegar la ESCRITURA en el
-           ORQUESTADOR ÚNICO ``_pf_assign_lot_to_document`` (protocolo NATIVO de
-           reserva), capturando el ``UserError`` POR DESTINO (nunca aborta el
-           barrido) y marcando el resultado (asignado/parcial/error);
-        5. bitácora por documento (solo modelos con chatter) y notificación con
-           los conteos (CA-7), ENCADENADA al DETALLE por destino (H-029).
+        2. ``reason`` obligatorio y política de excepción (cero hardcodeo: la
+           política sale de ``pf_lot_assign_exception_policy``);
+        3. guía SIN escritura: si NINGUNA unidad asignable trae lote ⇒
+           ``UserError``; las filas sin lote NO bloquean a las demás;
+        4. por cada unidad asignable (FIFO), delegar la ESCRITURA en el
+           ORQUESTADOR ÚNICO ``_pf_assign_lots_to_document`` (protocolo NATIVO
+           ADITIVO: 1 liberación + N reservas) pasándole el MOVIMIENTO directo
+           (sin ``limit=1``), capturando el ``UserError`` POR FILA (nunca aborta
+           el barrido) y clasificando el resultado (asignado/parcial/error);
+        5. bitácora por documento (chatter: lote + motivo + usuario) y
+           notificación con los conteos (CA-6), ENCADENADA al DETALLE por
+           destino (H-029).
+
+        Código sí, datos no: la ÚNICA escritura son las primitivas NATIVAS del
+        motor disparadas por este botón; no hay ``cr.execute``/``cr.commit``.
         """
         self.ensure_one()
         self.env['printflow.stock.remedy']._pf_assert_can_clean()
@@ -567,39 +648,41 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         if policy != 'warn' and not self.confirm_exception:
             raise UserError(_(
                 'La política vigente exige confirmar la excepción: marca '
-                '"Confirmo la excepción" para asignar el lote a la selección.'))
-        chosen = self._pf_selected_lot()
-        if not chosen:
+                '"Confirmo la excepción" para asignar los lotes.'))
+        assignable = self.line_ids.filtered('assignable')
+        if not assignable.filtered('lot_id'):
             raise UserError(_(
-                'Elige un lote con existencia antes de asignarlo: marca la '
-                'casilla de la fila en la tabla ("Elegir") o usa el '
-                'desplegable "Lote a asignar".'))
-        self.lot_id = chosen
-        self._pf_check_coverage(chosen)
+                'Elige el lote de al menos una unidad: cada fila es un '
+                'movimiento (una unidad / línea de pedido) de la entrega.'))
         ProductFlow = self.env['printflow.product.flow']
-        for line in self.line_ids.filtered('assignable'):
+        for line in assignable:
+            if not line.lot_id:
+                line.result = 'skipped'
+                line.result_note = _(
+                    'Sin lote elegido: la unidad no se toca.')
+                continue
             try:
-                ProductFlow._pf_assign_lot_to_document(
-                    line.kind, line.res_model, line.res_id, chosen,
+                ProductFlow._pf_assign_lots_to_document(
+                    line.kind, 'stock.move', line.move_id.id, [line.lot_id],
                     product=self.product_id)
             except UserError as err:
                 line.result = 'error'
                 line.result_note = str(err) or _(
-                    'No se pudo asignar el lote.')
+                    'No se pudo asignar el lote a la unidad.')
                 continue
-            reserved = self._pf_line_reserved(line, chosen)
+            reserved = self._pf_line_reserved(line, line.lot_id)
             demand = line.demand_qty or 0.0
             if reserved <= _EPS:
                 line.result = 'error'
                 line.result_note = _(
-                    'El lote no quedó reservado en el documento.')
+                    'El lote no quedó reservado en la unidad.')
             elif demand > _EPS and reserved < demand - _EPS:
                 line.result = 'partial'
                 line.result_note = _('Solo se reservó lo disponible.')
             else:
                 line.result = 'assigned'
                 line.result_note = _('Lote asignado.')
-            self._pf_log_document(line, chosen)
+            self._pf_log_document(line, line.lot_id)
         # H-029: se materializa el motivo POR DESTINO en una ventana de solo
         # lectura y se ENCADENA a la notificación. La escritura ya terminó.
         result = self.env[

@@ -90,12 +90,15 @@
   **H-040** (eje centrado en el LOTE, no en la ORDEN/UNIDAD), y **CIERRA H-034** (una entrega con 2 unidades = 2
   filas). **Decidido por el dueño (D1/D2):** grano = **MOVIMIENTO** · se **retiran los DOS modos** y queda **UNA**
   acción **"Asignar lote"**. Ver **§3.O** (contrato §3.3 completo + CA-1…CA-11 + qué se retira).
-- Tarea Activa: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**. Lote en curso:
-  **Lote 1 (T1–T3) `[motor]`**. Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR (Lote 3) → adaptar
-  (Lote 4)**; entre Lote 1 y Lote 2 **la pantalla NO se usa** (estado intermedio declarado).
+- Tarea Activa: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
+  **Lote 1 (T1–T3) `[motor]` ✅ CERRADO** (dev: T1–T3 `[x]`; 41/41 candados de bandeja/pending/**picker** verdes).
+  Lote en curso: **Lote 2 (T4–T5) `[pantalla]`**. Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR
+  (Lote 3) → adaptar (Lote 4)**; los rojos esperados entre lotes están declarados en §3.7.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
-- Responsable Activo (Turno): **Odoo Dev** (paso 4 · **Lote 1 `[motor]` T1–T3**). El Analista revisó el plan
-  (§3.7) y dejó la compuerta §3.3 cerrada; el **motor `x_product_dimensional_pricing` sigue SOLO LECTURA**.
+- Responsable Activo (Turno): **Odoo Vistas** (paso 4 · **Lote 2 `[pantalla]` T4–T5**). **Lote 1 `[motor]` cerrado**
+  (T1–T3 `[x]`; el dev dejó 4 archivos + su bitácora y una **desviación declarada D-1**: borró el botón
+  "Repartir lotes" en el Lote 1 porque **sin eso el módulo no carga**; esa mitad de T5 queda ✅). El **motor
+  `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
 - (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
   en git; test nuevo `TestProductFlowLotAssignBulkSplit` **8/8 verde** y **regresión real de T1** comprobada
@@ -449,10 +452,14 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
 > ya crearon**. Lo que se borra (el form del reparto) se borra **antes** de que T6 borre sus campos.
 > ⚠️ **Estado intermedio declarado:** entre el cierre del Lote 1 y el cierre del Lote 2 la pantalla NO se usa
 > (el motor ya es por fila y el form viejo todavía no tiene el selector por fila).
+> ⚠️ **ROJOS ESPERADOS entre lotes (NO perseguir — es el orden ADD→REPINTAR→BORRAR):**
+> `TestProductFlowLotAssignBulkSplit` (usa `action_split_lot_bulk`, retirado en el **Lote 1** ⇒ lo retira **T8**) y
+> `TestProductFlowLotAssignBulkResult` (guarda por fila + el rótulo "Unidades por asignar" ⇒ lo adapta **T9**).
+> Los candados de **bandeja / pending_order / picker** quedan **VERDES** (verificado en el Lote 1: 41/41).
 
 #### Lote 1 (T1–T3) — `[motor]` · Motor de la decisión POR UNIDAD/MOVIMIENTO (aditivo)
 
-- [ ] **T1 — `wizard/printflow_flow_lot_assign_bulk_line.py`: campos del destino por UNIDAD (grano = MOVIMIENTO).**
+- [x] **T1 — `wizard/printflow_flow_lot_assign_bulk_line.py`: campos del destino por UNIDAD (grano = MOVIMIENTO).**
   - Agregar los campos (respetando el orden OCA: atributos → campos), con `help` en cada uno:
     - `lot_id = fields.Many2one('stock.lot', string='Lote a asignar', help=...)` con
       `domain="[('product_id', '=', bulk_id.product_id), ('id', 'in', bulk_id.candidate_lot_ids)]"`
@@ -477,7 +484,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
     `own_lot_id`, `own_lot_name`, `own_lot_qty`, `sale_order_name`, `sale_line_id` y `move_id` con
     `string='Unidad'`.
 
-- [ ] **T2 — `wizard/printflow_flow_lot_assign_bulk.py`: decisión POR FILA (una sola acción centrada en las órdenes).**
+- [x] **T2 — `wizard/printflow_flow_lot_assign_bulk.py`: decisión POR FILA (una sola acción centrada en las órdenes).**
   - **`_pf_prepare_rows`**: enriquecer cada fila con el **lote propio POR MOVIMIENTO**. Con la MISMA lectura batch
     de movimientos que ya hace (agregar `sale_line_id`, `product_uom_qty`, `picking_id`), resolver
     `own_lot_name` con la **misma primitiva del motor** que usa la bandeja
@@ -526,7 +533,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
     tocaron en este lote). En shell: `bulk.line_ids` trae `own_lot_name`/`sale_line_id` y, cuando el lote propio
     tiene existencia, `lot_id` pre-llenado; cuando no, `lot_id` vacío.
 
-- [ ] **T3 — `wizard/printflow_flow_lot_tray.py`: grano de la fila del contenedor = MOVIMIENTO (cierra H-034) +
+- [x] **T3 — `wizard/printflow_flow_lot_tray.py`: grano de la fila del contenedor = MOVIMIENTO (cierra H-034) +
       retiro de la entrada del reparto.**
   - **`_pf_bulk_rows`**: **expandir** cada fila `pending_order` (que apunta al ALBARÁN) en **UNA fila por
     `stock.move` ACTIVO del producto en ese albarán** (`state not in ('done','cancel')`), con **UNA sola
@@ -590,12 +597,13 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
     motivo; `env.ref('printflow_gestion_inventario.printflow_flow_lot_assign_bulk_view_form_split')` **ya no
     existe**. No se acciona el botón (BD de PRUEBA: solo abrir/leer).
 
-- [ ] **T5 — `wizard/printflow_flow_lot_tray_views.xml`: retirar "Repartir lotes" y re-rotular "Asignar lote".**
-  - **BORRAR** el `<button name="action_split_lot_bulk" ... string="Repartir lotes">` del `<header>` (T7 del anexo
-    **§3.N**: se retira). Queda **UNA** sola acción de lote en bloque (CA-1).
-  - Actualizar el `title` del botón `action_assign_lot_bulk` para declarar el contrato nuevo: *"Elige el lote de
-    CADA unidad (cada fila es un movimiento de la entrega). ESCRIBE inventario por la vía NATIVA (reserva).
-    Requiere jefe de taller/administrador"*.
+- [ ] **T5 — `wizard/printflow_flow_lot_tray_views.xml`: re-rotular "Asignar lote" (el borrado del botón YA está hecho).**
+  - ✅ **BORRAR el `<button name="action_split_lot_bulk" … string="Repartir lotes">`: HECHO en el Lote 1** por
+    **desviación declarada D-1** — sin ese borrado el módulo **no carga** (`ParseError: action_split_lot_bulk is not
+    a valid action on printflow.flow.lot.tray`). Queda **UNA** sola acción de lote en bloque (CA-1).
+  - ⏳ **PENDIENTE (este lote):** actualizar el `title` del botón `action_assign_lot_bulk` para declarar el contrato
+    nuevo: *"Elige el lote de CADA unidad (cada fila es un movimiento de la entrega). ESCRIBE inventario por la vía
+    NATIVA (reserva). Requiere jefe de taller/administrador"*.
   - **NO** tocar los demás botones de cabecera ni las columnas del tree (H-029/H-031/H-032 intactos).
   - **Verificación:** `-u` sin error; con filas seleccionadas en la bandeja aparece **solo** "Asignar lote"
     (además de las acciones de autorización/confirmación ya existentes); "Repartir lotes" **no existe**.
@@ -6299,3 +6307,60 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   **Firma del cierre:** Analista ✅ · Planificador ✅ · Dev ✅ (3 lotes) · Verificador ✅ (`cumple`).
   **Único pendiente = del DUEÑO (funcional, NO de código):** recargar el módulo en el 8071 y probar el botón
   **"Repartir lotes"** (ver §3.N · "pendiente del dueño").
+- [2026-10-17 · Odoo Dev] **§3.O · Lote 1 `[motor]` (T1–T3) COMPLETO.** Grano de la decisión = **MOVIMIENTO**
+  (H-039/H-040; H-034 queda cerrado por construcción en el contenedor). Fuente: `odoo-impreven` /
+  `Ciber Estudios 2015 RESTAURADA` (solo lectura); ruta escrita: `C:\odoo_custom\printflow_gestion_inventario`.
+  *Archivos (4; el motor `x_product_dimensional_pricing` **SIN cambios**):*
+  (1) `wizard/printflow_flow_lot_assign_bulk_line.py` — T1: `lot_id` (decisión por fila, dominio sobre
+  `bulk_id.product_id`/`candidate_lot_ids`), `own_lot_id`/`own_lot_name`/`own_lot_qty`,
+  `sale_order_name`/`sale_line_id`, `move_id` re-rotulado **'Unidad'**; docstring del módulo al grano por unidad.
+  (2) `wizard/printflow_flow_lot_assign_bulk.py` — T2: `_pf_prepare_rows` resuelve el **lote propio por
+  movimiento** (lectura batch + `sale.order.line._get_exclusive_lot_name`, respaldo del `own_lot_name` de la
+  bandeja; FIFO y dedupe intactos); `_pf_populate` escribe las claves nuevas y **pre-llena `lot_id`** solo si el
+  lote propio tiene **existencia efectiva** (`available_here` / `available`, salida de la MISMA lectura de
+  candidatos, sin N+1); `action_assign_lot_bulk` **reescrita**: guardia + motivo + política, guía si ninguna fila
+  trae lote, y por fila `_pf_assign_lots_to_document(kind, 'stock.move', line.move_id.id, [line.lot_id])` con
+  captura `UserError` POR FILA y bitácora por documento; rótulos `Unidades por asignar` / `Filas omitidas` y
+  `selection_note` en unidades. (3) `wizard/printflow_flow_lot_tray.py` — T3: `_pf_bulk_rows` **expande** cada
+  `pending_order` en **una fila por `stock.move` activo** (UNA búsqueda batch, `res_model`/`res_id` = albarán,
+  `move_id` = movimiento exacto, `demand_qty` = `product_uom_qty`) y se **retira** `action_split_lot_bulk`.
+  (4) `wizard/printflow_flow_lot_tray_views.xml` — **desvío declarado** (ver abajo): se borró el `<button
+  name="action_split_lot_bulk">` (T5) porque la vista valida en carga que el método exista.
+  *Verificación:* `py_compile` de los 3 `.py` **OK**; `-u printflow_gestion_inventario` en la BD de test
+  `pf_picker_tests` **sin error de carga** (`--data-dir` propio: el `filestore` de `Program Files` es de otro
+  usuario). En shell (solo lectura): `fields_get` de la línea con los 7 campos y `move_id='Unidad'`; dominio de
+  `lot_id` = `[('product_id','=',bulk_id.product_id),('id','in',bulk_id.candidate_lot_ids)]`;
+  `hasattr(tray,'action_split_lot_bulk') is False`; el contenedor **conserva** `mode`/`split_note`/`lot_id`
+  (se retiran en T6, como manda el orden).
+  *Tests (BD de test `pf_picker_tests`, no la restaurada):* set bandeja/pending/reparto **47 tests → 0 failed /
+  6 error(s)**: los 41 verdes son `TestProductFlowLotPendingOrderAssign`, `TestProductFlowLotTray`,
+  `TestProductFlowLotTrayOrders`, `TestProductFlowLotTrayDocument` y `TestProductFlowLotTrayAuthorizeBulk`
+  (**CA-8 y candados de bandeja intactos**). Los 6 rojos son `TestProductFlowLotAssignBulkSplit`
+  (`AttributeError: … tray … no attribute 'action_split_lot_bulk'`), esperados: **T8 RETIRA ese archivo**.
+  `TestProductFlowLotAssignBulkResult` (4): **1 passed** (candado SQL) + **2 error** (el guard nuevo exige lote
+  por fila; el test aún escribe `bulk.lot_id`) + **1 failed** (`'Unidades por asignar' != 'Entregas por
+  asignar'`, el rótulo que T2 ordena cambiar); **T9 lo adapta**. `TestProductFlowLotAssignBulk` (modo `single`)
+  también queda para **T8**. Ningún test nuevo en este lote (el del camino por unidad es **T7**).
+  *Restricciones:* ✅ sin `cr.execute`/`cr.commit` (solo docstrings); ✅ no se forzó ningún flujo nativo (la ÚNICA
+  escritura sigue siendo `_pf_assign_lots_to_document` → `stock.move._pf_reassign_lots` → primitivas NATIVAS del
+  motor); ✅ motor **sin diff**; ✅ **código sí, datos no** — 0 escrituras en `Ciber Estudios 2015 RESTAURADA`.
+  **Desviaciones declaradas:** (D-1) el `<button name="action_split_lot_bulk">` de la bandeja se borró en ESTE
+  lote (T5 lo pedía): sin eso el módulo **no carga** (`ParseError: action_split_lot_bulk is not a valid action on
+  printflow.flow.lot.tray`), porque la vista valida en carga; se prefirió borrar la superficie antes que dejar el
+  método vivo (residuo que ninguna tarea posterior retiraba). No se tocó ningún otro botón ni el re-rotulado de
+  "Asignar lote" (sigue para `odoo-vistas` en T5). (D-2) El docstring de `action_assign_lot_bulk` (bandeja) se
+  actualizó al grano nuevo **sin cambio de comportamiento**. (D-3) `demand_qty` usa `move.product_uom_qty` como
+  **respaldo** cuando la fila llega sin demanda. (D-4) El `own_lot_qty` de la fila se toma de `qty_on_hand` del
+  candidato (existencia física, igual semántica que `_pf_annotate_lot_quantities` de la bandeja).
+  **Inconsistencias del plan que se REPORTAN (no se arreglan aquí):** (I-1) T2 afirma que
+  `test_product_flow_lot_assign_bulk_result.py` sigue verde, pero T2 cambia un rótulo que ese test afirma y el
+  guard por fila choca con `bulk.lot_id`: solo se pone verde en **T9** (su propia tarea). (I-2) Igual con
+  `test_product_flow_lot_assign_bulk_split.py`: T3 retira el método de la bandeja que ese test usa ⇒ rojo hasta
+  **T8** (que lo retira). (I-3) T3 manda retirar el método pero deja su botón para T5 ⇒ **el módulo no carga**
+  (ver D-1). **Riesgo abierto para Lote 2 (`odoo-vistas`):** el dominio de `lot_id` viaja como
+  `bulk_id.product_id`/`bulk_id.candidate_lot_ids`; si el cliente no lo resolviera en el tree embebido, la
+  salida declarada en T1 es usar `parent.`/campos `related` (no se implementó por no acumular campos sin uso).
+  **Turno → siguiente: Lote 2 (T4–T5) `[pantalla]` (`odoo-vistas`).** Entre este lote y el Lote 2 **la pantalla
+  NO se usa** (estado intermedio declarado). **Pendiente del dueño:** `-u printflow_gestion_inventario` en el
+  8071 cuando lo indique el Analista.
+
