@@ -5,7 +5,8 @@
 - Servidor Odoo: odoo-impreven / http://localhost:8071
 - Base de Datos: Ciber Estudios 2015 RESTAURADA
 - Ruta del Módulo: C:\odoo_custom\printflow_gestion_inventario
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **13 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **11 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+  **Cierre 17/10 · reparto multi-lote (verificado `cumple`): H-036 y H-037 pasan a `resuelto`** → **11 abiertos**.
   **17/10-c (Lote 1 · aviso fuera de alcance):** se ABRE **H-038** (el repo del **MOTOR**
   `x_product_dimensional_pricing` tiene **143 entradas sin commitear** en `main`; riesgo de proceso, NO del módulo
   — se reporta al dueño, no se toca desde aquí).
@@ -75,10 +76,14 @@
   **Acción de código RESUELTA (17/10 · ciclo T1–T9):** mostrar el motivo por destino (**H-029**), no
   des-reservar la excepción al validar en lote (**H-030**) y los rótulos "Entregas/Unidades" (**H-031**).
   Los TRES pasan a `resuelto` en `HALLAZGOS.md` (verificado por el `odoo-verificador`: `cumple`).
-- Responsable Activo (Turno): **Odoo Analista** (revisión del plan ✅ → paso 3). **PLAN APROBADO**: pasa a
-  **`odoo-dev`** (Lote 1: T1–T3). **Verificación del Analista en el punto crítico:** `_pf_reserve_lot` delega en
-  `stock.move._update_reserved_quantity` (primitiva **NATIVA**, **ADITIVA**, no libera) ⇒ el patrón "1 liberación
-  + N reservas" de `_pf_reassign_lots` **SÍ** es aditivo y el diseño se sostiene.
+- Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
+  **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
+  en git; test nuevo `TestProductFlowLotAssignBulkSplit` **8/8 verde** y **regresión real de T1** comprobada
+  (revertir el patrón aditivo ⇒ **CA-1 falla**). Verificación del Analista en el punto crítico: `_pf_reserve_lot`
+  delega en `stock.move._update_reserved_quantity` (primitiva **NATIVA**, **ADITIVA**, no libera) ⇒ el patrón
+  "1 liberación + N reservas" de `_pf_reassign_lots` **SÍ** es aditivo y el diseño se sostiene.
+  **Pendiente del DUEÑO (funcional):** recargar el módulo (`-u printflow_gestion_inventario`) en el servidor 8071
+  y probar el botón **"Repartir lotes"** (ver §3.N · pendiente del dueño).
   (Nota: **H-034** queda FUERA de esta tarea — §3.10 · O-1.) Ciclo anterior: **T1–T3**
   verificados, **0 pendientes**; `odoo-verificador` = `cumple`.
 - Tarea (CERRADA · **NORMAL** · ciclo 17/10-bis): **fix del crash al abrir el detalle del bloque**.
@@ -238,10 +243,12 @@ flowchart TD
 | 🟢 Verde | RUEDAS | Piezas intercambiables (widgets, vistas, options) | Sí, es lo normal |
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
 
-## 3. Especificación Técnica de la Tarea Actual
+## 3.N (ANEXO · TAREA CERRADA) — Reparto multi-lote en bloque (H-037 · H-036)
 
-> **Turno:** Odoo Planificador (cierre del diseño; paso 2). **Estado:** **PLAN COMPLETO** — decisiones **D-A** (Opción B), **D-B** (H-034 FUERA) y **D-C** (camino NATIVO ADITIVO) CERRADAS + **D1–D6**; `T1–T8` en **3 lotes**.
-> → listo para el **paso 3: Analista → `odoo-dev`** (**Lote 1: T1–T3**).
+> **Turno:** Odoo Analista (CIERRE; paso 5). **Estado:** ✅ **TAREA CERRADA** — `T1–T8` en **3 lotes**
+> **COMPLETOS** y **verificado** por el `odoo-verificador` = **`cumple`** (una sola pasada, sin hallazgos).
+> **Cierre 17/10:** **H-036** y **H-037** → `resuelto`; **H-034** FUERA (O-1) y **H-038** sigue `abierto`
+> (riesgo de proceso del repo del MOTOR, ajeno a este módulo).
 > **Tarea GRANDE** (toca el FLUJO NATIVO de reserva de entregas ⇒ **SIEMPRE Grande**: Analista → Planificador →
 > Analista → Dev por lotes → Verificador → Analista).
 > **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`.
@@ -5801,3 +5808,27 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   **Plan §3.11 Lote 3 (T7–T8) COMPLETO (0 pendientes).** Turno → **Odoo Verificador** (una sola pasada, al
   cerrar todos los lotes). **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071
   (`-u printflow_gestion_inventario`) para ver el botón **"Repartir lotes"** y el form del MODO reparto.
+- [2026-10-17 · Odoo Analista] **CIERRE del ciclo H-037/H-036 — reparto multi-lote en bloque.** COMPUERTA DE
+  CONVERGENCIA (§4.3): **APLICADA Y PASADA** ⇒ tarea **CERRADA**.
+  *Checklist §3.11:* `T1–T8` **8/8 en `[x]`**, **0 pendientes** (plan completo en 3 lotes; cada lote en sesión
+  **NUEVA** de `odoo-dev`, sin retomar la anterior).
+  *Verificación (paso 4 · LIGERA, una sola pasada):* `odoo-verificador` = **`cumple`**, **sin hallazgos**;
+  chequeo INDEPENDIENTE suyo: `py_compile` de los `.py` tocados + el test = **exit 0**, y lectura del `git diff`
+  contra la Sección 3.
+  *Evidencia de tests:* `TestProductFlowLotAssignBulkSplit` **8/8 verde** (CA-1..CA-6, CA-8 + candado de SQL
+  crudo) y **regresión real de T1** comprobada (revertir el patrón aditivo ⇒ CA-1 falla; archivo restaurado con
+  `git checkout`, diff vacío). Set de regresión: **113 tests, 1 rojo PRE-EXISTENTE y AJENO** (`TestProductFlowLotPickerUx`,
+  `AssertionError: 6.0 != 8.0`; **delta = 0**, §3.K · O-4 / B1).
+  *Restricciones duras:* ✅ **no** se forzó ningún flujo nativo (la reserva la ejecuta el protocolo **NATIVO**; se
+  consumen `_pf_unreserve_reservation`/`_pf_reserve_lot` **tal cual**); ✅ **motor `x_product_dimensional_pricing`
+  NO tocado** (solo lectura); ✅ sin `cr.execute` de escritura ni `cr.commit()`; ✅ **código sí, datos no** — **0**
+  registros de `Ciber Estudios 2015 RESTAURADA` leídos o escritos (toda la evidencia se tomó en la BD de test
+  `pf_picker_tests`).
+  *Hallazgos:* **H-036** y **H-037** → **`resuelto`** (implementado y verificado). **H-034** sigue FUERA (§3.10 ·
+  O-1; eje vecino: multi-**MOVIMIENTO**). **H-038** sigue `abierto` (riesgo de proceso del repo del MOTOR, ajeno
+  a este módulo; se reporta al dueño, no se toca desde aquí). Contador de la Ficha: **13 → 11 abiertos**.
+  *Git:* `88c0daf` (plan), `ef8c039`/`0ea7fde` (Lote 1), `56de92b`/`181b510` (Lote 2), `ebc6947`/`b2699b0`
+  (Lote 3) — **todo subido a `origin/main`**. La Sección 3 pasó a **§3.N (ANEXO · TAREA CERRADA)**.
+  **Firma del cierre:** Analista ✅ · Planificador ✅ · Dev ✅ (3 lotes) · Verificador ✅ (`cumple`).
+  **Único pendiente = del DUEÑO (funcional, NO de código):** recargar el módulo en el 8071 y probar el botón
+  **"Repartir lotes"** (ver §3.N · "pendiente del dueño").
