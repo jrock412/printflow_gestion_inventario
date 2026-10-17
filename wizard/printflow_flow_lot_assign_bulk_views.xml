@@ -91,6 +91,9 @@
                         Marca la casilla de la fila del lote que quieras asignar a
                         TODA la selección. La fila marcada queda resaltada y el
                         lote se refleja en "Lote a asignar".
+                        La casilla elige <b>UN</b> solo lote por corrida (el último
+                        marcado queda). Para repartir la demanda entre <b>VARIOS</b>
+                        lotes usa el botón "Repartir lotes" de la bandeja.
                     </div>
                     <field name="candidate_ids" nolabel="1"/>
                 </group>
@@ -133,6 +136,175 @@
                             string="Asignar lote" class="btn-primary"
                             icon="fa-tags"
                             title="Asigna el lote elegido a TODAS las entregas sin lote seleccionadas. ESCRIBE inventario por la vía NATIVA (reserva). Requiere jefe de taller/administrador"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ==================================================================
+         MODAL: REPARTIR VARIOS LOTES EN BLOQUE (PrintFlow · H-037)
+         HERMANO del form anterior: lo abre el botón de ACCIÓN SOBRE LA
+         SELECCIÓN "Repartir lotes" de la bandeja de lote
+         (``printflow.flow.lot.tray``). En vez de UN lote, el operador marca con
+         la columna "Incluir" VARIOS lotes con existencia y el reparto consume
+         esos lotes EN EL ORDEN DE LA TABLA (primero el de más disponible) para
+         cubrir la demanda de las entregas seleccionadas.
+
+         La tabla de candidatos se define INLINE (tree EMBEBIDO): NO se toca el
+         tree COMPARTIDO ``printflow_flow_lot_candidate_view_tree`` (que sigue
+         sirviendo al selector por documento y al modo 'single'). La escritura
+         sigue siendo la vía NATIVA (reserva ADITIVA: 1 liberación + N reservas,
+         ver ``stock.move._pf_reassign_lots``). Requiere jefe de
+         taller/administrador (guardia en ``_pf_assert_can_clean``).
+         ================================================================== -->
+    <record id="printflow_flow_lot_assign_bulk_view_form_split" model="ir.ui.view">
+        <field name="name">printflow.flow.lot.assign.bulk.form.split</field>
+        <field name="model">printflow.flow.lot.assign.bulk</field>
+        <field name="arch" type="xml">
+            <!-- NO se pone edit="false": esta superficie ES una decisión (marcar
+                 varios lotes con "Incluir" y escribir el motivo). -->
+            <form string="Repartir lotes en bloque" create="false" delete="false">
+                <!-- Campos técnicos: modo del contenedor y aviso de
+                     disponibilidad AGREGADA. -->
+                <field name="mode" invisible="1"/>
+                <field name="multi_location" invisible="1"/>
+
+                <group string="Selección">
+                    <group>
+                        <field name="product_id" readonly="1"/>
+                        <field name="source_label" readonly="1"/>
+                        <field name="total_demand" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="location_id" readonly="1"/>
+                        <field name="assignable_count" readonly="1"/>
+                        <field name="omitted_count" readonly="1"/>
+                        <!-- Texto VISIBLE (no tooltip): declara la UNIDAD de
+                             cada ranura. Cada fila es una ENTREGA (albarán de
+                             salida); la demanda va en UNIDADES (H-031). -->
+                        <field name="selection_note" readonly="1" nolabel="1"
+                               colspan="2"/>
+                    </group>
+                </group>
+
+                <!-- Aviso VISIBLE: sin una única ubicación efectiva la
+                     disponibilidad mostrada es AGREGADA (suma de todas las
+                     ubicaciones). La reserva real la decide cada entrega con las
+                     reglas NATIVAS de Odoo al repartir. -->
+                <div class="alert alert-warning" colspan="2"
+                     invisible="not multi_location">
+                    Los destinos NO comparten una única ubicación: los lotes
+                    muestran su disponibilidad <b>AGREGADA</b> (suma de todas las
+                    ubicaciones). La reserva real la decide cada entrega al
+                    repartir; la que no alcance queda parcial u omitida.
+                </div>
+
+                <group string="Reparto">
+                    <!-- Plan VISIBLE: lotes marcados EN ORDEN + total disponible
+                         frente a la demanda. -->
+                    <field name="split_note" readonly="1" nolabel="1" colspan="2"/>
+                    <field name="confirm_partial"/>
+                    <div class="text-muted" colspan="2">
+                        Si el total disponible de los lotes marcados es menor que
+                        la demanda de la selección, marca la casilla para repartir
+                        lo disponible: las entregas que no alcancen quedarán
+                        parciales.
+                    </div>
+                    <field name="confirm_exception"/>
+                    <div class="text-muted" colspan="2"
+                         invisible="not confirm_exception">
+                        Confirmas la excepción configurada en la política vigente
+                        (los lotes no son los esperados por los documentos).
+                    </div>
+                </group>
+
+                <group string="Lotes" col="1">
+                    <div class="text-muted" colspan="2">
+                        Marca "Incluir" en TODOS los lotes que quieras repartir: se
+                        consumen en el orden de la tabla (primero el de más
+                        disponible) para cubrir las entregas de arriba hacia abajo.
+                    </div>
+                    <!-- Tree INLINE: NO se toca el tree COMPARTIDO de candidatos
+                         (D1/D6). Mismas decoraciones y columnas que el selector,
+                         con el check de MULTI-selección "Incluir". -->
+                    <field name="candidate_ids" nolabel="1">
+                        <tree string="Lotes"
+                              create="false" delete="false" editable="bottom"
+                              decoration-success="is_own_lot and is_elective"
+                              decoration-warning="is_current_lot"
+                              decoration-info="is_picked"
+                              decoration-muted="is_occupied or not is_elective">
+                            <field name="is_in_split" string="Incluir"
+                                   readonly="not is_elective"/>
+                            <field name="lot_name" string="Lote"/>
+                            <field name="qty_on_hand" string="Existencia"/>
+                            <field name="reserved" string="Reservado"/>
+                            <field name="available" string="Disponible"/>
+                            <field name="role_label" string="Rol"/>
+                            <field name="available_here" string="Libre aquí"
+                                   optional="hide"/>
+                            <field name="covers_demand" string="¿Alcanza?"
+                                   optional="hide"/>
+                            <field name="holder_names" string="Reservado por"
+                                   optional="hide"/>
+                            <field name="location_names" string="Ubicaciones"
+                                   optional="hide"/>
+                            <field name="is_generic" string="Genérico"
+                                   optional="hide"/>
+                            <field name="hint" string="Señal" optional="hide"/>
+                            <field name="is_recommended" string="Sugerido"
+                                   optional="hide"/>
+                            <field name="is_own_lot" column_invisible="True"/>
+                            <field name="is_current_lot" column_invisible="True"/>
+                            <field name="is_authorized" column_invisible="True"/>
+                            <field name="is_elective" column_invisible="True"/>
+                            <field name="is_occupied" column_invisible="True"/>
+                            <field name="is_picked" column_invisible="True"/>
+                            <field name="lot_id" column_invisible="True"/>
+                        </tree>
+                    </field>
+                </group>
+
+                <group string="Destinos" col="1">
+                    <div class="text-muted" colspan="2">
+                        Se reparten los destinos ASIGNABLES (entregas sin lote). Los
+                        demás (OF, insumos, reserva huérfana, duplicados) se OMITEN
+                        y se reportan: no abortan el resto.
+                    </div>
+                    <field name="line_ids" nolabel="1" readonly="1">
+                        <tree create="false" delete="false" editable="false"
+                              decoration-success="result == 'assigned'"
+                              decoration-warning="result == 'partial'"
+                              decoration-muted="result == 'skipped'"
+                              decoration-danger="result == 'error'">
+                            <field name="seq" string="#"/>
+                            <field name="label" string="Destino"/>
+                            <field name="kind" string="Tipo"/>
+                            <field name="demand_qty" string="Demanda"/>
+                            <field name="location_id" string="Ubicación"/>
+                            <field name="result" string="Resultado"/>
+                        </tree>
+                    </field>
+                </group>
+
+                <group string="Motivo de la asignación" col="1">
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="¿Por qué se reparten estos lotes entre estas entregas?"/>
+                    <div class="text-muted">
+                        El motivo es OBLIGATORIO y queda en la bitácora de cada
+                        documento. El reparto requiere jefe de
+                        taller/administrador y ESCRIBE inventario por la vía NATIVA
+                        (reserva ADITIVA: una liberación + N reservas).
+                    </div>
+                </group>
+
+                <footer>
+                    <button name="action_split_lot_bulk" type="object"
+                            string="Repartir lotes" class="btn-primary"
+                            icon="fa-random"
+                            title="Reparte la demanda de las entregas sin lote seleccionadas entre VARIOS lotes con existencia (en el orden de la tabla: primero el de más disponible). ESCRIBE inventario por la vía NATIVA (reserva ADITIVA). Requiere jefe de taller/administrador"/>
                     <button string="Cancelar" class="btn-secondary"
                             special="cancel"/>
                 </footer>

@@ -1054,14 +1054,12 @@ class PrintflowFlowLotTray(models.TransientModel):
 
         Flujo (D2/D5/D7):
         1. guardia de permisos ``_pf_assert_can_clean`` (jefe de taller/admin);
-        2. filtra las filas ASIGNABLES (``can_choose_lot`` y kind de entrega sin
-           lote —``missing_move``/``pending_order``— con producto); el resto se
-           OMITE y se cuenta;
-        3. resuelve el ``stock.move`` de cada fila con ``_pf_document_move``
-           (ya soporta ``pending_order``), DESCARTA las que no resuelven y
-           DEDUPLICA por ``move.id`` (D5: ``missing_move`` y ``pending_order``
-           pueden apuntar al MISMO albarán);
-        4. delega la construcción del contenedor en
+        2. delega la traducción de la selección a filas en el helper COMPARTIDO
+           ``_pf_bulk_rows`` (filtra las asignables; el resto se OMITE y se
+           cuenta; resuelve el ``stock.move`` con ``_pf_document_move`` —ya
+           soporta ``pending_order``—, DESCARTA las que no resuelven y DEDUPLICA
+           por ``move.id``, D5);
+        3. delega la construcción del contenedor en
            ``printflow.flow.lot.assign.bulk._pf_populate`` (que reutiliza el
            cálculo de candidatos y la dedupe/orden) y abre su form a
            ``target='new'``.
@@ -1077,15 +1075,53 @@ class PrintflowFlowLotTray(models.TransientModel):
         if not records:
             return self._pf_authorize_selected_notification(
                 _('Selecciona al menos una entrega sin lote para asignar.'))
+        product, rows, omitted = self._pf_bulk_rows(records)
+        if not product:
+            return self._pf_authorize_selected_notification(_(
+                'No había entregas sin lote asignables en la selección: se '
+                'omiten los ítems que no admiten elegir lote.'))
+        if not rows:
+            return self._pf_authorize_selected_notification(_(
+                'No había entregas con un movimiento activo en la selección.'))
+        bulk = self.env['printflow.flow.lot.assign.bulk']._pf_populate(
+            product, rows, omitted_count=omitted)
+        if not bulk:
+            return self._pf_authorize_selected_notification(_(
+                'No se pudo preparar la asignación en bloque.'))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Asignar lote en bloque'),
+            'res_model': 'printflow.flow.lot.assign.bulk',
+            'res_id': bulk.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    @api.model
+    def _pf_bulk_rows(self, records):
+        """Prepara ``(product, rows, omitted)`` de una selección (SIN efectos).
+
+        Extracción BEHAVIOR-PRESERVING de ``action_assign_lot_bulk`` (T5): NO
+        notifica ni escribe; solo traduce la selección a las filas CRUDAS que
+        consume ``printflow.flow.lot.assign.bulk._pf_populate``. Filtra las filas
+        ASIGNABLES (``can_choose_lot`` y kind de entrega sin lote con producto),
+        resuelve el ``stock.move`` de cada una con ``_pf_document_move`` (ya
+        soporta ``pending_order``), DESCARTA las que no resuelven y DEDUPLICA por
+        ``move.id`` (D5). Las descartadas se suman a ``omitted``.
+
+        Devuelve ``product`` VACÍO si no hay ninguna fila asignable, para que el
+        llamador distinga ese caso del de "asignables pero sin movimiento".
+
+        :param records: filas de la bandeja ya resueltas/``exists()``.
+        :rtype: tuple[product.product, list[dict], int]
+        """
         candidates = records.filtered(
             lambda rec: rec.can_choose_lot
             and rec.kind in _BULK_ASSIGNABLE_KINDS
             and rec.product_id)
         omitted = len(records) - len(candidates)
         if not candidates:
-            return self._pf_authorize_selected_notification(_(
-                'No había entregas sin lote asignables en la selección: se '
-                'omiten los ítems que no admiten elegir lote.'))
+            return self.env['product.product'], [], omitted
         product = candidates[:1].product_id
         rows = []
         seen_moves = set()
@@ -1111,20 +1147,61 @@ class PrintflowFlowLotTray(models.TransientModel):
                 'scheduled_date': rec.scheduled_date or False,
                 'own_lot_name': rec.own_lot_name or '',
             })
+        return product, rows, omitted
+
+    def action_split_lot_bulk(self):
+        """Abre el wizard de REPARTO multi-lote de las ENTREGAS seleccionadas.
+
+        Método PÚBLICO a propósito (Odoo 17 rechaza invocar privados por RPC).
+        HERMANO de ``action_assign_lot_bulk``: sobre la MISMA selección, pero abre
+        el contenedor en ``mode='split'`` (varios lotes marcados con "Incluir").
+
+        Flujo:
+        1. guardia de permisos ``_pf_assert_can_clean`` (jefe de taller/admin);
+        2. toma las filas seleccionadas (``self``) o el ``active_domain`` del
+           contexto —igual que ``action_assign_lot_bulk``;
+        3. prepara las filas con el helper COMPARTIDO ``_pf_bulk_rows`` (misma
+           dedupe/orden y mismo conteo de omitidas que el modo ``single``);
+        4. delega la construcción del contenedor en
+           ``printflow.flow.lot.assign.bulk._pf_populate(..., mode='split')`` y
+           abre el FORM DEL MODO REPARTO (``views`` explícitos: se declaran para
+           abrir ESA vista y no la del modo ``single``).
+
+        NO escribe nada: el reparto lo ejecuta el wizard por la vía NATIVA.
+        """
+        self.env['printflow.stock.remedy']._pf_assert_can_clean()
+        records = self
+        if not records:
+            records = self.search(self.env.context.get('active_domain') or [])
+        records = records.exists()
+        if not records:
+            return self._pf_authorize_selected_notification(_(
+                'Selecciona al menos una entrega sin lote para repartir los '
+                'lotes.'))
+        product, rows, omitted = self._pf_bulk_rows(records)
+        if not product:
+            return self._pf_authorize_selected_notification(_(
+                'No había entregas sin lote asignables en la selección: se '
+                'omiten los ítems que no admiten elegir lote.'))
         if not rows:
             return self._pf_authorize_selected_notification(_(
                 'No había entregas con un movimiento activo en la selección.'))
         bulk = self.env['printflow.flow.lot.assign.bulk']._pf_populate(
-            product, rows, omitted_count=omitted)
+            product, rows, omitted_count=omitted, mode='split')
         if not bulk:
             return self._pf_authorize_selected_notification(_(
-                'No se pudo preparar la asignación en bloque.'))
+                'No se pudo preparar el reparto de lotes.'))
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Asignar lote en bloque'),
+            'name': _('Repartir lotes en bloque'),
             'res_model': 'printflow.flow.lot.assign.bulk',
             'res_id': bulk.id,
             'view_mode': 'form',
+            # El form del MODO reparto se pasa EXPLÍCITO para no abrir el del
+            # modo 'single' (mismo modelo, otra superficie).
+            'views': [(self.env.ref(
+                'printflow_gestion_inventario.'
+                'printflow_flow_lot_assign_bulk_view_form_split').id, 'form')],
             'target': 'new',
         }
 
