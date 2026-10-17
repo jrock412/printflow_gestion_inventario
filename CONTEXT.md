@@ -620,7 +620,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
 
 #### Lote 2 (T4–T6) — Contenedor en modo reparto · bandeja · vistas
 
-- [ ] **T4 — `wizard/printflow_flow_lot_assign_bulk.py`: MODO reparto (D1/D2/D3/D5).**
+- [x] **T4 — `wizard/printflow_flow_lot_assign_bulk.py`: MODO reparto (D1/D2/D3/D5).**
   - Campos NUEVOS: `mode = fields.Selection([('single', 'Un lote (el marcado)'), ('split', 'Reparto
     multi-lote')], string='Modo', default='single', readonly=True, help=...)` y
     `split_note = fields.Char(string='Orden del reparto', compute='_compute_split_note', readonly=True, help=...)`.
@@ -666,7 +666,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
     devuelve `mode` y `split_note`; los candados `test_product_flow_lot_assign_bulk.py`,
     `test_product_flow_lot_assign_bulk_result.py`, `test_product_flow_lot_pending_order_assign.py` siguen
     **verdes** (reportar en bitácora).
-- [ ] **T5 — `wizard/printflow_flow_lot_tray.py`: acción "Repartir lotes" + helper compartido.**
+- [x] **T5 — `wizard/printflow_flow_lot_tray.py`: acción "Repartir lotes" + helper compartido.**
   - Extraer del cuerpo de `action_assign_lot_bulk` un helper privado `_pf_bulk_rows(self, records)` que devuelve
     `(product, rows, omitted)` **SIN efectos secundarios ni notificaciones** (la construcción de `rows` con
     `_pf_document_move`, el descarte de las que no resuelven y el **dedupe por `move.id`** se mueven tal cual).
@@ -690,7 +690,7 @@ Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja F
   - **Verificación:** `py_compile` OK; `hasattr(env['printflow.flow.lot.tray'], 'action_split_lot_bulk')`; los
     candados de bandeja (`test_product_flow_lot_tray*.py`) **verdes** (la extracción del helper no cambia el
     modo `single`).
-- [ ] **T6 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: form del MODO reparto + microcopy de H-036.**
+- [x] **T6 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: form del MODO reparto + microcopy de H-036.**
   - **AGREGAR** `<record id="printflow_flow_lot_assign_bulk_view_form_split" model="ir.ui.view">` (`name` =
     `printflow.flow.lot.assign.bulk.form.split`, `model` = `printflow.flow.lot.assign.bulk`): `<form
     string="Repartir lotes en bloque" create="false" delete="false">` con
@@ -5674,3 +5674,81 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   motor sí está limpio). **Regla respetada: código sí, datos no** — 0 registros de la BD `Ciber Estudios 2015
   RESTAURADA` escritos. **Plan §3.11 Lote 1 (T1–T3) COMPLETO (0 pendientes).** Turno → **Odoo Dev**
   (Lote 2: T4–T6, sesión NUEVA).
+- [2026-10-17 · Odoo Dev] **Lote 2 (T4–T6) ejecutado** — contenedor en MODO reparto + acción de bandeja +
+  vistas (H-037 / H-036). Sesión NUEVA; no se retomó ninguna anterior; no se tocaron tareas `[x]` ni las del
+  Lote 3.
+  **(T4) `wizard/printflow_flow_lot_assign_bulk.py`:** campos NUEVOS `mode` (Selection `single`/`split`,
+  default `'single'`, readonly) y `split_note` (Char compute VISIBLE); `_compute_split_note`
+  (`@api.depends('candidate_ids.is_in_split','candidate_ids.lot_name','candidate_ids.available_here',
+  'candidate_ids.available','total_demand')`, orden = el de la tabla vía `filtered('is_in_split')`, texto guía
+  si no hay marcados, `%.2f` sin sufijos); `_pf_populate(self, product, rows, omitted_count=0, mode='single')`
+  (**argumento NUEVO con default** ⇒ los llamadores del modo `single` no cambian) con `'mode': mode` en el
+  `create`; `_pf_split_lots()` (lista ORDENADA de `stock.lot`); `_pf_check_split_coverage(lots)` (D3: libre por
+  ubicación efectiva vía `stock.quant._get_available_quantity` o `Σ available` de los marcados si
+  `multi_location`; `UserError` guía si `<= _EPS` o si no alcanza sin `confirm_partial`; **no escribe**);
+  `action_split_lot_bulk()` (mismo esqueleto del `single`: guardia `_pf_assert_can_clean` → `reason`
+  obligatorio → política `_pf_exception_policy` → cobertura → bucle FIFO con captura de `UserError` POR
+  destino → `_pf_line_breakdown` + clasificación `error`/`partial`/`assigned` → `_pf_log_split_document` →
+  `_pf_build_from_bulk` + `_pf_result_notification`, **mismos 4 conteos**); `_pf_line_breakdown(line, lots)`
+  (desglose *"Reparto: lote → qty · …"*, aviso de lotes sin existencia, `sudo()`, **no** toca
+  `_pf_line_reserved`); `_pf_log_split_document(line, lots, reserved)` (patrón de `_pf_log_document`, que NO se
+  toca). **INTACTOS:** `action_assign_lot_bulk`, `_pf_selected_lot`, `_pf_check_coverage`, `_pf_log_document`,
+  `_pf_result_notification`, `_pf_line_reserved` (modo `single` byte a byte). Docstring del módulo extendido
+  (dos modos) + contrato.
+  **(T5) `wizard/printflow_flow_lot_tray.py`:** helper NUEVO `@api.model _pf_bulk_rows(self, records)` que
+  devuelve `(product, rows, omitted)` **sin efectos secundarios ni notificaciones** (extracción
+  BEHAVIOR-PRESERVING: filtro de asignables, `_pf_document_move`, descarte y **dedupe por `move.id`** se
+  movieron TAL CUAL); `action_assign_lot_bulk` **conserva el mismo comportamiento observable** (mismos mensajes
+  de vacío y mismo `act_window`) y ahora **solo delega** en el helper; `action_split_lot_bulk(self)` NUEVO
+  (público, Odoo 17 rechaza privados por RPC): guardia → `records = self or search(active_domain)` →
+  `_pf_bulk_rows` → `_pf_populate(..., mode='split')` → `act_window` con **`views` explícitos** al form
+  `printflow_gestion_inventario.printflow_flow_lot_assign_bulk_view_form_split`. **NO** se tocaron
+  `_pf_document_move`, `_pf_populate`, `_pf_rows_*`, `action_authorize_selected` ni el tree.
+  **(T6) `wizard/printflow_flow_lot_assign_bulk_views.xml`:** `<record id="printflow_flow_lot_assign_bulk_view_form_split">`
+  NUEVO (`name` = `printflow.flow.lot.assign.bulk.form.split`, `<form string="Repartir lotes en bloque">`) con
+  `mode`/`multi_location` ocultos, grupo "Selección" con **los mismos rótulos** (H-031), aviso `alert-warning`
+  de `multi_location`, grupo "Reparto" con `split_note` **VISIBLE** + `confirm_partial`/`confirm_exception` y su
+  microcopy, grupo "Lotes" con `<field name="candidate_ids">` y un **`<tree>` INLINE** (`editable="bottom"`,
+  mismas decoraciones, columna `is_in_split` `string="Incluir"` `readonly="not is_elective"`, secundarios
+  `optional="hide"` y de apoyo `column_invisible="True"`), grupo "Destinos" con el **MISMO** tree readonly de
+  `line_ids`, "Motivo de la asignación" con `reason` required y `<footer>` con `action_split_lot_bulk`
+  (`btn-primary`, `fa-random`) + Cancelar; y al form del modo `single` **solo se le AGREGA** una frase al
+  `<div class="text-muted">` de la ranura "Lotes" (H-036: "la casilla elige UN solo lote por corrida… para
+  repartir usa 'Repartir lotes'"). **NO** se tocó el tree COMPARTIDO
+  `printflow_flow_lot_candidate_view_tree` (R-5) ni `__manifest__.py` (la vista nueva es un `<record>` de un
+  archivo YA declarado en `data`).
+  **Evidencia de sintaxis:** `python -m py_compile` de `wizard/printflow_flow_lot_assign_bulk.py` y
+  `wizard/printflow_flow_lot_tray.py` ⇒ **OK (exit 0)**.
+  **Evidencia de carga + tests (BD de TEST `pf_picker_tests`, NUNCA la de producción):**
+  `odoo-bin -c odoo.conf -d pf_picker_tests -u printflow_gestion_inventario --data-dir=<temp>
+  --no-http --test-enable --test-tags /printflow_gestion_inventario:TestProductFlowLotAssignBulk,
+  /printflow_gestion_inventario:TestProductFlowLotAssignBulkResult,… --stop-after-init --logfile=<archivo>`
+  ⇒ **exit 1** por **UN** rojo, **1 failed / 0 error(s) de 110**. La carga del módulo **terminó sin error**
+  ("Modules loaded.", 109 módulos) y la **vista NUEVA cargó** como `ir.ui.view(2070)` (su arch carga
+  `mode`/`split_note`/`is_in_split` ⇒ los campos EXISTEN y resuelven; único aviso = `alert` sin `role`, el
+  MISMO patrón que ya emitía el form `single` ⇒ no es regresión). Desglose (todos ejecutados):
+  `TestLotManagement` 22, `TestProductFlowLotTray` 15, `TestProductFlowLotTrayDocument` 12,
+  `TestProductFlowLotPicker` 11, `TestProductFlowLotAssignBulk` 10, `TestProductFlowLotTrayAuthorizeBulk` 5,
+  `TestProductFlowLotTrayOrders` 5, `TestProductFlowOverReservationScoped` 5, `TestTrayAuthorizeCurrentLot` 5,
+  `TestPfBulkValidatePreservesLot` 4, `TestProductFlowLotAssignBulkResult` 4,
+  `TestProductFlowLotPickerCandidates` 4, `TestProductFlowLotCoupledChain` 3, `TestProductFlowLotPickerUx` 3,
+  `TestProductFlowLotPendingOrderAssign` 2.
+  **El ÚNICO rojo es PRE-EXISTENTE y AJENO (delta = 0):**
+  `TestProductFlowLotPickerUx.test_own_and_current_lots_are_listed_and_labeled`
+  (`test_product_flow_lot_picker_ux.py:143`, `AssertionError: 6.0 != 8.0`) — el MISMO rojo ya documentado en el
+  anexo **§3.K · O-4** (aritmética del propio test sobre existencias/reservas, ajeno a este lote; **B1/O-5 no
+  se persigue**). **Nota de entorno (no del código):** el primer intento falló con
+  `PermissionError [WinError 5]` sobre `sessions\filestore\pf_picker_tests` (escritura del `web_icon` de
+  `views/printflow_inventory_health_views.xml:260`) ⇒ se re-corrió con `--data-dir` en un directorio
+  ESCRIBIBLE (temp). Es un permiso del filestore de la instalación, **ajeno** a estos archivos (esa vista no se
+  tocó).
+  **NO se tocó** el motor `x_product_dimensional_pricing` (**solo lectura**; se consumen
+  `_pf_unreserve_reservation`/`_pf_reserve_lot` tal cual); sin `cr.execute` de escritura ni `cr.commit()`; la
+  ÚNICA escritura sigue siendo el protocolo NATIVO disparado por el operador. **Regla respetada: código sí,
+  datos no** — 0 registros de `Ciber Estudios 2015 RESTAURADA` leídos o escritos (toda la evidencia se tomó en
+  la BD de test).
+  **Regresión REAL de T1 (CA-1) aún NO comprobable aquí:** el test del reparto es **T8 (Lote 3)**.
+  **Plan §3.11 Lote 2 (T4–T6) COMPLETO (0 pendientes).** Turno → **Odoo Dev** (Lote 3: T7–T8, sesión NUEVA).
+  **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071
+  (`-u printflow_gestion_inventario`) para ver el botón **"Repartir lotes"** y el form del MODO reparto
+  (el botón de cabecera es la **T7**, siguiente lote).
