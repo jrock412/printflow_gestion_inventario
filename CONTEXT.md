@@ -39,13 +39,13 @@
   5. **HALLAZGO NUEVO (H-034, código):** el bloque resuelve **UN solo `stock.move` por albarán** (`limit=1`) ⇒
      las entregas con **2 movimientos del mismo producto** (**WH/OUT/05608** y **WH/OUT/06483**) quedan a medias
      y al validar siguen pidiendo el lote; el 2.º movimiento **no aparece en ninguna superficie** de la bandeja.
-     **Requiere tarea de código** (no abierta todavía: se espera la decisión del dueño).
+     **Requiere tarea de código PROPIA** (queda FUERA de esta tarea: §3.4 · D-B / §3.10 · O-1; espera la decisión del dueño).
   6. **HALLAZGO NUEVO (H-036, UX/contrato — 2.ª ronda):** el check **"Asignar"** de la tabla de candidatos es de
      **selección ÚNICA** (gana el **último** tick; el wizard asigna **UN** lote por corrida, **no** reparte la
      demanda entre varios). Evidencia: en la corrida **bulk id 4** (13:25) la única fila marcada fue `SN126353`
      (**1 u**), aunque el recomendado de 23 u (`666634`) seguía visible con `is_recommended=True` ⇒ `bulk.lot_id`
      = `SN126353` ⇒ **1 asignada / 25 con error**. La lectura del dueño ("marqué el 23 + los de 1 u") es correcta
-     como gesto, pero el diseño asigna un lote por corrida. **Requiere decisión de código/UX** (junto con H-034).
+     como gesto, pero el diseño asigna un lote por corrida. **RESUELTO por el Planificador:** el modo `single` declara en pantalla que asigna UN lote por corrida (D6) y el camino de reparto es el botón "Repartir lotes" (D1/§3.11).
    **Hallazgo nuevo de DATOS:** **H-035** (reservas colgadas sin lote en WH/OUT/03009 y WH/OUT/03120; quant
    **15219** con disponible **−2**). **Acción de DATOS del dueño:** asignar desde la bandeja con un lote **CON
    existencia** (`666634` = 23 u) y luego con los lotes de 1 u; **no** teclear cantidades a mano.
@@ -55,8 +55,8 @@
      contenedor (`lot_id` único; docstring *"UN lote a N entregas"*). Lo que falta es una **capacidad NUEVA**
      (reparto multi-lote). Agravante: la primitiva NATIVA `stock.move._pf_reassign_lot` **libera la reserva
      entera y luego reserva** ⇒ **no es aditiva** (dos llamadas con dos lotes borran el primero). **Se abre tarea
-     de código GRANDE** — ver **Sección 3** (Analista → Planificador); el Analista **recomienda** conservar el
-     contenedor y añadirle un camino de reparto (opción **B**), con **H-034** a evaluar aparte.
+     de código GRANDE** — ver **Sección 3** (Analista → Planificador; **plan CERRADO**, §3.4–§3.11); el Analista **recomienda** conservar el
+     contenedor y añadirle un camino de reparto (opción **B**), con **H-034** fuera de esta tarea. **PLAN CERRADO en §3.4–§3.11:** D-A = Opción B · D-B = H-034 FUERA · D-C = camino NATIVO ADITIVO.
 - **NOTA DE INCIDENCIA (RESUELTA — 17/10/2026 · turno Analista):** el dueño reporta *"asigné el lote y al validar
   me pide el número de lote"* en **WH/OUT/02994** (picking 23057, S03281). Diagnóstico con evidencia
   (fuente `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`):
@@ -72,8 +72,11 @@
   **Acción de código RESUELTA (17/10 · ciclo T1–T9):** mostrar el motivo por destino (**H-029**), no
   des-reservar la excepción al validar en lote (**H-030**) y los rótulos "Entregas/Unidades" (**H-031**).
   Los TRES pasan a `resuelto` en `HALLAZGOS.md` (verificado por el `odoo-verificador`: `cumple`).
-- Responsable Activo (Turno): **Odoo Analista** — **3.ª incidencia de lote ABIERTA** (ver la NOTA de incidencia
-  de arriba; **H-034** espera decisión del dueño para abrir tarea de código). Ciclo anterior: **T1–T3**
+- Responsable Activo (Turno): **Odoo Analista** (revisión del plan ✅ → paso 3). **PLAN APROBADO**: pasa a
+  **`odoo-dev`** (Lote 1: T1–T3). **Verificación del Analista en el punto crítico:** `_pf_reserve_lot` delega en
+  `stock.move._update_reserved_quantity` (primitiva **NATIVA**, **ADITIVA**, no libera) ⇒ el patrón "1 liberación
+  + N reservas" de `_pf_reassign_lots` **SÍ** es aditivo y el diseño se sostiene.
+  (Nota: **H-034** queda FUERA de esta tarea — §3.10 · O-1.) Ciclo anterior: **T1–T3**
   verificados, **0 pendientes**; `odoo-verificador` = `cumple`.
 - Tarea (CERRADA · **NORMAL** · ciclo 17/10-bis): **fix del crash al abrir el detalle del bloque**.
   Atacó **H-032** (la acción `act_window` anidada en `params['next']` iba **sin `views`** ⇒
@@ -234,8 +237,8 @@ flowchart TD
 
 ## 3. Especificación Técnica de la Tarea Actual
 
-> **Turno:** Odoo Analista (APERTURA de la incidencia; paso 1). **Estado:** **contrato redactado, SIN plan
-> todavía** → pasa al **paso 2: `odoo-planificador`**.
+> **Turno:** Odoo Planificador (cierre del diseño; paso 2). **Estado:** **PLAN COMPLETO** — decisiones **D-A** (Opción B), **D-B** (H-034 FUERA) y **D-C** (camino NATIVO ADITIVO) CERRADAS + **D1–D6**; `T1–T8` en **3 lotes**.
+> → listo para el **paso 3: Analista → `odoo-dev`** (**Lote 1: T1–T3**).
 > **Tarea GRANDE** (toca el FLUJO NATIVO de reserva de entregas ⇒ **SIEMPRE Grande**: Analista → Planificador →
 > Analista → Dev por lotes → Verificador → Analista).
 > **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`.
@@ -274,9 +277,9 @@ una sola vez, y **todos** los lotes quedan reservados por la vía NATIVA en las 
 con el reporte por destino y el motivo intactos; el selector por documento sigue igual; los tests del módulo
 pasan en verde.
 
-### 3.3 Contrato funcional (qué debe quedar) — decisiones ABIERTAS para el Planificador
+### 3.3 Contrato funcional (qué debe quedar) — decisiones RESUELTAS en §3.4
 
-**Decisión D-A (arquitectura) — la decide el Planificador, CON justificación:**
+**Decisión D-A (arquitectura) — RESUELTA por el Planificador: OPCIÓN B** (se conserva el contenedor y gana un MODO de reparto; ver §3.4 · D-A).
 
 - **Opción A:** un **wizard NUEVO** solo para el reparto multi-lote.
 - **Opción B (recomendada por el Analista):** **conservar** `printflow.flow.lot.assign.bulk` y añadirle un
@@ -299,34 +302,499 @@ pasan en verde.
 | **C5** | Se conserva el **reporte por destino** (asignado / parcial / omitido / error) y el detalle (H-029) **sin regresión**. |
 | **C6** | La **excepción de lote** y la política (`pf_lot_assign_exception_policy`) siguen gobernando (cero hardcodeo). |
 
-**PREGUNTA TÉCNICA BLOQUEANTE que el Planificador DEBE resolver:** un mismo `stock.move` puede necesitar **2+
-lotes** (p. ej. demanda 2 u con lotes de 1 u). El camino actual (`_pf_reassign_move_lot` → `_pf_reassign_lot`)
+**PREGUNTA TÉCNICA BLOQUEANTE — RESUELTA por el Planificador: CAMINO NATIVO ADITIVO (i)** (ver §3.4 · D-C: `_update_reserved_quantity` SUMA a la línea del mismo lote, no reemplaza).
+Un mismo `stock.move` puede necesitar **2+ lotes** (p. ej. demanda 2 u con lotes de 1 u). El camino actual (`_pf_reassign_move_lot` → `_pf_reassign_lot`)
 **libera** la reserva antes de reservar ⇒ **NO es aditivo** (P3). Dos salidas posibles: (i) hallar el camino
 **NATIVO ADITIVO** (reserva acumulativa vía `_update_reserved_quantity` sobre el movimiento respetando la
 excepción de lote), o (ii) **acotar el alcance** a "**un lote por movimiento/destino**" y declararlo explícito.
 Debe quedar escrito cuál se elige y por qué.
 
-**Decisión D-B (alcance) — la decide el Planificador:** si **H-034** (un solo `stock.move` por albarán) entra en
-esta tarea o se deja FUERA (declarado en "Observaciones fuera de alcance").
+**Decisión D-B (alcance) — RESUELTA por el Planificador: H-034 queda FUERA** (declarado en §3.10 · O-1).
+Si **H-034** (un solo `stock.move` por albarán) entra en esta tarea o se deja FUERA (declarado en "Observaciones fuera de alcance").
 
-### 3.4 Restricciones duras
+### 3.4 Decisiones de diseño CERRADAS (D-A · D-B · D-C · D1–D6)
 
-1. **Código sí, datos no** (`regla-trabajo-odoo-17-ce`).
-2. El motor `x_product_dimensional_pricing` **NO se edita** (solo lectura).
-3. **No reinventar ni forzar flujos nativos**: se engancha con `_inherit` + `super()`; **PROHIBIDO** tocar
-   `stock.quant`/`stock.move` a mano, los estados (`state`, `qty_done`, `quantity`), `cr.execute` de escritura o
-   `cr.commit()`.
-4. Convenciones **OCA** (`odoo-17-clean-architecture` §2.5).
-5. **Sin hardcodeo**: lo configurable va a `ir.config_parameter` / `res.config.settings`.
+> **Cierre del Odoo Planificador.** Fuente: `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` · Rutas:
+> `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: aquí se escribe) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor; **SOLO LECTURA — NO se edita**).
+> Regla vigente: **código sí, datos no** (`regla-trabajo-odoo-17-ce`); cadena: Analista → **Planificador** →
+> Analista → Dev (por lotes, máx. 3) → Verificador → Analista.
+> **No se reinventa ni se fuerza ningún flujo nativo:** toda reserva sigue pasando por las PRIMITIVAS NATIVAS
+> (`stock.move._do_unreserve` / `stock.move._update_reserved_quantity`, que el motor expone como
+> `_pf_unreserve_reservation` / `_pf_reserve_lot`). El diseño **ENGANCHA** el protocolo existente y le añade el
+> ÚNICO eslabón que faltaba: reservar **N lotes de forma ADITIVA** sobre el MISMO movimiento (hoy la primitiva
+> del motor es "liberar TODO y reservar UNO").
+> **Trazabilidad:** D-A → decide arquitectura · D-B → decide alcance · D-C → **responde la pregunta
+> bloqueante** · D1–D6 → diseño de detalle.
 
-### 3.5 Pendiente del dueño
+**D-A — Arquitectura: OPCIÓN B (CERRADA · el contenedor gana un MODO de reparto).**
+- Se **CONSERVA** `printflow.flow.lot.assign.bulk` (TransientModel: destinos `line_ids`, candidatos
+  `candidate_ids`, `reason`, política, cobertura, captura de error por destino, bitácora y el detalle
+  `printflow.flow.lot.assign.bulk.result`) y se le añade un **MODO**: `mode = 'single' | 'split'`.
+- `mode='single'` es el de HOY, **sin cambios observables**: mismo `action_assign_lot_bulk`, mismos 4 conteos,
+  mismo encadenado del detalle (**H-029**), misma cobertura, mismo escritor.
+- `mode='split'` es el **REPARTO multi-lote** (H-037).
+- **Por qué NO un wizard nuevo (Opción A):** duplicaría las SEIS piezas que el contenedor ya tiene
+  (`_pf_prepare_rows` + dedupe, tabla de candidatos, `_pf_check_coverage`, captura por destino, bitácora y
+  wizard de resultado) y sus tests; y el contenedor **YA** es el sitio correcto ("N destinos + K lotes +
+  1 motivo"). **Por qué NO tocar el selector por documento:** su contrato es UN lote por documento y está
+  cubierto por tests (**C4**).
+- **Entrada nueva (acción sobre la SELECCIÓN):** botón de cabecera **"Repartir lotes"**
+  (`action_split_lot_bulk`) en la bandeja `printflow.flow.lot.tray`, HERMANO de "Asignar lote"; abre el MISMO
+  contenedor en `mode='split'`.
 
-Confirmar la **dirección (Opción A vs Opción B)** y si **H-034** entra en el alcance. El Analista **recomienda la
-Opción B** (reutilizar el contenedor) y **evaluar H-034 por separado** (es un eje vecino: multi-MOVIMIENTO, no
-multi-LOTE).
+**D-B — Alcance: H-034 (multi-MOVIMIENTO) queda FUERA de esta tarea (CERRADA).**
+- Esta tarea es **multi-LOTE**; **H-034** es **multi-MOVIMIENTO** (un albarán con 2+ movimientos del mismo
+  producto: `_pf_rows_pending_orders` produce UNA fila por ORDEN y la resolución usa `limit=1`).
+- Se **declara** en §3.10 (**O-1**) con su evidencia y se deja para una tarea propia (requiere cambiar la
+  ENUMERACIÓN de filas de la bandeja y la resolución a N movimientos por albarán: otra superficie, otro riesgo y
+  otra decisión del dueño). **NO** se toca el `limit=1` de `_pf_document_move` ni el de
+  `_pf_assign_lot_on_pending_order_doc`.
+- **Consecuencia asumida (declarada):** en un albarán con 2 movimientos del producto el reparto resuelve **UN**
+  movimiento (igual que hoy); el segundo sigue apareciendo al validar (H-034) y **no empeora** por esta tarea.
+
+**D-C — RESPUESTA A LA PREGUNTA BLOQUEANTE: camino NATIVO ADITIVO (i) (CERRADA).**
+- **Hecho verificado en el fuente INSTALADO del core**
+  (`C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\stock\models\stock_move.py`, L1505-1559,
+  `_update_reserved_quantity`): la primitiva nativa **NO reemplaza** la reserva: busca la `stock.move.line` cuya
+  clave `(location, lot, package, owner)` coincide y **SUMA** a su `quantity`; si no existe, **CREA** una línea
+  nueva. **Nunca borra las líneas de OTROS lotes** ⇒ llamada N veces con N lotes distintos, la reserva es
+  **ACUMULATIVA** (N líneas, un lote cada una, con la cantidad acotada por lo disponible).
+- **Por qué HOY no era aditiva (P3):** porque el camino actual (`_pf_reassign_move_lot` → motor
+  `_pf_reassign_lot`) ejecuta `_pf_unreserve_reservation()` (libera TODO el movimiento) **antes** de reservar
+  ⇒ dos llamadas ⇒ la segunda borra la primera. El defecto **no** está en la primitiva: está en **encadenar dos
+  "liberar y reservar"**.
+- **Diseño elegido:** **UNA** liberación por destino (primitiva del motor) + **N** reservas **ADITIVAS** en el
+  orden del plan (`_pf_reserve_lot` por lote, acotando por la demanda que falta). **Nada nuevo contra la base de
+  datos:** son las MISMAS primitivas que el camino de un lote (D5 del anexo 3.K respetado: un solo módulo
+  escritor, mismo protocolo). Lo único que cambia es el **patrón de llamadas** (1 liberar + N sumar, en vez de
+  1 liberar + 1 sumar).
+- **Consecuencia inmediata (el pedido del dueño se cumple):** un mismo `stock.move` puede quedar con **2+ lotes
+  con existencia** (p. ej. `666634` de 23 u **más** los lotes de 1 u) — exactamente lo que el wizard no podía
+  hacer (H-037) y la razón de que el 2.º tick pisara al 1.º (H-036).
+**D1 — SELECCIÓN multi-lote: una columna NUEVA en el candidato, SIN tocar la selección única.**
+- `printflow.flow.lot.candidate` gana `is_in_split` (Boolean, `string='Incluir'`, help del reparto). **NO** entra
+  en `_pf_enforce_single_selection` (el hook `write` del candidato solo reacciona a `'is_selected'`) ⇒ se pueden
+  marcar VARIOS lotes a la vez sin que se desmarquen (**contraste directo con H-036**).
+- `is_selected` y su semántica **ÚNICA** quedan **INTACTOS** (modo `single` y selector por documento).
+- La tabla del reparto se define **INLINE en el form del modo reparto**
+  (`<field name="candidate_ids">` con un `<tree>` EMBEBIDO) ⇒ **NO** se toca el tree compartido
+  `printflow_flow_lot_candidate_view_tree` (que sigue sirviendo al selector por documento y al modo `single`,
+  **C4/C5**).
+
+**D2 — ORDEN del reparto: DECLARADO, el de la tabla tal como se ve (determinista y reproducible).**
+- Orden de **LOTES** = el de la tabla de candidatos (`printflow.flow.lot.candidate._order =
+  'available desc, lot_name asc'`): **primero el lote con más disponible**; a igualdad, por nombre ascendente.
+- Orden de **DESTINOS** = `seq` de `line_ids` (FIFO por fecha prevista ASC + id ASC, ya declarado en D6 del
+  anexo 3.K). No hay reglas escondidas: **lo que se ve en pantalla es el orden que se aplica**.
+- El reparto es **AVARO por destino** (el 1.º destino se cubre con los primeros lotes; luego el 2.º, etc.), con
+  la misma semántica FIFO de la escasez que ya rige la acción en bloque.
+- `split_note` (Char, computado, **VISIBLE**) muestra el plan: "1) 666634 → 23.00 · 2) SN126353 → 1.00 …" con
+  el total disponible frente a la demanda. Es una **estimación de la tabla** (sin lecturas extra); la reserva
+  REAL la decide la primitiva nativa por destino.
+
+**D3 — COBERTURA: misma regla que el modo `single`, calculada sobre el plan.**
+- Con ubicación efectiva: `libre = Σ stock.quant._get_available_quantity(product, location_id, lot_id=lot)`
+  (una lectura por lote marcado; acotada a la selección del operador). Sin ubicación única (`multi_location`):
+  `Σ available` **AGREGADO** de los candidatos marcados (aviso visible ya existente).
+- `Σ libre <= _EPS` ⇒ `UserError` guía ("Ninguno de los lotes marcados tiene existencia…"). **NO escribe nada.**
+- `Σ libre < total_demand` sin `confirm_partial` ⇒ `UserError` guía (mismo check y misma familia de texto que el
+  modo `single`); con el check ⇒ se reparte **lo que hay** y los destinos que no alcancen quedan `partial`.
+
+**D4 — ESCRITURA: un solo módulo escritor, N reservas ADITIVAS (código sí, datos no).**
+- Primitiva NUEVA en PrintFlow `models/stock_move.py` (**ya existe** el archivo con el guardián de H-030;
+  `_inherit = 'stock.move'`): `_pf_reassign_lots(self, lots)` = **una** `self._pf_unreserve_reservation()`
+  (primitiva del MOTOR, sin tocarla) + **N** `self._pf_reserve_lot(lot, remaining)` (primitiva del MOTOR,
+  ADITIVA por construcción) en el orden del plan, acotando por `product_uom_qty` del movimiento.
+- **Guardián propio** (espeja el filtro del core y el de `_pf_unreserve_reservation`): si el movimiento está
+  `picked` o en `('done', 'cancel')` ⇒ devuelve `0.0` (no se apilan reservas sobre lo ya en curso; el destino se
+  reporta con error honesto).
+- **Orquestador** (mismo módulo escritor): `printflow.product.flow._pf_assign_lots_to_document(kind,
+  res_model, res_id, lots, product)` — misma guardia `_pf_assert_can_clean`, **lista blanca explícita** de kinds
+  `('missing_move', 'pending_order')` (constante local `_SPLIT_KINDS`; **NUNCA `getattr`**), mismo camino de
+  resolución del movimiento que `_pf_assign_lot_on_pending_order_doc` (resolver PRIVADO propio del reparto: el
+  handler existente **no se toca**).
+- El motor `x_product_dimensional_pricing` queda **SIN CAMBIOS**: solo se **consumen** sus primitivas.
+
+**D5 — REPORTE por destino y bitácora (H-029 / H-031 SIN regresión).**
+- Se conservan el modelo de línea (`result` + `result_note`), el detalle
+  `printflow.flow.lot.assign.bulk.result` (una fila por destino, incluidas las omitidas y las no asignables) y el
+  **mismo** cierre de la acción (`display_notification` con el **MISMO** texto de los 4 conteos + `params['next']`
+  al detalle) ⇒ **cero regresión** de H-029/H-031/H-032.
+- En reparto, `result_note` = **desglose por lote** ("Reparto: 666634 → 2.00 · SN126353 → 1.00 (1 lote sin
+  existencia)"), acotado y compacto (Char). La clasificación es la MISMA de hoy: `reserved <= _EPS` ⇒ `error`;
+  `reserved < demand - _EPS` ⇒ `partial`; si no ⇒ `assigned`.
+- Bitácora: se agrega `_pf_log_split_document` (**NO** se toca `_pf_log_document`): mismo `message_post` por
+  documento en modelos con chatter, listando los lotes del plan y el reservado real, con el `reason` común.
+
+**D6 — H-036 (contrato UX del check "Asignar"): se corrige EN PANTALLA, sin cambiar la selección única.**
+- La selección ÚNICA del modo `single` es **deliberada** (H-036) ⇒ **NO** se cambia; se **declara en pantalla**:
+  el texto de la ranura "Lotes" del form del modo `single` dice explícitamente que **se asigna UN lote por
+  corrida** (el marcado) y **apunta al camino nuevo** ("Repartir lotes") para repartir la demanda entre varios.
+  Es exactamente el arreglo que H-036 prescribe ("decirlo en pantalla y ofrecer el camino para los demás").
+- En el modo reparto, la columna del candidato se rotula **"Incluir"** (multi-tick) ⇒ el gesto deja de
+  confundirse con el del modo `single`.
+- **NO** se renombra la columna del tree **COMPARTIDO** (`string="Asignar"`): se evita tocar una superficie del
+  selector por documento y sus candados (**C4**).
+
+### 3.5 Archivos
+
+**NUEVO**
+- `tests/test_product_flow_lot_assign_bulk_split.py` — CA-1..CA-7 del reparto (T8).
+
+**MODIFICADOS**
+- `models/stock_move.py` — primitiva ADITIVA `_pf_reassign_lots` (+ docstring del módulo). (T1)
+- `wizard/printflow_product_flow.py` — `_SPLIT_KINDS` + `_pf_assign_lots_to_document` + resolver privado. (T2)
+- `wizard/printflow_flow_lot_candidate.py` — campo `is_in_split`. (T3)
+- `wizard/printflow_flow_lot_assign_bulk.py` — `mode`, `split_note`, `_pf_split_lots`,
+  `_pf_check_split_coverage`, `_pf_line_breakdown`, `_pf_log_split_document`, `action_split_lot_bulk`,
+  `_pf_populate(..., mode=...)`. (T4)
+- `wizard/printflow_flow_lot_tray.py` — `action_split_lot_bulk` + helper compartido `_pf_bulk_rows`. (T5)
+- `wizard/printflow_flow_lot_assign_bulk_views.xml` — form NUEVO del modo reparto (tree inline con "Incluir") +
+  microcopy de H-036 en el form del modo `single`. (T6)
+- `wizard/printflow_flow_lot_tray_views.xml` — botón de cabecera "Repartir lotes". (T7)
+- `tests/__init__.py` — registro del test nuevo. (T8)
+
+**SIN CAMBIOS (contrato):** `security/ir.model.access.csv` (**NO hay modelos nuevos ⇒ sin filas nuevas**),
+`__manifest__.py` (la vista nueva es un `<record>` dentro de un archivo YA declarado en `data`), el motor
+`x_product_dimensional_pricing` (**SOLO LECTURA**), `wizard/printflow_flow_lot_picker*`,
+`printflow_flow_lot_candidate_view_tree` (tree compartido), `models/printflow_flow_lots.py`
+(`_pf_available_lots`), `wizard/printflow_flow_lot_assign_bulk_result*`, `printflow.flow.lot.tray`
+(`action_assign_lot_bulk`, `_pf_document_move`, `_pf_rows_*`).
+
+### 3.6 Restricciones duras
+
+1. **Código sí, datos no** (`regla-trabajo-odoo-17-ce`): el Dev **NO** toca registros de la BD; solo código.
+2. **No forzar ni reemplazar flujos nativos.** PROHIBIDO `cr.execute` de escritura, `cr.commit()`, escribir
+   `stock.quant` / `stock.move` / `stock.move.line` a mano, forzar `state` / `quantity` / `qty_done`,
+   `unlink()`+`create()` a mano, `button_validate` / `_action_done` por detrás. La ÚNICA escritura son las
+   primitivas del MOTOR (`_pf_unreserve_reservation`, `_pf_reserve_lot`) sobre el movimiento del destino,
+   disparadas por el **operador** desde el botón.
+3. El motor `x_product_dimensional_pricing` **NO se edita** (sus primitivas se **consumen** tal cual).
+4. **Sin modelos nuevos** ⇒ sin filas de ACL y sin `data` nueva en el manifest.
+5. **Cero hardcodeo:** todos los textos por `_()`; la política sale de `ir.config_parameter`
+   (`pf_lot_assign_exception_policy`).
+6. **Convenciones OCA** (`odoo-17-clean-architecture` §2.5): un archivo por modelo, orden del modelo
+   (atributos → campos → computes → CRUD → acciones → negocio), `snake_case`, campos `*_ids` para x2many,
+   `xml_id` con prefijo `printflow_`, nodo raíz `<odoo>`.
+7. **Un solo módulo escritor** (`printflow.product.flow`) con **lista blanca explícita** de kinds
+   (**NUNCA `getattr`**).
+8. **NO romper:** modo `single`, selector por documento, bandeja clásica, autorización en bloque, dedupe FIFO ni
+   el detalle H-029.
+
+### 3.7 Criterios de aceptación (verificables)
+
+| # | Criterio | Verificación |
+|---|---|---|
+| **CA-1** (**reparto multi-lote**) | Con **2+ lotes marcados** en la columna "Incluir" (todos con `Disponible > 0`), UNA sola corrida deja **TODOS** los lotes reservados por la vía NATIVA en las entregas **sin perder ninguno**: un destino cuya demanda exige 2 lotes queda con **2 `stock.move.line`** (una por lote) y con la reserva completa. | Test T8: destinos con demanda 2 u y dos lotes de 1 u ⇒ tras `action_split_lot_bulk()` el movimiento tiene 2 líneas (lotes distintos) y la fila del destino queda `assigned`. |
+| **CA-2** (**H-036 · multi-tick**) | Marcar varios lotes en la tabla del reparto **NO se desmarca entre sí** (`is_in_split` es independiente por fila); y la selección **ÚNICA** de `is_selected` sigue intacta. | Test T8: `write({'is_in_split': True})` en 2 candidatos ⇒ los 2 quedan `True`; `write({'is_selected': True})` en 2 ⇒ solo 1 queda `True`. |
+| **CA-3** (**parcial**) | Si `Σ libre del plan < total_demand` y NO se marcó "Confirmo la asignación parcial" ⇒ `UserError` guía **sin escribir nada**; con el check ⇒ se reparte lo disponible **en el orden declarado** y los destinos que no alcancen quedan `partial` con el desglose en `result_note`. | Test T8: demanda 3 u con lotes de 1+1 ⇒ `UserError` y 0 `move_line`; con `confirm_partial=True` ⇒ 2 u repartidas, fila `partial`, `result_note` con los 2 lotes. |
+| **CA-4** (**orden declarado**) | El orden del reparto es el declarado: **lotes** por el orden de la tabla (`available desc, lot_name asc`) y **destinos** por `seq` (FIFO). El `split_note` es VISIBLE y coincide con el orden aplicado. | Test T8: lotes de 1 u y 3 u con demanda 2 ⇒ el plan empieza por el de 3 u (`split_note`) y la reserva consume primero ese lote. |
+| **CA-5** (**reporte intacto**) | La acción de reparto conserva los **4 conteos**, el `display_notification` y el `params['next']` al detalle `printflow.flow.lot.assign.bulk.result` (una fila por destino, con `result` y `result_note`), igual que el modo `single` (H-029/H-031 sin regresión). | Test T8: mismo bloque de aserciones del detalle que `test_product_flow_lot_assign_bulk.py`/`..._result.py`, pero ejecutado desde `action_split_lot_bulk`. |
+| **CA-6** (**guardia · motivo · política**) | Sin jefe de taller/administrador, ABRIR y EJECUTAR lanzan `UserError`; sin `reason` ⇒ `UserError`; con política ≠ `warn` sin `confirm_exception` ⇒ `UserError`. | Test T8 (mismos escenarios de CA-5/CA-6 del modo `single`). |
+| **CA-7** (**cero regresión**) | El modo `single` (`action_assign_lot_bulk`) y el selector por documento conservan su comportamiento; el motor **SIN CAMBIOS**; `_pf_available_lots` con firma y retorno intactos; el tree compartido de candidatos intacto. | Suite citada abajo en verde; `git diff` vacío en `x_product_dimensional_pricing`; sin `cr.execute(`/`cr.commit(` en los archivos tocados. |
+| **CA-8** (**no apilar sobre lo en curso**) | Un movimiento `picked` o en `('done','cancel')` **no recibe** reservas nuevas: `_pf_reassign_lots` devuelve `0.0` y el destino se reporta con error honesto. | Test T8: movimiento `done`/`picked` ⇒ `result == 'error'` y `result_note` explica, sin tocar sus líneas. |
+| **CA-9** (**superficies**) | El botón de cabecera "Repartir lotes" abre el form del MODO REPARTO (no el del modo `single`) y el form del modo `single` **no cambia** su comportamiento. | Verificación de T6/T7 con `-u printflow_gestion_inventario` + el test de CA-5 (el `act_window` apunta a la vista del reparto). |
+
+### 3.8 Riesgos
+
+| # | Riesgo | Impacto | Mitigación |
+|---|---|---|---|
+| **R-1** | Volver a "perder" un lote (el bug que se quiere cerrar). | Alto | `_pf_reassign_lots` libera **UNA** vez y luego **SUMA**; entre reservas no hay ninguna liberación. CA-1 lo fija con 2 lotes reales. |
+| **R-2** | Sobre-reserva si se llama dos veces a `_update_reserved_quantity` con el **mismo** lote para el mismo movimiento. | Medio | Cada lote del plan se procesa **una sola vez** por destino y se acota por `remaining = need - taken`, con corte en `<= _EPS`. CA-1 (cantidad total == demanda) y CA-3 lo vigilan. |
+| **R-3** | El motor "exclusivo por lote" reescribe el reparto en un `action_assign` posterior (p. ej. "validar entregas en lote"). | Medio | El guardián **H-030** ya instalado en `models/stock_move.py` (`_pf_keep_current_lot_reservation`) **preserva** la reserva cuando el lote exclusivo del pedido **no** tiene existencia (el caso real del banner). Si el lote exclusivo **SÍ** tiene existencia, gana la regla de negocio del lote exclusivo (igual que hoy con un lote: **no** se cambia esa regla). Se declara en §3.9. |
+| **R-4** | La estimación del `split_note` (tabla) difiere de la reserva real en modo `multi_location`. | Bajo | El aviso **VISIBLE** de `multi_location` ya existe; la reserva REAL la decide la primitiva nativa por destino y el `confirm_partial` cubre el faltante. El `split_note` se declara como **estimación**. |
+| **R-5** | Tocar el tree COMPARTIDO de candidatos rompe el selector por documento y sus candados. | Alto | La tabla del reparto es un `<tree>` **INLINE** en el form nuevo; el tree compartido **no se edita** (D1/D6). |
+| **R-6** | El helper `_pf_bulk_rows` (extracción del preparado de filas) altera el modo `single`. | Medio | La extracción es **behavior-preserving**: `action_assign_lot_bulk` conserva su retorno y sus mensajes; los candados `test_product_flow_lot_assign_bulk.py`, `..._pending_order_assign.py`, `..._tray*` deben seguir **verdes** (CA-7). |
+| **R-7** | La suite completa tiene **8 rojos pre-existentes (B1)** ajenos. | Bajo | El Dev corre SOLO los tests de lote/bandeja afectados y **reporta el delta**; NO persigue B1. |
+
+### 3.9 Contratos que NO deben romperse
+
+- **CA-1..CA-9** de §3.7.
+- `printflow.flow.lot.assign.bulk.action_assign_lot_bulk` (**modo `single`**): guardia `_pf_assert_can_clean()`,
+  `reason` obligatorio, política de excepción, `_pf_check_coverage`, bucle FIFO con captura de `UserError` por
+  destino, `message_post` por documento, **texto exacto de los 4 conteos** y `params['next']` al detalle: **SIN
+  CAMBIOS observables**.
+- `printflow.flow.lot.picker` + `_pf_populate`/`_pf_selected_lot`/`action_assign_lot`: **INTACTOS**.
+- `printflow.flow.lot.candidate`: `is_selected`, `_pf_enforce_single_selection`, `_compute_is_picked`,
+  `_compute_is_recommended` y su **tree compartido**: **INTACTOS** (solo se AGREGA un campo).
+- `printflow.product.flow._pf_assign_lot_to_document`, el mapa `handlers` (lista blanca, nunca `getattr`) y
+  `_pf_reassign_move_lot`: **INTACTOS** (el reparto entra por un método NUEVO del MISMO módulo).
+- `stock.move._pf_reassign_lot`, `_pf_unreserve_reservation`, `_pf_reserve_lot`, `_assign_exclusive_lot` y
+  `_action_assign` del **motor**: **INTACTOS** (solo se consumen).
+- `models/stock_move.py` de PrintFlow: `_pf_keep_current_lot_reservation` y el override de
+  `_assign_exclusive_lot` (**H-030**): **INTACTOS**.
+- `printflow.flow.lot.tray._pf_populate`, `_pf_document_move`, `_pf_rows_*` y su tree (botón de cabecera
+  "Asignar lote" y columnas): **INTACTOS** (solo se AGREGA un método y un botón).
+- `models/printflow_flow_lots.py::_pf_available_lots`: firma y dict de retorno **INTACTOS**.
+- `models/` **nunca** importa `wizard/`. Sin `cr.execute` de escritura. Sin `cr.commit()`.
+
+### 3.10 Observaciones (FUERA de alcance — NO implementar aquí)
+
+- **O-1 · H-034 (multi-MOVIMIENTO): FUERA (D-B).** El `limit=1` de la resolución (`_pf_document_move`,
+  `_pf_assign_lot_on_pending_order_doc`) y la enumeración de UNA fila por ORDEN
+  (`_pf_rows_pending_orders`) **no se tocan**. Evidencia: `wizard/printflow_product_flow.py` L970-982 ·
+  `wizard/printflow_flow_lot_tray.py` L786-820 y L536-599 · BD: `stock.move` 109860/109861 (WH/OUT/05608) y
+  120603/120604 (WH/OUT/06483). Requiere tarea propia (y decisión del dueño, según H-034).
+- **O-2** La asignación **REAL** de lotes a las 26 entregas del banner es **DATOS** (**H-018**); la ejecuta el
+  dueño desde la bandeja. El código **muestra** y **facilita**, no asigna por su cuenta.
+- **O-3** Las reservas colgadas **sin lote** (**H-035**, `quant` 15219 con disponible −2) son **DATO**; se
+  resuelven asignando un lote con existencia desde la bandeja (no tecleando cantidades a mano).
+- **O-4** El refactor del **selector por documento** a multiselección ("propuesta 2") sigue en backlog.
+- **O-5** Los **8 rojos** de la suite (**B1**, p. ej. `test_diagnostic_delivery_orders.py`,
+  `test_product_flow_lot_tray_ux.py`, `test_node_pending_enumeration`) siguen abiertos y son ajenos; el Dev
+  **reporta el delta** si cambia por esta tarea y **no** los persigue.
+- **O-6** **H-021** (fase 2: "Autorizar excepción" ≠ "Asignar lote"), **H-016** y **H-015** siguen fuera de
+  alcance.
+- **O-7** Autorizar la **excepción de lote compartido** en bloque **NO** entra: el reparto escribe por el
+  protocolo NATIVO (no crea `printflow.lot.exception`); la autorización se hace por fila, como hoy.
+
+### 3.11 Plan de ejecución atómico y secuencial (T1–T8 · 3 lotes)
+
+> **8 tareas · 3 lotes** (máx. 3 por lote; cada lote = **UNA sesión NUEVA de `odoo-dev`**, nunca se retoma la
+> anterior). El Dev marca `- [x]` SOLO lo hecho y deja su **bitácora** para el lote siguiente.
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`.
+> **Rutas:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: aquí se escribe) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor; **SOLO LECTURA**, NO se edita).
+> **Regla vigente: código sí, datos no.** PROHIBIDO `cr.execute` de escritura y `cr.commit()`.
+> **No forzar ni reemplazar flujos nativos; código sí, datos no.**
+> Convenciones OCA §2.5 (un archivo por modelo, orden del modelo, `snake_case`, `xml_id` con prefijo
+> `printflow_`, nodo raíz `<odoo>`).
+
+#### Lote 1 (T1–T3) — Núcleo: primitiva ADITIVA + orquestador + campo del candidato
+
+- [ ] **T1 — `models/stock_move.py`: primitiva ADITIVA `_pf_reassign_lots` (H-037).**
+  - Extender el docstring del módulo (hoy documenta H-030) con un 2.º bloque: *"Reparto ADITIVO multi-lote
+    (H-037): una liberación + N reservas"* y por qué el camino del motor no era aditivo (`_pf_reassign_lot`
+    libera ANTES de reservar).
+  - Agregar el método (después del guardián de H-030, sin tocar `_pf_keep_current_lot_reservation` ni
+    `_assign_exclusive_lot`):
+    `def _pf_reassign_lots(self, lots):`
+    1. `self.ensure_one()`; `if not lots or self.product_id.tracking != 'lot': return 0.0`;
+    2. **guardián**: `if self.picked or self.state in ('done', 'cancel'): return 0.0` (mismo criterio que el
+       filtro de `_pf_unreserve_reservation` del motor: si no se puede liberar, no se apila);
+    3. `need = self.product_uom_qty or 0.0`; `if need <= _EPS: return 0.0`;
+    4. `self._pf_unreserve_reservation()` — **UNA** vez (primitiva del MOTOR);
+    5. `taken = 0.0`; `for lot in lots:` → `remaining = need - taken`; `if remaining <= _EPS: break`;
+       `taken += self._pf_reserve_lot(lot, remaining) or 0.0` (primitiva del MOTOR, **ADITIVA**);
+    6. `return taken`.
+  - Docstring del método: NO borra los lotes ya reservados entre llamadas; el 1.er destino/lote que no tenga
+    existencia devuelve `0.0` y el bucle **continúa** con el siguiente lote del plan.
+  - **NO** tocar `x_product_dimensional_pricing`; **NO** `cr.execute`/`cr.commit`; **NO** escribir
+    `stock.quant`/`stock.move`.
+  - **Verificación:** `python -m py_compile models/stock_move.py` OK; en el shell,
+    `type(env['stock.move']).mro()` contiene la clase de PrintFlow y `hasattr(env['stock.move'],
+    '_pf_reassign_lots')` es `True`; `git diff` de `C:\odoo_custom\x_product_dimensional_pricing` **vacío**.
+- [ ] **T2 — `wizard/printflow_product_flow.py`: orquestador del reparto (D4).**
+  - Constante de módulo `_SPLIT_KINDS = ('missing_move', 'pending_order')` (lista blanca explícita del reparto,
+    espejo del alcance de la bandeja; comentario del por qué).
+  - Nuevo `@api.model def _pf_assign_lots_to_document(self, target_kind, res_model, res_id, lots, product=None)`:
+    1. `self.env['printflow.stock.remedy']._pf_assert_can_clean()`;
+    2. `if not lots: raise UserError(_('No se indicaron lotes para el reparto.'))`;
+    3. `if (target_kind or '') not in _SPLIT_KINDS: return 0.0`;
+    4. resolver el movimiento con un **resolver PRIVADO del reparto** `@api.model _pf_split_target_move(self,
+       res_model, res_id, product)` (mismo camino que `_pf_assign_lot_on_pending_order_doc`:
+       `res_model == 'stock.move'` ⇒ `browse(res_id).exists()`; `res_model == 'stock.picking'` ⇒
+       `search([('picking_id','=',res_id),('product_id','=',product.id),('state','not in',('done','cancel'))],
+       limit=1)`; cualquier otro ⇒ recordset vacío);
+    5. `if not move: return 0.0`;
+    6. `return move._pf_reassign_lots(list(lots))` (**siempre `float`**; `list(...)` para fijar el ORDEN del
+       plan sin ambigüedad del ORM).
+  - **NO** tocar `_pf_assign_lot_to_document`, `handlers`, `_pf_assign_lot_on_*` ni `_pf_reassign_move_lot`
+    (el modo `single` debe quedar **byte a byte**).
+  - **Verificación:** `py_compile` OK; `hasattr(env['printflow.product.flow'],
+    '_pf_assign_lots_to_document')`; tests de lote existentes sin cambios de resultado.
+- [ ] **T3 — `wizard/printflow_flow_lot_candidate.py`: campo `is_in_split` (D1).**
+  - Agregar `is_in_split = fields.Boolean(string='Incluir', help='Marca ESTE lote para el REPARTO multi-lote
+    (botón "Repartir lotes"). A diferencia de "Elegir" (selección ÚNICA), "Incluir" admite VARIAS filas: el
+    reparto consume los lotes marcados en el orden de la tabla. Solo se puede marcar si el lote tiene
+    Disponible.')` junto a `is_selected` (mismo bloque de campos).
+  - **NO** tocar `write`, `_pf_enforce_single_selection`, `_pf_parent`, `_compute_is_picked`,
+    `_compute_is_recommended`, `_compute_is_elective`. Extender el docstring del módulo 2 líneas (la fila ahora
+    sirve a TRES superficies: selector por documento, modo `single` y modo `split`).
+  - **Verificación:** `fields_get('printflow.flow.lot.candidate')` incluye `is_in_split` con `string='Incluir'`;
+    `tests/test_product_flow_lot_picker.py` + `..._picker_candidates.py` verdes.
+
+#### Lote 2 (T4–T6) — Contenedor en modo reparto · bandeja · vistas
+
+- [ ] **T4 — `wizard/printflow_flow_lot_assign_bulk.py`: MODO reparto (D1/D2/D3/D5).**
+  - Campos NUEVOS: `mode = fields.Selection([('single', 'Un lote (el marcado)'), ('split', 'Reparto
+    multi-lote')], string='Modo', default='single', readonly=True, help=...)` y
+    `split_note = fields.Char(string='Orden del reparto', compute='_compute_split_note', readonly=True, help=...)`.
+  - `_compute_split_note` (`@api.depends('candidate_ids.is_in_split', 'candidate_ids.lot_name',
+    'candidate_ids.available_here', 'candidate_ids.available', 'total_demand')`): si NO hay marcados ⇒ texto
+    guía ("Marca en la tabla los lotes a repartir…"); si hay ⇒ `"1) LOTE → X.XX · 2) LOTE → Y.YY. Total
+    disponible: A de B demandadas."` con `_()` y `%.2f` (sin sufijos de unidad). Usar
+    `rec.candidate_ids.filtered('is_in_split')` (**el orden del recordset = el de la tabla**, D2).
+  - `_pf_populate(self, product, rows, omitted_count=0, mode='single')`: **argumento NUEVO con default** ⇒ los
+    llamadores actuales no cambian de comportamiento; agregar `'mode': mode` al `create({...})`. Docstring: el
+    modo NO altera destinos ni candidatos, solo el camino de decisión.
+  - `_pf_split_lots(self)`: devuelve una **lista ordenada** de `stock.lot` (`[cand.lot_id for cand in
+    self.candidate_ids.filtered('is_in_split')]`; ignorar filas sin `lot_id`).
+  - `_pf_check_split_coverage(self, lots)` (D3): con `self.location_id` ⇒
+    `Σ self.env['stock.quant']._get_available_quantity(self.product_id, self.location_id, lot_id=lot)`;
+    sin ubicación ⇒ `Σ candidate.available` de los marcados. `<= _EPS` ⇒ `UserError` guía; `< total_demand`
+    sin `confirm_partial` ⇒ `UserError` guía (familia de texto del modo `single`).
+  - `_pf_line_breakdown(self, line, lots)` → `(total, note)`: suma `line.move_id.move_line_ids` cuyo `lot_id`
+    esté en `lots` (lectura `sudo()`), `note` = `_('Reparto: %s') % ' · '.join('%s → %.2f' % (lot.name, qty))`
+    + `_(' (%s lotes sin existencia)') % n` cuando alguno no aportó; sin aportes ⇒
+    `_('Ningún lote del reparto quedó reservado.')`. **NO** tocar `_pf_line_reserved` (camino `single`).
+  - `_pf_log_split_document(self, line, lots, reserved)` (D5): copia del patrón de `_pf_log_document`
+    (**sin tocarlo**), con `message_post` que lista los lotes y el reservado real + el `reason` común.
+  - `action_split_lot_bulk(self)` (**MODO reparto**, mismo esqueleto del `single`):
+    1. `self.ensure_one()`; `self.env['printflow.stock.remedy']._pf_assert_can_clean()`;
+    2. `reason` obligatorio ⇒ `UserError`;
+    3. política (`self.env['printflow.flow.lot.picker']._pf_exception_policy()`; si ≠ `'warn'` exige
+       `confirm_exception` ⇒ `UserError`);
+    4. `lots = self._pf_split_lots()`; si vacío ⇒ `UserError` guía ("Marca en la tabla los lotes que quieres
+       repartir (columna 'Incluir')");
+    5. `self._pf_check_split_coverage(lots)` (**bloquea ANTES de escribir**);
+    6. `ProductFlow = self.env['printflow.product.flow']`;
+       `for line in self.line_ids.filtered('assignable'):` → `try: ProductFlow._pf_assign_lots_to_document(
+       line.kind, line.res_model, line.res_id, lots, product=self.product_id) except UserError as err:`
+       ⇒ `line.result='error'` + `result_note=str(err)`, `continue`; luego `reserved, note =
+       self._pf_line_breakdown(line, lots)`; clasificar (`<= _EPS` ⇒ `error`; `< demand` ⇒ `partial` con
+       prefijo `_('Solo se reservó lo disponible. ')`; si no ⇒ `assigned`) y `self._pf_log_split_document(...)`;
+    7. `result = self.env['printflow.flow.lot.assign.bulk.result']._pf_build_from_bulk(self)` y
+       `return self._pf_result_notification(result)` (**mismo cierre y mismos 4 conteos**, D5).
+  - **NO** tocar `action_assign_lot_bulk`, `_pf_selected_lot`, `_pf_check_coverage`, `_pf_log_document`,
+    `_pf_result_notification` ni `_pf_line_reserved`. Extender el docstring del módulo (dos modos).
+  - **Verificación:** `py_compile` OK; `-u printflow_gestion_inventario` sin error; `fields_get` del contenedor
+    devuelve `mode` y `split_note`; los candados `test_product_flow_lot_assign_bulk.py`,
+    `test_product_flow_lot_assign_bulk_result.py`, `test_product_flow_lot_pending_order_assign.py` siguen
+    **verdes** (reportar en bitácora).
+- [ ] **T5 — `wizard/printflow_flow_lot_tray.py`: acción "Repartir lotes" + helper compartido.**
+  - Extraer del cuerpo de `action_assign_lot_bulk` un helper privado `_pf_bulk_rows(self, records)` que devuelve
+    `(product, rows, omitted)` **SIN efectos secundarios ni notificaciones** (la construcción de `rows` con
+    `_pf_document_move`, el descarte de las que no resuelven y el **dedupe por `move.id`** se mueven tal cual).
+  - `action_assign_lot_bulk` **queda con el mismo comportamiento observable** (mismos mensajes de vacío, mismo
+    `act_window` a `printflow.flow.lot.assign.bulk`) ⇒ llamar al helper y conservar el resto **idéntico**.
+  - Nuevo `action_split_lot_bulk(self)` (**público**: Odoo 17 rechaza privados por RPC):
+    1. `self.env['printflow.stock.remedy']._pf_assert_can_clean()`;
+    2. `records = self or self.search(self.env.context.get('active_domain') or [])`, `exists()`;
+       vacío ⇒ `self._pf_authorize_selected_notification(_('Selecciona al menos una entrega sin lote para
+       repartir los lotes.'))`;
+    3. candidatas = `records.filtered(lambda rec: rec.can_choose_lot and rec.kind in _BULK_ASSIGNABLE_KINDS and
+       rec.product_id)`; ninguna ⇒ notificación guía;
+    4. `product, rows, omitted = self._pf_bulk_rows(candidates)`; sin filas ⇒ notificación guía;
+    5. `bulk = self.env['printflow.flow.lot.assign.bulk']._pf_populate(product, rows, omitted_count=omitted,
+       mode='split')`; si vacío ⇒ notificación;
+    6. `return {'type': 'ir.actions.act_window', 'name': _('Repartir lotes en bloque'), 'res_model':
+       'printflow.flow.lot.assign.bulk', 'res_id': bulk.id, 'view_mode': 'form', 'views':
+       [(self.env.ref('printflow_gestion_inventario.printflow_flow_lot_assign_bulk_view_form_split').id,
+       'form')], 'target': 'new'}` (en primer nivel los `views` se normalizan; se pasan explícitos para abrir
+       **el form del MODO reparto**).
+  - **Verificación:** `py_compile` OK; `hasattr(env['printflow.flow.lot.tray'], 'action_split_lot_bulk')`; los
+    candados de bandeja (`test_product_flow_lot_tray*.py`) **verdes** (la extracción del helper no cambia el
+    modo `single`).
+- [ ] **T6 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: form del MODO reparto + microcopy de H-036.**
+  - **AGREGAR** `<record id="printflow_flow_lot_assign_bulk_view_form_split" model="ir.ui.view">` (`name` =
+    `printflow.flow.lot.assign.bulk.form.split`, `model` = `printflow.flow.lot.assign.bulk`): `<form
+    string="Repartir lotes en bloque" create="false" delete="false">` con
+    1. campos técnicos ocultos: `mode`, `multi_location`;
+    2. `<group string="Selección">` igual que el form `single` (producto, `source_label`, `total_demand`,
+       `location_id`, `assignable_count`, `omitted_count`, `selection_note`) — **mismos rótulos** (H-031);
+    3. el aviso `alert-warning` de `multi_location` (**sin cambios**);
+    4. `<group string="Reparto">` con `split_note` **VISIBLE** (`readonly="1" nolabel="1" colspan="2"`),
+       `confirm_partial` y `confirm_exception` + su microcopy (mismo patrón del form `single`);
+    5. `<group string="Lotes" col="1">` con `<field name="candidate_ids" nolabel="1">` y un **`<tree>`
+       INLINE** (`create="false" delete="false" editable="bottom"`) con las MISMAS decoraciones del tree
+       compartido y las columnas: `is_in_split` (`string="Incluir"`, `readonly="not is_elective"`),
+       `lot_name`, `qty_on_hand`, `reserved`, `available`, `role_label` (+ los secundarios `available_here`,
+       `covers_demand`, `holder_names`, `location_names`, `hint`, `is_recommended` con `optional="hide"`) y los
+       de apoyo con `column_invisible="True"` (`is_own_lot`, `is_current_lot`, `is_elective`, `is_occupied`,
+       `is_picked`, `lot_id`, `is_authorized`). Texto guía: *"Marca "Incluir" en TODOS los lotes que quieras
+       repartir: se consumen en el orden de la tabla (primero el de más disponible) para cubrir las entregas de
+       arriba hacia abajo."*
+    6. `<group string="Destinos" col="1">` con el **MISMO** tree de `line_ids` del form `single` (readonly);
+    7. `<group string="Motivo de la asignación" col="1">` con `reason` **required**;
+    8. `<footer>` con `<button name="action_split_lot_bulk" type="object" string="Repartir lotes"
+       class="btn-primary" icon="fa-random" title="..."/>` y "Cancelar" (`special="cancel"`).
+  - **AGREGAR** al form del modo `single` (mismo archivo) SOLO una frase al `<div class="text-muted">` de la
+    ranura "Lotes" (D6/**H-036**): *"La casilla elige **UN** solo lote por corrida (el último marcado queda).
+    Para repartir la demanda entre **VARIOS** lotes usa el botón "Repartir lotes" de la bandeja."* —
+    **solo se AGREGA texto; no se reemplaza ni se quita nada**.
+  - **NO** tocar `__manifest__.py` (el archivo ya está en `data`) ni el tree compartido
+    `printflow_flow_lot_candidate_view_tree`.
+  - **Verificación:** `-u printflow_gestion_inventario` sin error; el form `split` abre con el plan visible y la
+    columna "Incluir"; el form `single` se ve igual + la frase nueva.
+
+#### Lote 3 (T7–T8) — Botón de cabecera + test del reparto
+
+- [ ] **T7 — `wizard/printflow_flow_lot_tray_views.xml`: botón "Repartir lotes" (D-A).**
+  - En el `<header>` (L28-63), **HERMANO** de "Asignar lote" y con el MISMO `display="selection"`:
+    `<button name="action_split_lot_bulk" type="object" string="Repartir lotes" class="btn-secondary"
+    icon="fa-random" display="selection" title="Reparte la demanda de las entregas sin lote seleccionadas entre
+    VARIOS lotes con existencia (en el orden de la tabla: primero el de más disponible). ESCRIBE inventario por
+    la vía NATIVA (reserva ADITIVA). Requiere jefe de taller/administrador"/>`
+  - **NO** tocar los botones existentes ni las columnas del tree (H-029/H-031/H-032 intactos).
+  - **Verificación:** `-u printflow_gestion_inventario` sin error; con filas seleccionadas en la bandeja aparece
+    el botón y abre el form del MODO reparto.
+- [ ] **T8 — Test del reparto: `tests/test_product_flow_lot_assign_bulk_split.py` (+ `tests/__init__.py`).**
+  - **CREAR** el archivo partiendo de la MISMA base/helpers de `tests/test_product_flow_lot_assign_bulk.py`
+    (`TransactionCase`; `@tagged('post_install', '-at_install')`; `_product`, `_lot`, `_stock`, `_outgoing`,
+    `_open_tray`, `_user`, `_manager`; `PARAM_EXCEPTION_POLICY='warn'` en `setUpClass`) y agregar
+    `_wizard_for_split(selection)` (usa `selection.action_split_lot_bulk()` y asertar
+    `res_model == 'printflow.flow.lot.assign.bulk'`, `target == 'new'` y que los `views` apuntan a
+    `printflow_flow_lot_assign_bulk_view_form_split`).
+  - Casos (nombres obligatorios):
+    * `test_ca1_split_reserves_all_marked_lots` (**CA-1**): 2 lotes con 1 u cada uno + 1 entrega con demanda 2 u
+      (sin reserva) ⇒ marcar `is_in_split=True` en los 2 candidatos, `bulk.action_split_lot_bulk()` ⇒ el
+      `stock.move` queda con **2 `move_line`** (lotes distintos), `sum(quantity) == 2.0` y la fila del destino
+      `result == 'assigned'`.
+    * `test_ca2_multi_tick_is_independent_and_single_selection_kept` (**CA-2**): `write({'is_in_split': True})`
+      en 2 candidatos ⇒ los 2 quedan `True`; `write({'is_selected': True})` en 2 ⇒ **solo 1** se queda marcado
+      (contraste con H-036).
+    * `test_ca3_partial_requires_confirmation` (**CA-3**): demanda 3 u con lotes de 1+1 u ⇒ sin
+      `confirm_partial` lanza `UserError` y el movimiento queda **sin** `move_line`; con `confirm_partial=True`
+      ⇒ 2 u repartidas entre los 2 lotes, fila `partial` y `result_note` con los **nombres de los 2 lotes**.
+    * `test_ca4_declared_order_biggest_lot_first` (**CA-4**): lotes de 1 u y 3 u con demanda 2 u ⇒ el
+      `split_note` empieza por el lote de 3 u y la reserva consume primero ese lote.
+    * `test_ca5_report_and_detail_are_kept` (**CA-5**): el retorno sigue siendo `display_notification` con los
+      **mismos 4 conteos** y `params['next']['res_model'] == 'printflow.flow.lot.assign.bulk.result'`; el
+      detalle trae **una fila por destino** y las filas `error`/`skipped` con `result_note` NO vacío.
+    * `test_ca6_guardian_reason_and_policy` (**CA-6**): usuario sin jefe de taller ⇒ `UserError` al ejecutar;
+      sin `reason` ⇒ `UserError`; política ≠ `warn` sin `confirm_exception` ⇒ `UserError`.
+    * `test_ca8_does_not_stack_on_picked_move` (**CA-8**): movimiento `picked`/`done` ⇒ `result == 'error'` y
+      `result_note` con motivo, **sin** tocar sus `move_line`.
+    * Candado: el archivo NO contiene `cr.execute(` ni `cr.commit(`.
+  - `tests/__init__.py`: registrar `from . import test_product_flow_lot_assign_bulk_split` al final del bloque de
+    lote (junto a `test_product_flow_lot_assign_bulk_result`), con comentario del motivo (H-037/H-036).
+  - **Verificación:** el archivo nuevo pasa **en verde**; además verdes:
+    `test_product_flow_lot_assign_bulk.py`, `test_product_flow_lot_assign_bulk_result.py`,
+    `test_product_flow_lot_pending_order_assign.py`, `test_product_flow_lot_tray.py`,
+    `test_product_flow_lot_tray_orders.py`, `test_product_flow_lot_tray_document.py`,
+    `test_product_flow_lot_tray_authorize.py`, `test_product_flow_lot_picker.py`,
+    `test_product_flow_lot_picker_candidates.py`, `test_product_flow_lot_picker_ux.py`,
+    `test_product_flow_lot_coupled_chain.py`, `test_lot_management.py`,
+    `test_pf_bulk_validate_preserves_lot.py` y `test_product_flow_over_reservation_scoped.py`.
+    **Regresión real, no decorativa:** el test de CA-1 DEBE fallar si se revierte T1 (sin la reserva aditiva el
+    2.º lote pisa al 1.º) — el Dev lo comprueba y lo deja escrito en su bitácora.
+
+**Verificación (turno del Verificador, fuera del dev).** `--test-tags` sobre
+`/printflow_gestion_inventario:TestProductFlowLotAssignBulkSplit` (nuevo) y, sin regresión,
+`/printflow_gestion_inventario:TestProductFlowLotAssignBulk`,
+`...:TestProductFlowLotAssignBulkResult`, `...:TestProductFlowLotPendingOrderAssign`,
+`...:TestProductFlowLotTray`, `...:TestProductFlowLotTrayOrders`, `...:TestProductFlowLotTrayDocument`,
+`...:TestProductFlowLotTrayAuthorize`, `...:TestProductFlowLotPicker`, `...:TestProductFlowLotPickerUX`,
+`...:TestProductFlowLotCoupledChain`, `...:TestLotManagement`, `...:TestPfBulkValidatePreservesLot` y
+`...:TestProductFlowOverReservationScoped`. Al hilo solo vuelve el exit code, N/N y, si falla, la aserción + cola
+del traceback. **Los 8 rojos de B1 NO cuentan como fallo de esta tarea**, pero el Dev **reporta** si su delta
+cambió por T1/T2 (O-5).
+
+### 3.12 Pendiente del dueño
+
+1. **Recargar el módulo** (`-u printflow_gestion_inventario`) en el servidor 8071.
+2. **Probar el camino nuevo (código):** en la bandeja de `IMPRESION BANNER ` seleccionar las entregas sin lote,
+   pulsar **"Repartir lotes"**, marcar **"Incluir"** en varios lotes con existencia (p. ej. `666634` de 23 u
+   **más** los de 1 u) y confirmar con un motivo. Debe quedar todo reservado **de una sola pasada**, sin perder
+   ningún lote, con el detalle por destino.
+3. **Datos (lo ejecuta el dueño, no el agente):** la asignación real de lotes a las 26 entregas del banner
+   (**H-018**) y la de las reservas sin lote (**H-035**); **no** teclear cantidades a mano.
+4. **Decidir** si **H-034** (un solo MOVIMIENTO por albarán) se abre como tarea propia: aquí queda **FUERA**
+   (D-B / O-1).
 
 ---
-
 ## 3.M (ANEXO · TAREA CERRADA) — Regresión de la ventana de detalle del bloque (H-032 · H-033)
 
 > **Turno:** Odoo Analista (APERTURA de la regresión; paso 1). **Estado:** **contrato redactado, listo para
