@@ -5,12 +5,14 @@
 - Servidor Odoo: odoo-impreven / http://localhost:8071
 - Base de Datos: Ciber Estudios 2015 RESTAURADA
 - Ruta del Módulo: C:\odoo_custom\printflow_gestion_inventario
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **10 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **11 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
   Del cierre anterior: **H-021** y **H-026** pasan a `resuelto`; **H-027** `descartado` (intencional);
   **H-028** `abierto` (baja).
   **Incidencia NUEVA (17/10, reporte del dueño):** **H-029** (el motivo del fallo por destino de la
-  asignación en bloque no se ve) y **H-030** (el "validar entregas en lote" del motor des-reserva el
-  lote de excepción y omite el 100%). Ver la nota de abajo.
+  asignación en bloque no se ve), **H-030** (el "validar entregas en lote" del motor des-reserva el
+  lote de excepción y omite el 100%) y **H-031** (los rótulos del wizard "Asignables 26" vs
+  "Demanda total 30" no declaran su unidad: filas vs unidades, y no dicen que cada fila es una
+  ENTREGA). Ver la nota de abajo.
 - **NOTA DE INCIDENCIA (17/10/2026 · turno Analista):** el dueño reporta *"asigné el lote y al validar
   me pide el número de lote"* en **WH/OUT/02994** (picking 23057, S03281). Diagnóstico con evidencia
   (fuente `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`):
@@ -27,7 +29,10 @@
   des-reservar la excepción al validar en lote (**H-030**).
 - Responsable Activo (Turno): **Odoo Analista** (cierre de ciclo: **Lote 1**, **Lote 2** y **Lote 3** verificados;
   **plan T1–T8 COMPLETO, 0 pendientes**; **`odoo-verificador` = `cumple`**). Tarea **GRANDE · CERRADA**.
-  Tarea ACTUAL: **incidencia en análisis** (H-029/H-030), sin plan todavía.
+  Tarea ACTUAL (GRANDE · contrato redactado, **plan pendiente** → `odoo-planificador`): **incidencias del
+  wizard de asignación en bloque y del "validar entregas en lote"** (**H-029** motivo por destino ·
+  **H-030** el validado en lote des-reserva la excepción · **H-031** rótulos "Entregas" vs "Unidades").
+  Ver **Sección 3**.
 - Tarea (CERRADA · **GRANDE**): **ASIGNACIÓN DE LOTE EN BLOQUE desde la bandeja** (acción sobre la SELECCIÓN).
   Decidido con el dueño: **(a)** acción en bloque sobre las filas seleccionadas (no el refactor del selector);
   **(b)** si el lote no cubre la demanda sumada ⇒ **asignar lo disponible (parcial)** con confirmación; **(c)** alcance
@@ -168,6 +173,121 @@ flowchart TD
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
 
 ## 3. Especificación Técnica de la Tarea Actual
+
+> **Turno:** Odoo Analista (APERTURA de la incidencia; cierra el paso 1 → pasa al **paso 2: `odoo-planificador`**).
+> **Estado:** **contrato redactado, SIN plan todavía**. Tarea **GRANDE** (toca el flujo NATIVO de
+> reserva/validación de entregas ⇒ SIEMPRE Grande).
+> **Fuente:** odoo-impreven / BD `Ciber Estudios 2015 RESTAURADA`.
+> **Rutas:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: el wizard vive aquí) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor del "validar entregas en lote"; **SOLO LECTURA**,
+> se hereda/extiende desde PrintFlow).
+> **Regla vigente:** código sí, datos no (`regla-trabajo-odoo-17-ce`).
+> **Cadena:** Analista → Planificador → Analista → Dev (por lotes, máx. 3) → Verificador → Analista.
+> **Hallazgos que ataca:** **H-029** · **H-030** · **H-031** — los TRES viven en el MISMO flujo de
+> asignación/validación en bloque de entregas.
+
+### 3.1 Problema (evidencia en la BD y en el código)
+
+**Caso real (BD `Ciber Estudios 2015 RESTAURADA`, 17/10):** el dueño corrió la asignación en bloque
+(`printflow.flow.lot.assign.bulk` id **1**, 27 destinos, demanda **33 u**) eligiendo el lote **`8763`**
+(id 2891) — un lote **VACÍO** (`product_qty = 0`; solo tenía 3 u y se las llevó la entrega más antigua
+WH/OUT/02988). Resultado real: **1 asignada · 26 con error** y el wizard cerró **sin decir POR QUÉ**
+(**H-029**). Después, el "validar entregas en lote" del motor omitió **28/28** (**H-030**), y en la
+segunda pasada el dueño leyó, confundido, **"Asignables 26 / Demanda total 30"** (**H-031**).
+
+| # | Sub-problema | Hallazgo | Evidencia |
+|---|---|---|---|
+| **P1** | El motivo del fallo **por destino** SÍ se calcula y SÍ se guarda, pero **NO se muestra**: la acción termina en `display_notification` con 4 conteos y `act_window_close`. | H-029 | `wizard/printflow_flow_lot_assign_bulk.py` L438-461 (`line.result_note = str(err)`) y L497-524 (`_pf_result_notification` → `'next': act_window_close`) · BD: `...assign.bulk` id **1** + 27 líneas con `result_note` (26 = *"El lote "8763" no tiene existencia disponible…"*) |
+| **P2** | El "validar entregas en lote" hace `picking.action_assign()` **ANTES** de validar; en producto de **entrega exclusiva por lote** ese `action_assign` **des-reserva la excepción** (libera el lote asignado a mano) ⇒ `state != 'assigned'` ⇒ `_PfBulkSkip` ⇒ **28/28 omitidas** con *"Sin stock reservado"*. | H-030 | `x_product_dimensional_pricing/models/printflow_stock_picking_bulk.py` L72-96 (L74 `action_assign`, L75-78 el skip) · override `stock_move.py` L57-89, L194-217 · BD: `printflow.delivery.bulk.result` id **158** (28 líneas `skipped`) |
+| **P3** | Los rótulos **no declaran su unidad**: **"Asignables" = 26** son **FILAS/ENTREGAS** y **"Demanda total" = 30** son **UNIDADES**; nada dice que cada fila es un **albarán de ENTREGA** (el dueño lo leyó como "la OC"). | H-031 | `wizard/printflow_flow_lot_assign_bulk_views.xml` L39 (`total_demand`), L43 (`assignable_count`) · `wizard/printflow_flow_lot_assign_bulk.py` L78-82, L117-119, L132-135 |
+
+### 3.2 Objetivo (acotado)
+
+**SÍ:**
+1. **P1 (H-029):** que el operador **VE A el motivo por destino** al terminar la asignación en bloque,
+   sin perder el cierre de la bandeja ni los 4 conteos.
+2. **P2 (H-030):** que "validar entregas en lote" **NO des-reserve** la reserva por excepción ya
+   existente; que valide lo que de verdad está reservado, o que **omita con motivo HONESTO** en vez de
+   `"Sin stock reservado"`.
+3. **P3 (H-031) — RÓTULOS YA DECIDIDOS CON EL DUEÑO:** `Asignables` → **"Entregas por asignar"**;
+   `Demanda total` → **"Unidades a entregar"**; `Filas omitidas` → **"Entregas omitidas"**; + **texto
+   aclaratorio VISIBLE** bajo "Selección": *"Cada fila es una entrega (albarán de salida). N entregas = M unidades."*
+
+**NO:**
+- NO cambiar la **lógica de cálculo**: 26 y 30 son **CORRECTOS** (26 filas = 22×1 u + 4×2 u = 30 u).
+  Solo rótulos y texto.
+- NO tocar el motor `x_product_dimensional_pricing` a mano: se **hereda/extiende con `_inherit` + `super()`**
+  desde PrintFlow (cambio directo en el motor ⇒ **solo con autorización del dueño**).
+- NO forzar flujos nativos: prohibido `cr.execute` de escritura, `cr.commit()`, escribir
+  `stock.quant`/`stock.move` a mano, forzar `state`/`quantity`.
+- NO resolver por DATOS el caso del dueño (asignar lotes a las 26 entregas = **H-018**; lo ejecuta él).
+- NO romper: selector por documento, bandeja clásica, autorización en bloque, ni el dedupe FIFO.
+
+### 3.3 Contrato funcional
+
+| Superficie | Debe quedar |
+|---|---|
+| Fin de `action_assign_lot_bulk` | Conserva los **4 conteos** y ADEMÁS deja **visible el motivo por destino** (los destinos `error`/`partial` con su `result_note`, p. ej. vía un wizard de detalle o en la propia notificación). La bandeja **se sigue cerrando**. |
+| "Validar entregas en lote" | Un albarán que **YA tiene reserva con lote** (excepción del operador) **NO se des-reserva**: se valida, o se omite con el **motivo REAL**. El savepoint por albarán se mantiene. |
+| Ranura "Selección" del wizard | **"Entregas por asignar"** = 26 · **"Unidades a entregar"** = 30 · **"Entregas omitidas"** = 0 + **texto aclaratorio visible**. |
+| Motor `x_product_dimensional_pricing` | **SIN CAMBIOS** (se hereda/extiende desde PrintFlow); cambio directo ⇒ autorización del dueño. |
+
+### 3.4 Fuente ÚNICA / patrones a reutilizar (cero reinvención)
+
+- **Patrón "resultado con detalle por documento" (para H-029):** el wizard de resultado del bulk-validate
+  del motor (`printflow.delivery.bulk.result` + su `_views.xml`) YA pinta **una fila por albarán con
+  `status` y `reason`** (`printflow_stock_picking_bulk.py` L104-106 y `_pf_bulk_build_result_wizard`).
+  Es el patrón a copiar/portar a PrintFlow.
+- **Modelo de línea que YA guarda el detalle:** `printflow.flow.lot.assign.bulk.line`
+  (`result`, `result_note`) — de la tarea del anexo **3.K**. Solo falta **pintarlo**.
+- **Guardia de permisos:** `printflow.stock.remedy._pf_assert_can_clean()`.
+- **Política/motivo:** `printflow.flow.lot.picker._pf_exception_policy` (ya integrado).
+- **Nativo de reserva (SOLO lectura, para entender el des-reserve):**
+  `stock.move._pf_unreserve_reservation` / `_pf_reassign_lot` / `_is_exclusive_delivery`.
+
+### 3.5 Restricciones duras
+
+1. **Código sí, datos no** (`regla-trabajo-odoo-17-ce`): el Dev NO toca registros de la BD.
+2. **No forzar ni reemplazar flujos nativos.** Ninguna escritura nueva por fuera de los remedios
+   EXISTENTES; el "validar en lote" es un flujo de Odoo que el operador dispara.
+3. **`_inherit` + `super()`** para extender el motor desde PrintFlow; **`x_product_dimensional_pricing`
+   NO se edita** sin autorización explícita del dueño.
+4. **Cero hardcodeo:** todo texto por `_()`; lo configurable por `ir.config_parameter`.
+5. **Convenciones OCA** (`odoo-17-clean-architecture` §2.5): un archivo por modelo, `__init__` por archivo,
+   orden del modelo, `xml_id` con prefijo `printflow_`.
+6. **Un solo escritor:** no abrir un segundo camino de escritura de lote.
+
+### 3.6 Obstáculos que el PLANIFICADOR DEBE resolver (no los decide el Dev)
+
+- **O-1 (H-030 — el crítico).** El fix natural ("no llamar `action_assign` si ya hay reserva" o "re-aplicar
+  el lote tras reservar") vive en el **MOTOR** (`printflow_stock_picking_bulk.py`) y en el override de
+  `stock_move._action_assign`. El Planificador debe decidir **DÓNDE** se corrige (¿override `_inherit`
+  desde PrintFlow? ¿PrintFlow aporta su propio `stock.move`?) y **demostrar** que el flujo nativo queda
+  **intacto** para las entregas SIN excepción. Un cambio mal puesto aquí rompe **TODAS** las entregas.
+- **O-2 (H-029).** ¿"Ver detalle" como wizard de resultado (patrón del bulk-validate) **o** volcar los
+  motivos en la notificación? Elegir UNA y justificar por qué NO se rompe el cierre de la bandeja.
+- **O-3 (H-031).** Confirmar el formato del texto aclaratorio y que `total_demand` conserve
+  `digits='Product Unit of Measure'` (no inventar sufijos de unidad).
+
+### 3.7 Criterios de aceptación (borrador — el Planificador los refina; el Dev los prueba)
+
+- **CA-1 (H-029).** Tras una asignación en bloque con errores, el operador **lee el motivo por destino**
+  (p. ej. *"El lote "8763" no tiene existencia disponible para asignarlo a este documento."*) sin tocar la BD.
+- **CA-2 (H-030).** Un albarán con **reserva por excepción** procesado por "validar entregas en lote"
+  **NO pierde su lote** y queda `done` u omitido con **motivo honesto**; ya **NO** reporta
+  *"Sin stock reservado"* habiendo reserva.
+- **CA-3 (H-031).** La ranura "Selección" dice **"Entregas por asignar"** / **"Unidades a entregar"** /
+  **"Entregas omitidas"** y el **texto aclaratorio es visible** (sin abrir el tooltip).
+- **CA-4 (cero regresión).** Selector por documento, bandeja clásica, autorización en bloque, dedupe FIFO
+  y `_pf_available_lots` **intactos**; la suite de lote/bandeja queda como estaba (los 8 rojos de **B1**
+  son PRE-EXISTENTES y ajenos).
+
+### 3.8 Pendiente inmediato
+
+**Nada de código todavía.** Este contrato pasa al **`odoo-planificador`** para el diseño (D1–Dn) y el
+plan por lotes (T1…Tn). Luego el Analista revisa el plan y lo pasa al **`odoo-dev`** por lotes.
+
+## 3.K (ANEXO · TAREA CERRADA) — Asignación de lote en bloque desde la bandeja
 
 > **Turno:** Odoo Analista (revisión del PLAN del Planificador; paso 3 -> **`odoo-dev`**). **Estado:** **PLAN
 > COMPLETO** (D1–D9 cerradas por el **Odoo Planificador**; T1–T8 en 3 lotes). Tarea **GRANDE** (toca el flujo de
