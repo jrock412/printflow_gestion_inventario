@@ -48,6 +48,15 @@
                             string="Asignar lote" class="btn-primary"
                             icon="fa-tags" display="selection"
                             title="Asigna UN lote (con un motivo) a las entregas sin lote seleccionadas. ESCRIBE inventario por la vía NATIVA (reserva). Requiere jefe de taller/administrador"/>
+                    <!-- REPARTO MULTI-LOTE (H-037): HERMANO de "Asignar lote",
+                         sobre la MISMA selección, pero abre el contenedor en
+                         ``mode='split'`` para marcar VARIOS lotes ("Incluir") y
+                         cubrir la demanda de una sola pasada (reserva ADITIVA
+                         por la vía NATIVA: 1 liberación + N reservas). -->
+                    <button name="action_split_lot_bulk" type="object"
+                            string="Repartir lotes" class="btn-secondary"
+                            icon="fa-random" display="selection"
+                            title="Reparte la demanda de las entregas sin lote seleccionadas entre VARIOS lotes con existencia (en el orden de la tabla: primero el de más disponible). ESCRIBE inventario por la vía NATIVA (reserva ADITIVA). Requiere jefe de taller/administrador"/>
                     <!-- SECUNDARIAS que TOCAN inventario: van con AVISO. -->
                     <button name="action_confirm_create_suggested_lots" type="object"
                             string="Crear lote sugerido" class="btn-secondary"
