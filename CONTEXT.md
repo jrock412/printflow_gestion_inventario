@@ -5,15 +5,59 @@
 - Servidor Odoo: odoo-impreven / http://localhost:8071
 - Base de Datos: Ciber Estudios 2015 RESTAURADA
 - Ruta del Módulo: C:\odoo_custom\printflow_gestion_inventario
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **11 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
-  Del cierre anterior: **H-021** y **H-026** pasan a `resuelto`; **H-027** `descartado` (intencional);
-  **H-028** `abierto` (baja).
-  **Incidencia NUEVA (17/10, reporte del dueño):** **H-029** (el motivo del fallo por destino de la
-  asignación en bloque no se ve), **H-030** (el "validar entregas en lote" del motor des-reserva el
-  lote de excepción y omite el 100%) y **H-031** (los rótulos del wizard "Asignables 26" vs
-  "Demanda total 30" no declaran su unidad: filas vs unidades, y no dicen que cada fila es una
-  ENTREGA). Ver la nota de abajo.
-- **NOTA DE INCIDENCIA (17/10/2026 · turno Analista):** el dueño reporta *"asigné el lote y al validar
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **12 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+  **17/10-c (3.ª ronda · TAREA ABIERTA):** se ABRE **H-037** (el wizard en bloque **no tiene capacidad de
+  REPARTO multi-lote**: su contrato declarado es "UN lote → N entregas" y el protocolo NATIVO del motor no es
+  aditivo ⇒ llamar dos veces borra el primer lote). El dueño pide revisar el wizard; **tarea GRANDE abierta en
+  la Sección 3** (Analista → Planificador).
+  **17/10-c (2.ª ronda):** se ABRE **H-036** (el check "Asignar" de la tabla de candidatos parece multiselección
+  pero es de **selección ÚNICA**: gana el último tick ⇒ se asigna **un solo lote por corrida**; evidencia: bulk id 4).
+  **17/10-c:** se ABREN **H-034** (el bloque resuelve UN solo movimiento por albarán) y **H-035** (reservas
+  colgadas sin lote actuales), del análisis de la 3.ª incidencia de lote (ver NOTA de abajo).
+  **Cierre 17/10-bis: H-032 y H-033 pasan a `resuelto`** (T1–T3 en 1 lote; `odoo-verificador` = `cumple`).
+  **Cierre 17/10: H-029, H-030 y H-031 pasan a `resuelto`** (T1–T9 en 3 lotes; `odoo-verificador` = `cumple`).
+  Del cierre anterior: **H-021** y **H-026** `resuelto`; **H-027** `descartado` (intencional);
+  **H-028** `abierto` (baja, deuda de nomenclatura — no se toca).
+- **NOTA DE INCIDENCIA (ABIERTA — 17/10/2026-c · turno Analista):** el dueño reporta **por 3.ª vez** *"asigno un
+  lote y al validar me pide el número de lote"* en **IMPRESION BANNER** (producto 13571), y sospecha que hay que
+  **reservar primero** y asignar el lote después. Diagnóstico con evidencia (fuente `odoo-impreven` / BD
+  `Ciber Estudios 2015 RESTAURADA`):
+  1. **La hipótesis del dueño NO es la causa.** En este módulo "Asignar lote" **NO es solo lote: ES la reserva**
+     (`_pf_reassign_move_lot` → `_pf_reassign_lot` → `_update_reserved_quantity(lot)`). No hay un "paso antes":
+     el lote elegido es el que se reserva. Evidencia: **WH/OUT/02994** quedó `assigned` con el lote `SN126353`
+     (move.line 94879) y **se validó** (`done`, 15:06:44).
+  2. **Causa real de los 3 intentos: los lotes elegidos estaban (casi) VACÍOS.** `bulk` id 1 (04:52) con lote
+     `8763` (**3 u**, consumidas por el 1.er destino FIFO) y `bulk` id 4 (13:25) con lote `SN126353` (**1 u**):
+     **1 asignada / 25-26 con error** *"El lote X no tiene existencia disponible…"*; los `bulk` id 2 y 3
+     (05:34/06:41) se abrieron **sin lote** ⇒ 26 filas en `pending`, **nada escrito**. En la tabla de candidatos
+     SÍ se veía que el recomendado era `666634` (**23 u disponibles**).
+  3. **Las 23 entregas sin reserva y las 2 con reserva SIN lote son causa DATO** (**H-018**): el producto es de
+     **entrega exclusiva por lote** y el lote exclusivo de cada pedido (`S…-L…`) está **vacío**; la mercancía
+     entró en lotes **genéricos** (`666634` = 23 u + 6 lotes de 1 u = **29 u** para ~**34 u** de demanda).
+  4. **Quien pide el lote al validar es el chequeo NATIVO de Odoo** (`tracking='lot'`), no el módulo: la línea
+     no lleva lote porque **no se escribió nada** (o se tecleó la cantidad a mano).
+  5. **HALLAZGO NUEVO (H-034, código):** el bloque resuelve **UN solo `stock.move` por albarán** (`limit=1`) ⇒
+     las entregas con **2 movimientos del mismo producto** (**WH/OUT/05608** y **WH/OUT/06483**) quedan a medias
+     y al validar siguen pidiendo el lote; el 2.º movimiento **no aparece en ninguna superficie** de la bandeja.
+     **Requiere tarea de código** (no abierta todavía: se espera la decisión del dueño).
+  6. **HALLAZGO NUEVO (H-036, UX/contrato — 2.ª ronda):** el check **"Asignar"** de la tabla de candidatos es de
+     **selección ÚNICA** (gana el **último** tick; el wizard asigna **UN** lote por corrida, **no** reparte la
+     demanda entre varios). Evidencia: en la corrida **bulk id 4** (13:25) la única fila marcada fue `SN126353`
+     (**1 u**), aunque el recomendado de 23 u (`666634`) seguía visible con `is_recommended=True` ⇒ `bulk.lot_id`
+     = `SN126353` ⇒ **1 asignada / 25 con error**. La lectura del dueño ("marqué el 23 + los de 1 u") es correcta
+     como gesto, pero el diseño asigna un lote por corrida. **Requiere decisión de código/UX** (junto con H-034).
+   **Hallazgo nuevo de DATOS:** **H-035** (reservas colgadas sin lote en WH/OUT/03009 y WH/OUT/03120; quant
+   **15219** con disponible **−2**). **Acción de DATOS del dueño:** asignar desde la bandeja con un lote **CON
+   existencia** (`666634` = 23 u) y luego con los lotes de 1 u; **no** teclear cantidades a mano.
+  7. **HALLAZGO NUEVO (H-037, diseño/capacidad — 3.ª ronda):** el dueño pide revisar el wizard porque "ese
+     wizard en específico es para poder asignar VARIOS lotes". **Confirmado y matizado:** la selección única
+     **NO** viene de "reutilizar la lógica del selector por documento" — es el **contrato declarado** del
+     contenedor (`lot_id` único; docstring *"UN lote a N entregas"*). Lo que falta es una **capacidad NUEVA**
+     (reparto multi-lote). Agravante: la primitiva NATIVA `stock.move._pf_reassign_lot` **libera la reserva
+     entera y luego reserva** ⇒ **no es aditiva** (dos llamadas con dos lotes borran el primero). **Se abre tarea
+     de código GRANDE** — ver **Sección 3** (Analista → Planificador); el Analista **recomienda** conservar el
+     contenedor y añadirle un camino de reparto (opción **B**), con **H-034** a evaluar aparte.
+- **NOTA DE INCIDENCIA (RESUELTA — 17/10/2026 · turno Analista):** el dueño reporta *"asigné el lote y al validar
   me pide el número de lote"* en **WH/OUT/02994** (picking 23057, S03281). Diagnóstico con evidencia
   (fuente `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`):
   1. La asignación en bloque **SÍ corrió** (`printflow.flow.lot.assign.bulk` id 1, 27 destinos, demanda
@@ -25,15 +69,31 @@
   3. El botón "validar entregas en lote" del motor omitió **28/28** ("Sin stock reservado") — **H-030**.
   **Acción de datos (la ejecuta el dueño, no el agente):** en la bandeja "Asignar lote" elegir un lote
   **con existencia** (`666634` = 23 u; quedan 30 u en total para 30 u de demanda) y volver a validar.
-  **Acción de código pendiente de planificar:** mostrar el motivo por destino (**H-029**) y no
-  des-reservar la excepción al validar en lote (**H-030**).
-- Responsable Activo (Turno): **Odoo Analista** (cierre de ciclo: **Lote 1**, **Lote 2** y **Lote 3** verificados;
-  **plan T1–T8 COMPLETO, 0 pendientes**; **`odoo-verificador` = `cumple`**). Tarea **GRANDE · CERRADA**.
-  Tarea ACTUAL (GRANDE · contrato redactado, **plan pendiente** → `odoo-planificador`): **incidencias del
-  wizard de asignación en bloque y del "validar entregas en lote"** (**H-029** motivo por destino ·
-  **H-030** el validado en lote des-reserva la excepción · **H-031** rótulos "Entregas" vs "Unidades").
-  Ver **Sección 3**.
-- Tarea (CERRADA · **GRANDE**): **ASIGNACIÓN DE LOTE EN BLOQUE desde la bandeja** (acción sobre la SELECCIÓN).
+  **Acción de código RESUELTA (17/10 · ciclo T1–T9):** mostrar el motivo por destino (**H-029**), no
+  des-reservar la excepción al validar en lote (**H-030**) y los rótulos "Entregas/Unidades" (**H-031**).
+  Los TRES pasan a `resuelto` en `HALLAZGOS.md` (verificado por el `odoo-verificador`: `cumple`).
+- Responsable Activo (Turno): **Odoo Analista** — **3.ª incidencia de lote ABIERTA** (ver la NOTA de incidencia
+  de arriba; **H-034** espera decisión del dueño para abrir tarea de código). Ciclo anterior: **T1–T3**
+  verificados, **0 pendientes**; `odoo-verificador` = `cumple`.
+- Tarea (CERRADA · **NORMAL** · ciclo 17/10-bis): **fix del crash al abrir el detalle del bloque**.
+  Atacó **H-032** (la acción `act_window` anidada en `params['next']` iba **sin `views`** ⇒
+  `TypeError: Cannot read properties of undefined (reading 'map')` en `_preprocessAction`) y **H-033**
+  (el MISMO defecto en el precedente `printflow_node_pending_line.action_pf_validate_selected`, rama `others`).
+  Fix: `'views': [(False, 'form')]` en la acción anidada. 3 archivos, 1 lote (**T1–T3**), motor
+  `x_product_dimensional_pricing` **SIN CAMBIOS**. Ver **Sección 3**; el ciclo anterior queda como anexo **3.L**.
+  **Pendiente del dueño:** recargar el módulo (`-u printflow_gestion_inventario`) y reprobar el botón.
+- Tarea (CERRADA · **GRANDE** · ciclo 17/10): **incidencias del wizard de asignación en bloque y del
+  "validar entregas en lote"**. Ataca **H-029** (el motivo del fallo por destino no se veía), **H-030** (el
+  "validar entregas en lote" des-reservaba la excepción y omitía el 100%) y **H-031** (los rótulos
+  "Asignables" vs "Demanda total" confundían FILAS con UNIDADES). Diseño **D1–D7**: **D1** wizard de detalle
+  portado de `printflow.delivery.bulk.result` · **D2** guardián ADITIVO en `stock.move._assign_exclusive_lot`
+  (motor `x_product_dimensional_pricing` **SIN CAMBIOS**; PrintFlow solo hace `_inherit` + `super()`) ·
+  **D3** rótulos "**Entregas por asignar**" / "**Unidades a entregar**" / "**Entregas omitidas**" +
+  `selection_note` VISIBLE. Ver **Sección 3** (§3.5 D1–D7 · §3.6 archivos · §3.12 **T1–T9** en 3 lotes).
+  **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071 (`-u printflow_gestion_inventario`).
+  **Pendiente de DATOS (no código):** asignar lote a las 26 entregas desde la bandeja con un lote **con
+  existencia** (**H-018**).
+- Tarea (CERRADA · **GRANDE** · ciclo anterior): **ASIGNACIÓN DE LOTE EN BLOQUE desde la bandeja** (acción sobre la SELECCIÓN).
   Decidido con el dueño: **(a)** acción en bloque sobre las filas seleccionadas (no el refactor del selector);
   **(b)** si el lote no cubre la demanda sumada ⇒ **asignar lo disponible (parcial)** con confirmación; **(c)** alcance
   **SOLO entregas sin lote** (`pending_order`/movimientos); el resto se OMITE y se reporta. Botón de cabecera
@@ -174,6 +234,206 @@ flowchart TD
 
 ## 3. Especificación Técnica de la Tarea Actual
 
+> **Turno:** Odoo Analista (APERTURA de la incidencia; paso 1). **Estado:** **contrato redactado, SIN plan
+> todavía** → pasa al **paso 2: `odoo-planificador`**.
+> **Tarea GRANDE** (toca el FLUJO NATIVO de reserva de entregas ⇒ **SIEMPRE Grande**: Analista → Planificador →
+> Analista → Dev por lotes → Verificador → Analista).
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`.
+> **Dónde:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: **aquí se escribe**) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor; **SOLO LECTURA — NO se edita**).
+> **Qué (objeto concreto):** `printflow.flow.lot.assign.bulk` (+ su `.line`, su candidato
+> `printflow.flow.lot.candidate`, sus vistas y la acción "Asignar lote" de `printflow.flow.lot.tray`).
+> **Regla vigente:** código sí, datos no (`regla-trabajo-odoo-17-ce`).
+> **Hallazgos que ataca:** **H-037** (sin capacidad de REPARTO multi-lote) · **H-036** (el check "Asignar" de la
+> tabla parece multiselección pero es de selección ÚNICA). **Vecino a EVALUAR (no necesariamente dentro):**
+> **H-034** (el bloque resuelve UN solo `stock.move` por albarán).
+
+### 3.1 Problema (evidencia)
+
+El dueño pide que el wizard en bloque permita **asignar VARIOS lotes** de una sola pasada (p. ej. `666634` de
+23 u **más** los lotes de 1 u) para cubrir la demanda de las entregas sin lote. Hoy **no se puede**:
+
+| # | Hecho | Evidencia |
+|---|---|---|
+| **P1** | El contenedor asigna **UN** lote a **N** entregas: es su **contrato declarado**, NO un accidente de reutilización. | `wizard/printflow_flow_lot_assign_bulk.py` L2-8 (docstring *"Asignación EN BLOQUE de UN lote a N entregas"*), L97-101 (`lot_id` `Many2one` único), L384-400 (`_pf_selected_lot` devuelve UNO; `UserError` si hay >1), L455-468 (pasa el mismo `chosen` a todos los destinos). |
+| **P2** | El check **"Asignar"** de la tabla de candidatos PARECE multiselección pero es de **selección ÚNICA** (gana el último tick). | `wizard/printflow_flow_lot_candidate.py` L263-294 (`write` → `_pf_enforce_single_selection`), L94-98 (`is_selected` único) · `wizard/printflow_flow_lot_picker_views.xml` L32-33 (`editable="bottom"`, `string="Asignar"`) · BD: bulk id **4**, única fila marcada `SN126353` (1 u) con `666634` (23 u) sin marcar. |
+| **P3** | El protocolo NATIVO disponible **no sabe SUMAR lotes a un movimiento**: `_pf_reassign_lot` **libera la reserva entera** y luego reserva el nuevo lote ⇒ llamarlo 2 veces borra el 1.º. | `x_product_dimensional_pricing/models/stock_move.py` L152-192 (`_pf_unreserve_reservation()` + `_pf_reserve_lot`), L10-33 (`_is_exclusive_delivery`), L194-204 (`_assign_exclusive_lot`: reserva UN lote). |
+| **P4** | Consecuencia ya medida: no existe **ninguna** corrida con el lote de 23 u; las únicas con lote fueron `8763` (3 u) y `SN126353` (1 u) ⇒ **1 asignada / 25-26 con error**. | BD: `printflow.flow.lot.assign.bulk` id **1** y **4**; candidatos del bulk 4 (`666634` 23 u `is_recommended=true`, NO marcado). |
+
+### 3.2 Objetivo (acotado)
+
+**SÍ:** que el operador pueda resolver desde la bandeja las entregas sin lote usando **VARIOS lotes con
+existencia** (reparto), reutilizando el contenedor `printflow.flow.lot.assign.bulk` y el protocolo NATIVO de
+reserva.
+**NO:** reinventar el flujo de reserva (nada de escribir `stock.quant`/`stock.move` a mano); NO tocar el motor
+(**solo lectura**); NO tocar datos; NO cambiar el contrato del **selector por documento**
+(`printflow.flow.lot.picker`, "un lote por documento").
+
+**Definición de TERMINADO:** el operador marca **2+ lotes** con `Disponible > 0` en la bandeja, pulsa asignar
+una sola vez, y **todos** los lotes quedan reservados por la vía NATIVA en las entregas (sin perder ninguno),
+con el reporte por destino y el motivo intactos; el selector por documento sigue igual; los tests del módulo
+pasan en verde.
+
+### 3.3 Contrato funcional (qué debe quedar) — decisiones ABIERTAS para el Planificador
+
+**Decisión D-A (arquitectura) — la decide el Planificador, CON justificación:**
+
+- **Opción A:** un **wizard NUEVO** solo para el reparto multi-lote.
+- **Opción B (recomendada por el Analista):** **conservar** `printflow.flow.lot.assign.bulk` y añadirle un
+  **camino/modo de REPARTO** (otra acción + otra estructura de selección **ordenada** de lotes) que reutilice
+  `_pf_prepare_rows`, `_pf_populate`/tabla de candidatos, `_pf_check_coverage`, el captura-de-error por destino,
+  la bitácora y el wizard de resultado.
+
+> **Por qué B:** el contenedor **YA** es el sitio correcto ("N destinos + K lotes + 1 motivo"); solo su etapa de
+> DECISIÓN es de un lote. Un wizard nuevo **duplicaría** seis piezas (`_pf_prepare_rows`, dedupe, candidatos,
+> cobertura, captura por destino, bitácora + resultado) y sus tests.
+
+**Comportamiento requerido (vale para A y B):**
+
+| # | Debe quedar |
+|---|---|
+| **C1** | El operador puede marcar **varios lotes** con `Disponible > 0` y la asignación los aplica a la selección **sin perder ninguno** (hoy el 2.º tick pisa al 1.º). |
+| **C2** | El reparto es **determinista y auditable**: el orden de lotes y de destinos queda DECLARADO (el Planificador lo fija) y el **motivo** sigue siendo obligatorio (bitácora por documento). |
+| **C3** | **Cero escritura forzada:** todo lote se reserva por el protocolo NATIVO; **prohibido** `cr.execute` de escritura, `cr.commit()`, `unlink()`+`create()` a mano, y escribir `stock.quant`/`stock.move`/`quantity`/`state` directamente. |
+| **C4** | El **selector por documento** (`printflow.flow.lot.picker`) queda **INTACTO** (su contrato es un lote por documento y está cubierto por tests). |
+| **C5** | Se conserva el **reporte por destino** (asignado / parcial / omitido / error) y el detalle (H-029) **sin regresión**. |
+| **C6** | La **excepción de lote** y la política (`pf_lot_assign_exception_policy`) siguen gobernando (cero hardcodeo). |
+
+**PREGUNTA TÉCNICA BLOQUEANTE que el Planificador DEBE resolver:** un mismo `stock.move` puede necesitar **2+
+lotes** (p. ej. demanda 2 u con lotes de 1 u). El camino actual (`_pf_reassign_move_lot` → `_pf_reassign_lot`)
+**libera** la reserva antes de reservar ⇒ **NO es aditivo** (P3). Dos salidas posibles: (i) hallar el camino
+**NATIVO ADITIVO** (reserva acumulativa vía `_update_reserved_quantity` sobre el movimiento respetando la
+excepción de lote), o (ii) **acotar el alcance** a "**un lote por movimiento/destino**" y declararlo explícito.
+Debe quedar escrito cuál se elige y por qué.
+
+**Decisión D-B (alcance) — la decide el Planificador:** si **H-034** (un solo `stock.move` por albarán) entra en
+esta tarea o se deja FUERA (declarado en "Observaciones fuera de alcance").
+
+### 3.4 Restricciones duras
+
+1. **Código sí, datos no** (`regla-trabajo-odoo-17-ce`).
+2. El motor `x_product_dimensional_pricing` **NO se edita** (solo lectura).
+3. **No reinventar ni forzar flujos nativos**: se engancha con `_inherit` + `super()`; **PROHIBIDO** tocar
+   `stock.quant`/`stock.move` a mano, los estados (`state`, `qty_done`, `quantity`), `cr.execute` de escritura o
+   `cr.commit()`.
+4. Convenciones **OCA** (`odoo-17-clean-architecture` §2.5).
+5. **Sin hardcodeo**: lo configurable va a `ir.config_parameter` / `res.config.settings`.
+
+### 3.5 Pendiente del dueño
+
+Confirmar la **dirección (Opción A vs Opción B)** y si **H-034** entra en el alcance. El Analista **recomienda la
+Opción B** (reutilizar el contenedor) y **evaluar H-034 por separado** (es un eje vecino: multi-MOVIMIENTO, no
+multi-LOTE).
+
+---
+
+## 3.M (ANEXO · TAREA CERRADA) — Regresión de la ventana de detalle del bloque (H-032 · H-033)
+
+> **Turno:** Odoo Analista (APERTURA de la regresión; paso 1). **Estado:** **contrato redactado, listo para
+> `odoo-dev`** (UN lote: T1–T3). Tarea **NORMAL** (2 archivos de código + 1 de test, SIN diseño de flujo:
+> se toca el cableado de una ACCIÓN, no el flujo de inventario).
+> **Fuente:** odoo-impreven / BD `Ciber Estudios 2015 RESTAURADA`.
+> **Rutas:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: aquí van los 3 archivos) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor; **SOLO LECTURA — no se edita**).
+> **Regla vigente:** código sí, datos no (`regla-trabajo-odoo-17-ce`).
+> **Hallazgos que ataca:** **H-032** (regresión de H-029/H-030/H-031) · **H-033** (mismo defecto latente
+> en un archivo hermano, descubierto al auditar el precedente).
+
+### 3.1 Problema (evidencia)
+
+El dueño abre la bandeja, selecciona entregas, pulsa **"Asignar lote"** (wizard
+`printflow.flow.lot.assign.bulk`) y ejecuta. El navegador revienta:
+
+```
+UncaughtPromiseError > TypeError
+Cannot read properties of undefined (reading 'map')
+  at _preprocessAction (web.assets_web.min.js:10274:73)
+  at doAction (…:10354:170)  →  doActionButton (…:10362:196)
+```
+
+**Causa raíz (verificada en el código de Odoo 17 y en el nuestro).** `_preprocessAction`
+(`addons/web/static/src/webclient/actions/action_service.js`) hace, para **TODA** acción
+`ir.actions.act_window`:
+
+```js
+action.views = [...action.views.map((v) => [v[0], v[1] === "tree" ? "list" : v[1]])];
+```
+
+⇒ si `views` viene `undefined`, revienta con **ese** mensaje. Y aquí está el detalle que importa:
+
+- El servidor Odoo **normaliza/agrega `views` SOLO a la acción de PRIMER nivel** que devuelve un botón.
+- Las acciones **ANIDADAS** dentro de `params['next']` de un `display_notification` **NO** se normalizan.
+
+La **T6** del ciclo anterior (H-029) puso la ventana de detalle dentro de `params['next']`
+**sin `views`** ⇒ crash al abrirla.
+
+**Prueba de que el primer nivel SÍ se normaliza:** el camino DIRECTO del motor
+(`_pf_bulk_build_result_wizard`) devuelve el **mismo dict sin `views`** y **funciona** — el dueño alcanzó a
+ver las 28 filas del `printflow.delivery.bulk.result` id **158** — porque ahí la acción es de **primer nivel**.
+
+| # | Sub-problema | Hallazgo | Evidencia |
+|---|---|---|---|
+| **P1** | La acción `act_window` anidada en `params['next']` va **sin `views`**. | **H-032** | `wizard/printflow_flow_lot_assign_bulk.py` L546-555 (dict `nxt`, sin `views`) y L571 (`'next': nxt`) · `action_service.js::_preprocessAction` (`action.views.map`) · error del navegador (arriba) · contraste: `x_product_dimensional_pricing/models/printflow_stock_picking_bulk.py` L129-136 (mismo dict, primer nivel ⇒ funciona) |
+| **P2** | **MISMO defecto** en el precedente que se copió, en su rama `others`. | **H-033** | `models/printflow_node_pending_line.py` L216-234 (`'next': result`) · `x_product_dimensional_pricing/models/printflow_stock_picking_bulk.py` L124-136 (`_pf_bulk_build_result_wizard`, sin `views`) |
+
+**Impacto:** el operador NO ve el detalle del motivo (**H-029 vuelve a quedar invisible**) y encima ve un
+error de JS. La asignación en sí **SÍ se ejecutó** (la escritura es server-side): lo que falla es solo la
+apertura del detalle.
+
+### 3.2 Objetivo
+
+**SÍ:** que la ventana de detalle del bloque **abra sin crash** (P1) y que el precedente hermano **no
+reviente** en su rama `others` (P2).
+**NO:** cambiar la lógica de conteo ni el flujo de reserva/validación; NO tocar el motor; NO tocar datos.
+
+### 3.3 Contrato funcional (qué debe quedar)
+
+| Superficie | Debe quedar |
+|---|---|
+| Acción anidada del detalle (H-032) | Incluye `'views': [(False, 'form')]`; conserva `type='ir.actions.act_window'`, `name`, `res_model`, `res_id`, `view_mode='form'`, `target='new'`. |
+| Precedente `action_pf_validate_selected` (H-033) | Su rama `others` también entrega `'views': [(False, 'form')]`. |
+| Texto de cierre (CA-7) | **Intacto** (los 4 conteos, igual). |
+
+> **Por qué `[(False, 'form')]` y no el dict cargado de la BD:** es la MISMA convención que el core de Odoo
+> usa al normalizar acciones de primer nivel (`[[False, 'form']]`), es una sola línea y no crea
+> dependencia con un xmlid inexistente. `False` como id = "carga la vista por defecto del modelo".
+
+### 3.4 Restricciones duras
+
+1. **Código sí, datos no** (`regla-trabajo-odoo-17-ce`).
+2. Solo se editan estos 3 archivos: `wizard/printflow_flow_lot_assign_bulk.py`,
+   `models/printflow_node_pending_line.py`, `tests/test_product_flow_lot_assign_bulk_result.py`.
+   El motor `x_product_dimensional_pricing` **NO se edita** (solo lectura).
+3. **Cero cambio de lógica:** nada de tocar conteos, `result_note`, `state`, `quantity`, `_action_assign`
+   ni el motor. PROHIBIDO `cr.execute` de escritura y `cr.commit()`.
+4. **No forzar ni reemplazar flujos nativos.**
+5. Convenciones OCA (`odoo-17-clean-architecture` §2.5).
+
+### 3.5 Plan (T1–T3 · UN lote)
+
+- [x] **T1 — `wizard/printflow_flow_lot_assign_bulk.py` (H-032).** En `_pf_result_notification`, agregar
+  `'views': [(False, 'form')]` al dict `nxt` que se pasa en `params['next']` (L546-555). Nada más.
+- [x] **T2 — `models/printflow_node_pending_line.py` (H-033).** En `action_pf_validate_selected`, rama
+  `others` (L221-233), agregar `'views': [(False, 'form')]` a la acción anidada en `'next'`.
+- [x] **T3 — `tests/test_product_flow_lot_assign_bulk_result.py`.** Añadir/extender un caso que fije
+  **CA-1**: `params['next']['views'] == [(False, 'form')]` (y sigue el `res_model`/`res_id`).
+
+### 3.6 Criterios de aceptación
+
+- **CA-1:** `action_assign_lot_bulk()` devuelve `params['next']['views'] == [(False, 'form')]` (test).
+- **CA-2:** `TestProductFlowLotAssignBulkResult` (T9 del ciclo anterior) sigue **verde**; `TestProductFlowLotAssignBulk` sigue **verde**.
+- **CA-3:** cero regresión: motor intacto, sin SQL crudo, sin tocar `stock.*` en escritura.
+- **CA-4:** `python -m py_compile` OK en los 2 archivos de código.
+
+### 3.7 Pendiente del dueño
+
+**Recargar el módulo** (`-u printflow_gestion_inventario`) en el servidor 8071 y volver a pulsar
+**"Asignar lote"**: debe abrir el detalle **sin error** y mostrar el motivo por entrega.
+
+---
+
+## 3.L (ANEXO · TAREA CERRADA) — Incidencias del wizard de asignación en bloque y del "validar entregas en lote" (H-029 · H-030 · H-031)
+
 > **Turno:** Odoo Analista (APERTURA de la incidencia; cierra el paso 1 → pasa al **paso 2: `odoo-planificador`**).
 > **Estado:** **contrato redactado, SIN plan todavía**. Tarea **GRANDE** (toca el flujo NATIVO de
 > reserva/validación de entregas ⇒ SIEMPRE Grande).
@@ -245,47 +505,375 @@ segunda pasada el dueño leyó, confundido, **"Asignables 26 / Demanda total 30"
 - **Nativo de reserva (SOLO lectura, para entender el des-reserve):**
   `stock.move._pf_unreserve_reservation` / `_pf_reassign_lot` / `_is_exclusive_delivery`.
 
-### 3.5 Restricciones duras
+### 3.5 Decisiones de diseño cerradas (D1–D7)
 
-1. **Código sí, datos no** (`regla-trabajo-odoo-17-ce`): el Dev NO toca registros de la BD.
-2. **No forzar ni reemplazar flujos nativos.** Ninguna escritura nueva por fuera de los remedios
-   EXISTENTES; el "validar en lote" es un flujo de Odoo que el operador dispara.
-3. **`_inherit` + `super()`** para extender el motor desde PrintFlow; **`x_product_dimensional_pricing`
-   NO se edita** sin autorización explícita del dueño.
+> **Cierre del Odoo Planificador.** Fuente: `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` · Rutas:
+> `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: aquí viven el wizard del bloque y la bandeja) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor del "validar entregas en lote"; **SOLO LECTURA**, NO se edita).
+> Regla vigente: **código sí, datos no**. El diseño **ENGANCHA** los flujos existentes (`_inherit` + `super()`) y
+> **NO reemplaza ni fuerza ningún flujo nativo**: la ÚNICA escritura sigue siendo la de hoy (la reasignación NATIVA
+> de reserva del remedio por documento) y la validación de albaranes que **dispara el operador**.
+> **Trazabilidad de obstáculos:** **O-1 → D2** · **O-2 → D1** · **O-3 → D3**.
+
+**D1 — H-029: DÓNDE y CÓMO se ve el motivo por destino (CERRADA · wizard de DETALLE, patrón del motor).**
+- Se **PORTA a PrintFlow** el patrón del motor `printflow.delivery.bulk.result` (+ su línea y su vista): se crean
+  `printflow.flow.lot.assign.bulk.result` (TransientModel con `line_ids` y los 4 conteos computados) y
+  `printflow.flow.lot.assign.bulk.result.line` (`seq` · `label` · `kind` · `demand_qty` · `result` · `result_note`).
+- `printflow.flow.lot.assign.bulk.action_assign_lot_bulk` **CONSERVA la notificación** con los 4 conteos y le
+  **encadena** el detalle con `params['next']` = `ir.actions.act_window` (`target='new'`) al wizard de resultado.
+  **Precedente EXACTO ya en uso en PrintFlow** (`models/printflow_node_pending_line.py::action_pf_validate_selected`,
+  L221-233: notificación + `next` = ventana de resultado) ⇒ **cero reinvención** del mecanismo de encadenado.
+- **Por qué NO volcar los motivos en la notificación:** la notificación no se desplaza, se trunca y desaparece; con
+  26+ motivos el operador no los puede leer — que es EXACTAMENTE la queja **H-029**. El detalle es una ventana de
+  SOLO LECTURA, persistente y desplazable, con **una fila por destino** (incluidas las OMITIDAS y las que no son
+  asignables) y su `result_note` completo.
+- **Por qué NO se rompe el cierre:** la notificación sigue siendo el retorno del botón (mismos 4 conteos, mismo
+  texto) y su `next` **ABRE** el detalle; al cerrar el detalle se vuelve a la bandeja de origen — el mismo
+  comportamiento de hoy (el modal del bloque se cierra y la bandeja queda como estaba; al reabrirla, las órdenes
+  resueltas ya no se listan, CA-8). El detalle **no escribe nada**: solo lee `bulk.line_ids`.
+
+**D2 — H-030: DÓNDE se corrige el des-reserve (CERRADA · override ADITIVO del seam `_assign_exclusive_lot`).**
+- **Causa exacta (verificada en el fuente INSTALADO de Odoo 17, no de memoria):** el NATIVO
+  `addons/stock/models/stock_move.py::_action_assign` (L1650-1664) **filtra** los movimientos que ya están
+  reservados (`moves_to_assign.filtered(lambda m: not m.picked and m.state in ['confirmed','waiting','partially_available'])`
+  y luego `if missing <= 0: assigned_moves_ids.add(move.id); continue`) ⇒ **un movimiento ya reservado NO se
+  re-asigna y su reserva se respeta**. El motor `x_product_dimensional_pricing/models/stock_move.py::_action_assign`
+  (L206-217) intercepta y, para los movimientos de **entrega EXCLUSIVA por lote** (`_is_exclusive_delivery()`),
+  llama **SIEMPRE** a `_assign_exclusive_lot()` **sin ese filtro** ⇒ `_pf_reassign_lot()` **LIBERA** la reserva
+  actual (`_pf_unreserve_reservation`) y reserva el **lote exclusivo del pedido** (`S…-Lyyy`) que está **VACÍO**
+  ⇒ reserva 0 ⇒ el albarán pierde la excepción de lote, queda `state != 'assigned'` y el motor del bulk lo OMITE
+  con *"Sin stock reservado."* (BD: `printflow.delivery.bulk.result` id **158**, 28/28 `skipped`).
+- **DÓNDE:** PrintFlow **hereda** `stock.move` (**CREAR** `models/stock_move.py`, `_inherit = 'stock.move'`) y
+  **sobrescribe el seam** `_assign_exclusive_lot()` con `super()` + un guardián de PRESERVACIÓN:
+
+  ```python
+  def _assign_exclusive_lot(self):
+      if self._pf_keep_current_lot_reservation():
+          self._recompute_state()
+          return True                      # se CONSERVA la reserva del operador
+      return super()._assign_exclusive_lot()   # motor INTACTO (comportamiento actual)
+  ```
+  El guardián `_pf_keep_current_lot_reservation()` (`ensure_one`) devuelve `True` SOLO si:
+  1. `product_id.tracking == 'lot'`; **y**
+  2. el movimiento **YA reserva un lote** (existe línea activa con `lot_id`, `not picked`, `quantity > _EPS`); **y**
+  3. `_get_exclusive_delivery_lot()` devuelve un lote **que existe pero NO tiene disponible** en la ubicación del
+     movimiento (`env['stock.quant']._get_available_quantity(product, move.location_id, lot_id=lot) <= _EPS`).
+  En cualquier otro caso ⇒ `super()`. **Espeja la regla del propio core** ("si ya está reservado, no se toca"):
+  no se inventa una regla nueva, solo se le aplica a la rama EXCLUSIVA del motor la regla que el nativo ya aplica.
+- **Por qué ahí y no en el motor:** es el **seam MÁS PEQUEÑO** que arregla el caso: toca **solo** el camino
+  exclusivo por lote. **NO** se reimplementa `_action_assign`, ni `button_validate`, ni
+  `printflow_stock_picking_bulk.py` (el motor queda **INTACTO** ⇒ **sin autorización del dueño**).
+- **Demostración de "flujo nativo intacto":** (a) **sin** reserva previa ⇒ `super()` (comportamiento del motor sin
+  cambios); (b) con el **lote exclusivo CON existencia** ⇒ `super()` (el motor sigue re-alineando al lote
+  exclusivo: no se altera la regla de negocio del lote exclusivo por pedido); (c) producto **NO** exclusivo ⇒ el
+  motor ni entra aquí (rama `normal` → FIFO NATIVO); (d) el lote exclusivo **NO existe** ⇒ el motor ya retorna
+  temprano sin tocar nada (no hace falta el guardián). El ÚNICO caso que cambia es la **excepción del operador**,
+  que es el objetivo declarado. **CA-1/CA-2 lo fijan (T8).**
+- **El razón-texto `"Sin stock reservado."` del motor NO se toca:** con este arreglo, un albarán **CON** reserva ya
+  no cae en el skip (se valida ⇒ `done`), y para un albarán **sin** reserva ni existencia el texto es **HONESTO**
+  (no hay reserva). Así se cumple "valida lo reservado **o** omite con motivo honesto" **sin** tocar el motor.
+
+**D3 — H-031: rótulos y texto aclaratorio (CERRADA · ya decidido con el dueño).**
+- Strings: `total_demand` → **"Unidades a entregar"**; `assignable_count` → **"Entregas por asignar"**;
+  `omitted_count` → **"Entregas omitidas"** (se corrige TAMBIÉN el `string="Filas omitidas"` que hoy fuerza la VISTA).
+- **Campo NUEVO computado** `selection_note` (Char, readonly) con el texto **VISIBLE**: *"Cada fila es una entrega
+  (albarán de salida). N entregas por asignar = M unidades a entregar."* (N = `assignable_count`, M = `total_demand`;
+  todo por `_()` ⇒ traducible). Se pinta en la ranura **"Selección"**, como texto visible (NO en un tooltip).
+- `total_demand` **CONSERVA** `digits='Product Unit of Measure'`; **NO** se inventan sufijos de unidad (la palabra
+  "unidades" va en la oración, como decidió el dueño). **NO** se toca la lógica de cálculo: 26 filas = 22×1 u + 4×2 u
+  = 30 u es CORRECTO.
+
+**D4 — Alcance de la acción en bloque (CERRADA · SIN cambios respecto al anexo 3.K).**
+- Sigue siendo SOLO `missing_move` + `pending_order` (entregas sin lote). Se OMITEN y se REPORTAN: `unassigned_mo`,
+  `orphan_quant`, `no_stock_lot`, `generic_lot`, `mixed_lot`, las filas con `can_choose_lot = False` y las que no
+  resuelven movimiento. La acción sobre la SELECCIÓN, el handler `pending_order`, el dedupe por `stock.move.id`, el
+  orden FIFO, la guardia `_pf_assert_can_clean`, el `reason` obligatorio y la política
+  (`pf_lot_assign_exception_policy`) **NO se tocan**.
+
+**D5 — Un solo escritor (CERRADA).**
+- La ÚNICA escritura sigue siendo `printflow.product.flow._pf_assign_lot_to_document` →
+  `_pf_reassign_move_lot` → `stock.move._pf_reassign_lot` (protocolo NATIVO del motor). El detalle de H-029
+  (solo lectura) y el guardián de H-030 (preserva, no escribe) **NO abren** caminos de escritura nuevos.
+  PROHIBIDO: `unlink()`+`create()` a mano, `cr.execute` de escritura, `cr.commit()`, forzar `state`/`quantity`/
+  `qty_done`, `button_validate` por detrás.
+
+**D6 — Infraestructura nueva (CERRADA).**
+- 2 TransientModel nuevos (resultado + su línea) ⇒ **2 filas** `base.group_user,1,1,1,1` en
+  `security/ir.model.access.csv`, y **1 vista** nueva en `__manifest__.py` (DESPUÉS de la del wizard del bloque,
+  que define el tree de candidato que se REUTILIZA y NO se toca).
+- El override de `stock.move` **NO** es modelo nuevo (es `_inherit`) ⇒ **sin fila de ACL**; se carga por
+  `models/__init__.py`.
+
+**D7 — Impacto en tests/candados (CERRADA · verificado por lectura de las aserciones reales).**
+- **Siguen VERDES y no se tocan:** `test_product_flow_lot_assign_bulk.py` (CA-7: el retorno sigue siendo
+  `display_notification` con el **MISMO** texto de los 4 conteos; solo se le agrega `next`),
+  `test_product_flow_lot_pending_order_assign.py`, `test_product_flow_lot_picker*.py`,
+  `test_product_flow_lot_tray*`, `test_product_flow_lot_coupled_chain.py`,
+  `test_product_flow_over_reservation_scoped.py` (3.J: el guardián de D2 **refuerza** "no des-asignar la entrega
+  sana"), `test_lot_management.py`, `test_flow_canvas_parity.py`, `test_product_flow_payload_parity.py`
+  (no hay claves nuevas de payload: todo es wizard/vista).
+- **A VIGILAR (baseline ajeno B1):** `tests/test_diagnostic_delivery_orders.py` y
+  `tests/test_pending_native_validate.py` del motor usan `action_pf_bulk_validate_deliveries`. El Dev los corre y
+  **reporta el DELTA** en su bitácora; si el delta es consecuencia DIRECTA del arreglo (más `done`, menos
+  `skipped` con reserva), se documenta y se deja el listón al Verificador. **B1 no se persigue.**
+- **CREAR 2 tests nuevos** (H-030 y H-029/H-031) y registrarlos en `tests/__init__.py`.
+  **NINGÚN** candado existente se modifica.
+
+### 3.6 Archivos (confirmados por el Planificador)
+
+**NUEVOS**
+- `wizard/printflow_flow_lot_assign_bulk_result_line.py` — línea del detalle (`printflow.flow.lot.assign.bulk.result.line`). (T1)
+- `wizard/printflow_flow_lot_assign_bulk_result.py` — cabecera del detalle (`printflow.flow.lot.assign.bulk.result`) + `_pf_build_from_bulk`. (T2)
+- `wizard/printflow_flow_lot_assign_bulk_result_views.xml` — form readonly del detalle. (T5)
+- `models/stock_move.py` — `_inherit='stock.move'` + guardián + `_assign_exclusive_lot` (H-030). (T7)
+- `tests/test_pf_bulk_validate_preserves_lot.py` — H-030 (T8).
+- `tests/test_product_flow_lot_assign_bulk_result.py` — H-029/H-031 (T9).
+
+**MODIFICADOS**
+- `wizard/printflow_flow_lot_assign_bulk.py` — H-031 (strings de los 3 campos + `selection_note`) y H-029
+  (`action_assign_lot_bulk` encadena el detalle; `_pf_result_notification` acepta el resultado). (T4/T6)
+- `wizard/printflow_flow_lot_assign_bulk_views.xml` — H-031 (rótulos + `selection_note` VISIBLE; quitar el
+  `string="Filas omitidas"`). (T5)
+- `wizard/__init__.py` — 2 imports (línea → cabecera), DESPUÉS de `printflow_flow_lot_assign_bulk`. (T3)
+- `security/ir.model.access.csv` — 2 filas `base.group_user,1,1,1,1`. (T3)
+- `__manifest__.py` — la vista del detalle en `data`, DESPUÉS de `printflow_flow_lot_assign_bulk_views.xml`. (T5)
+- `models/__init__.py` — importar `stock_move` (sección de extensiones del motor heredadas). (T7)
+- `tests/__init__.py` — registro de los 2 tests nuevos. (T8/T9)
+
+**NO SE TOCA (solo se consume o se hereda):** el motor `x_product_dimensional_pricing`
+(`printflow_stock_picking_bulk.py`, `stock_move.py` y `stock_picking.py` quedan **INTACTOS**);
+`wizard/printflow_flow_lot_candidate.py` (+ su tree); `wizard/printflow_flow_lot_picker*`;
+`wizard/printflow_flow_lot_tray.py` (`action_assign_lot_bulk` que ABRE el bloque, `_pf_document_move`,
+`_pf_rows_*`) y su vista; `wizard/printflow_product_flow.py` (`_pf_assign_lot_to_document`,
+`_pf_reassign_move_lot`, mapa `handlers`); `models/printflow_flow_lots.py` (`_pf_available_lots`);
+`models/printflow_node_pending_line.py` (solo CONSUME el bulk del motor).
+
+### 3.7 Restricciones duras
+
+1. **Código sí, datos no** (`regla-trabajo-odoo-17-ce`): el Dev **NO** toca registros de la BD; solo código.
+2. **No forzar ni reemplazar flujos nativos.** Ninguna escritura nueva por fuera de los remedios EXISTENTES; el
+   "validar entregas en lote" es un flujo de Odoo que el **operador** dispara. Prohibido `cr.execute` de escritura,
+   `cr.commit()`, escribir `stock.quant`/`stock.move` a mano y forzar `state`/`quantity`/`qty_done`.
+3. **`_inherit` + `super()`** para extender el motor desde PrintFlow; **`x_product_dimensional_pricing` NO se
+   edita** (queda **SIN CAMBIOS** ⇒ sin autorización del dueño).
 4. **Cero hardcodeo:** todo texto por `_()`; lo configurable por `ir.config_parameter`.
-5. **Convenciones OCA** (`odoo-17-clean-architecture` §2.5): un archivo por modelo, `__init__` por archivo,
-   orden del modelo, `xml_id` con prefijo `printflow_`.
+5. **Convenciones OCA** (`odoo-17-clean-architecture` §2.5): un archivo por modelo, `__init__` por archivo, orden
+   del modelo (atributos → campos → constraints → default → compute → onchange → CRUD → acciones → negocio),
+   `snake_case`, campos `*_id`/`*_ids` y `xml_id` con prefijo `printflow_`.
 6. **Un solo escritor:** no abrir un segundo camino de escritura de lote.
+7. **Ya reservado ⇒ no se toca:** el guardián de H-030 **solo PRESERVA**; nunca reserva, nunca suelta y nunca deja
+   el inventario peor de lo que estaba.
 
-### 3.6 Obstáculos que el PLANIFICADOR DEBE resolver (no los decide el Dev)
+### 3.8 Criterios de aceptación verificables
 
-- **O-1 (H-030 — el crítico).** El fix natural ("no llamar `action_assign` si ya hay reserva" o "re-aplicar
-  el lote tras reservar") vive en el **MOTOR** (`printflow_stock_picking_bulk.py`) y en el override de
-  `stock_move._action_assign`. El Planificador debe decidir **DÓNDE** se corrige (¿override `_inherit`
-  desde PrintFlow? ¿PrintFlow aporta su propio `stock.move`?) y **demostrar** que el flujo nativo queda
-  **intacto** para las entregas SIN excepción. Un cambio mal puesto aquí rompe **TODAS** las entregas.
-- **O-2 (H-029).** ¿"Ver detalle" como wizard de resultado (patrón del bulk-validate) **o** volcar los
-  motivos en la notificación? Elegir UNA y justificar por qué NO se rompe el cierre de la bandeja.
-- **O-3 (H-031).** Confirmar el formato del texto aclaratorio y que `total_demand` conserve
-  `digits='Product Unit of Measure'` (no inventar sufijos de unidad).
+| # | Criterio | Verificación |
+|---|---|---|
+| **CA-1** (**H-030**) | Un albarán de entrega con **reserva de lote EXCEPTUADA** por el operador, procesado por "validar entregas en lote", **NO pierde su lote**: ningún `action_assign()` intermedio lo des-reserva. | Test T8: tras `picking.action_assign()` el movimiento **sigue** reservando el lote elegido y el albarán queda `assigned`. |
+| **CA-2** (**H-030**) | Ese albarán **se valida** (`done`) y **ya NO** reporta *"Sin stock reservado."* habiendo reserva. Un albarán **sin** reserva ni existencia **sí** se omite con *"Sin stock reservado."* (motivo HONESTO). | Test T8: `action_pf_bulk_validate_deliveries` → fila `result='done'` y `picking.state='done'`; segunda entrega sin reserva → `skipped` + motivo. |
+| **CA-3** (**H-029**) | Tras una asignación en bloque con errores/omisiones, el operador **LEE el motivo por destino** (una fila por destino, con `result` y `result_note`), sin perder la notificación de los 4 conteos ni el cierre del modal. | Test T9: la acción devuelve `display_notification` (4 conteos) con `params['next']` = `act_window` a `printflow.flow.lot.assign.bulk.result`; el detalle trae **una fila por destino** (incluidas omitidas) y `result_note` NO vacío en `error`/`skipped`. |
+| **CA-4** (**H-031**) | La ranura "Selección" dice **"Entregas por asignar"** / **"Unidades a entregar"** / **"Entregas omitidas"** y el **texto aclaratorio es VISIBLE** (sin abrir el tooltip): *"Cada fila es una entrega (albarán de salida). N entregas por asignar = M unidades a entregar."* | Test T9: `fields_get('printflow.flow.lot.assign.bulk')` devuelve los 3 strings nuevos; `selection_note` contiene "entrega" y las cifras N/M; `total_demand` conserva `digits='Product Unit of Measure'`. |
+| **CA-5** (no regresión) | Las entregas **SIN** excepción conservan el flujo NATIVO: sin reserva previa ⇒ motor sin cambios; con el **lote exclusivo CON existencia** ⇒ reserva el lote exclusivo. Selector por documento, bandeja clásica, autorización en bloque, dedupe FIFO y `_pf_available_lots` **intactos**. Motor `x_product_dimensional_pricing` **SIN CAMBIOS**. | Tests T8 (CA-5) + los candados citados en D7; motor intacto (solo se hereda). Los 8 rojos de **B1** son PRE-EXISTENTES y ajenos. |
 
-### 3.7 Criterios de aceptación (borrador — el Planificador los refina; el Dev los prueba)
+### 3.9 Riesgos
 
-- **CA-1 (H-029).** Tras una asignación en bloque con errores, el operador **lee el motivo por destino**
-  (p. ej. *"El lote "8763" no tiene existencia disponible para asignarlo a este documento."*) sin tocar la BD.
-- **CA-2 (H-030).** Un albarán con **reserva por excepción** procesado por "validar entregas en lote"
-  **NO pierde su lote** y queda `done` u omitido con **motivo honesto**; ya **NO** reporta
-  *"Sin stock reservado"* habiendo reserva.
-- **CA-3 (H-031).** La ranura "Selección" dice **"Entregas por asignar"** / **"Unidades a entregar"** /
-  **"Entregas omitidas"** y el **texto aclaratorio es visible** (sin abrir el tooltip).
-- **CA-4 (cero regresión).** Selector por documento, bandeja clásica, autorización en bloque, dedupe FIFO
-  y `_pf_available_lots` **intactos**; la suite de lote/bandeja queda como estaba (los 8 rojos de **B1**
-  son PRE-EXISTENTES y ajenos).
+| # | Riesgo | Impacto | Mitigación |
+|---|---|---|---|
+| R-1 | El override de `_assign_exclusive_lot` cambia el flujo de **TODAS** las entregas exclusivas. | Alto | Es un **seam acotado** + guardián de 3 condiciones; sin reserva previa o con lote exclusivo con existencia ⇒ `super()` (motor). Condición (3) exige que el lote exclusivo **NO** tenga disponible ⇒ nunca "tapa" una re-alineación real. CA-5 con los 2 casos. |
+| R-2 | Preservar una reserva **fantasma** (lote sin físico) dejaría validar un albarán sin existencia. | Medio | En la práctica una reserva de **lote** solo nace del remedio NATIVO (`_pf_reserve_lot` con `strict=True`), que **solo reserva lo disponible**; el teclado manual crea líneas **sin** lote (`lot_id=False`, ver H-029 nota 2) que no entran en la condición (2). Los casos sin físico siguen el camino actual (skip honesto). |
+| R-3 | La condición (3) hace **1 lectura** de quant por movimiento exclusivo dentro del bucle del bulk. | Bajo | Lectura ACOTADA (1 por albarán) dentro de un bucle que ya hace savepoint + `action_assign` + `button_validate` por albarán (no es ruta caliente ni un listado). Se documenta y no se agrega ninguna lectura a la bandeja ni al poblado. |
+| R-4 | El detalle nuevo abre un wizard "de más" y rompe el cierre del modal. | Medio | Mismo patrón ya en producción (`printflow_node_pending_line.action_pf_validate_selected`: notificación + `next`); el detalle es de SOLO LECTURA y su footer "Cerrar" (`special="cancel"`) devuelve a la bandeja. |
+| R-5 | Cambiar el label `omitted_count` en el MODELO no se ve (la VISTA fuerza `string="Filas omitidas"`). | Bajo | T5 quita el `string` de la vista para que gobierne el del modelo; CA-4 se verifica en el modelo (`fields_get`) y la vista queda coherente. |
+| R-6 | Un candado text-based del bulk se rompe por la cadena nueva. | Bajo | D7: el texto de la notificación **no cambia**; solo se agrega `next`. Los 2 tests nuevos fijan el resto. |
 
-### 3.8 Pendiente inmediato
+### 3.10 Contratos que NO deben romperse
 
-**Nada de código todavía.** Este contrato pasa al **`odoo-planificador`** para el diseño (D1–Dn) y el
-plan por lotes (T1…Tn). Luego el Analista revisa el plan y lo pasa al **`odoo-dev`** por lotes.
+- **CA-1..CA-5** de 3.8.
+- `printflow.flow.lot.assign.bulk.action_assign_lot_bulk`: **conserva** la guardia `_pf_assert_can_clean()`, el
+  `reason` obligatorio, la política de excepción, `_pf_check_coverage`, el bucle FIFO con captura de `UserError`
+  **por destino**, el `message_post` por documento y el **texto exacto** de los 4 conteos.
+- El **recorrido de escritura** `_pf_assign_lot_to_document` → `_pf_reassign_move_lot` →
+  `stock.move._pf_reassign_lot` y el mapa `handlers` (lista blanca explícita, NUNCA `getattr`): **SIN cambios**.
+- `printflow.flow.lot.candidate` (+ `bulk_id`) y su tree `printflow_flow_lot_candidate_view_tree`: **SIN cambios**
+  (se reutiliza tal cual).
+- `printflow.flow.lot.tray` (bandeja clásica: `_pf_populate`, `_pf_document_move`, `_pf_rows_*`,
+  `action_assign_lot_bulk` de la SELECCIÓN) y su tree (botón de cabecera "Asignar lote"): **SIN cambios**.
+- `models/printflow_flow_lots.py::_pf_available_lots`: firma y dict de retorno **INTACTOS**.
+- Motor `x_product_dimensional_pricing`: **SIN CAMBIOS** (solo se **hereda** `stock.move` y se **lee**
+  `printflow.delivery.bulk.result` como patrón). `_action_assign`, `_assign_exclusive_lot`, `_pf_reassign_lot`,
+  `_pf_unreserve_reservation` y `action_pf_bulk_validate_deliveries` del motor quedan **intactos**.
+- `models/` **nunca** importa `wizard/`. Sin `cr.execute` de escritura. Sin `cr.commit()`.
+
+### 3.11 Observaciones (FUERA de alcance — NO implementar aquí)
+
+- **O-a** La asignación **REAL** de lotes a las 26 entregas del banner es **DATOS** (**H-018**); la ejecuta el
+  dueño. El código **muestra** y **facilita**, no asigna por su cuenta.
+- **O-b** El texto `"Sin stock reservado."` del motor **no se cambia** (D2): con el arreglo ya no cubre un caso
+  con reserva, y para el caso sin reserva es honesto.
+- **O-c** El camino **FIFO NATIVO** de las entregas **NO exclusivas** (producto sin `x_is_printflow_managed` ni
+  `pf_purchase_on_order`) queda **fuera de alcance**: el core ya preserva lo ya reservado y NO se toca.
+- **O-d** Los 8 rojos de la suite (**B1**) siguen abiertos y son ajenos; el Dev solo corre los tests afectados y
+  **reporta el delta** de `test_diagnostic_delivery_orders.py` / `test_pending_native_validate.py` si aparece.
+- **O-e** La fila del MOVIMIENTO sin lote y las filas por ORDEN del mismo albarán siguen SIN deduplicar (D4/3.K
+  O-5): se conservan a propósito.
+- **O-f** **H-021** (fase 2 "Autorizar excepción" ≠ "Asignar lote") y **H-016** siguen fuera de alcance.
+
+### 3.12 Plan de ejecución atómico y secuencial (T1–T9)
+
+> **9 tareas · 3 lotes** (máx. 3 por lote; cada lote = **UNA sesión NUEVA de `odoo-dev`**).
+> Convenciones OCA (`odoo-17-clean-architecture` §2.5): un archivo por modelo, `__init__` por archivo, orden del
+> modelo (atributos → campos → constraints → default → compute → onchange → CRUD → acciones → negocio),
+> `snake_case`, `xml_id` con prefijo `printflow_`, nodo raíz `<odoo>`.
+> **Regla: código sí, datos no.** PROHIBIDO `cr.execute` de escritura y `cr.commit()`.
+> **No forzar ni reemplazar flujos nativos; código sí, datos no.**
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`.
+> **Rutas:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow) · `C:\odoo_custom\x_product_dimensional_pricing` (motor; SOLO LECTURA).
+> El Dev marca `- [x]` SOLO lo hecho y deja su bitácora para el lote siguiente.
+
+#### Lote 1 (T1–T3) — Detalle del resultado (H-029 · modelos + registro)
+
+- [x] **T1 — CREAR `wizard/printflow_flow_lot_assign_bulk_result_line.py`.**
+  - `class PrintflowFlowLotAssignBulkResultLine(models.TransientModel)` con
+    `_name = 'printflow.flow.lot.assign.bulk.result.line'`, `_description = 'Línea del detalle de la asignación de lote en bloque (PrintFlow)'`,
+    `_order = 'seq asc, id asc'`. Docstring: es SOLO LECTURA (snapshot del resultado por destino); NO escribe `stock.*`.
+  - Campos (todos `readonly=True` salvo la FK): `result_id` (m2o `printflow.flow.lot.assign.bulk.result`, `required=True`,
+    `ondelete='cascade'`, `index=True`), `seq` (Integer), `label` (Char), `kind` (Char), `demand_qty` (Float
+    `digits='Product Unit of Measure'`), `result` (Selection **con los MISMOS 5 códigos** de
+    `printflow.flow.lot.assign.bulk.line.result`: `pending/assigned/partial/skipped/error`), `result_note` (Char).
+  - **Verificación:** `fields_get('printflow.flow.lot.assign.bulk.result.line')` devuelve los 7 campos.
+- [x] **T2 — CREAR `wizard/printflow_flow_lot_assign_bulk_result.py`.**
+  - `class PrintflowFlowLotAssignBulkResult(models.TransientModel)` con `_name = 'printflow.flow.lot.assign.bulk.result'`,
+    `_description = 'Resultado de la asignación de lote en bloque (PrintFlow)'`. Docstring del "por qué" (H-029: hacer
+    LEGIBLE el motivo por destino; patrón portado de `printflow.delivery.bulk.result` del motor).
+  - Campos: `bulk_id` (m2o `printflow.flow.lot.assign.bulk`, `readonly=True`, `ondelete='cascade'`), `product_id`
+    (m2o `product.product`, `readonly=True`), `source_label` (Char readonly), `line_ids` (o2m al modelo de T1),
+    `assigned_count` / `partial_count` / `omitted_count` / `error_count` (Integer, `compute='_compute_counts'`).
+  - `_compute_counts` con `@api.depends('line_ids.result')`: cuenta por `line_ids.filtered(lambda l: l.result == …)`.
+  - `@api.model _pf_build_from_bulk(self, bulk)`: crea el registro con `bulk_id`, `product_id`, `source_label` y
+    `line_ids` = **UNA fila por `bulk.line_ids`** (TODAS: `assigned/partial/skipped/error/pending`) copiando
+    `seq/label/kind/demand_qty/result/result_note` (los destinos NO asignables ya llegan como `skipped` + nota desde
+    `_pf_prepare_rows`, así que el detalle los muestra sin recalcular nada); devuelve el recordset creado.
+  - **Verificación:** `_pf_build_from_bulk` sobre un `bulk` con N destinos devuelve un registro con N líneas y los
+    conteos coherentes; `fields_get` responde.
+- [x] **T3 — Registro de los 2 modelos.**
+  - `wizard/__init__.py`: `from . import printflow_flow_lot_assign_bulk_result_line` y luego
+    `from . import printflow_flow_lot_assign_bulk_result`, **DESPUÉS** de `printflow_flow_lot_assign_bulk` (L29) y
+    ANTES de `printflow_flow_lot_picker`, con comentario del motivo.
+  - `security/ir.model.access.csv`: 2 filas al final
+    (`access_printflow_flow_lot_assign_bulk_result` / `access_printflow_flow_lot_assign_bulk_result_line`) con
+    `base.group_user,1,1,1,1` y `model_id:id` `model_printflow_flow_lot_assign_bulk_result` /
+    `model_printflow_flow_lot_assign_bulk_result_line`.
+  - **Verificación:** `-u printflow_gestion_inventario` sin error; `ir.model` registra los 2 modelos; el tree nuevo carga.
+
+#### Lote 2 (T4–T6) — H-031 (rótulos) + superficie del detalle + encadenado (H-029)
+
+- [x] **T4 — `wizard/printflow_flow_lot_assign_bulk.py`: rótulos + `selection_note` (H-031).**
+  - Cambiar el `string` de: `total_demand` → `'Unidades a entregar'`; `assignable_count` → `'Entregas por asignar'`;
+    `omitted_count` → `'Entregas omitidas'`. **NO** cambiar `digits`, `compute` ni la lógica.
+  - Agregar `selection_note = fields.Char(string='Resumen de la selección', compute='_compute_selection_note', readonly=True)`
+    y su `_compute_selection_note` con `@api.depends('assignable_count', 'total_demand')`:
+    `rec.selection_note = _('Cada fila es una entrega (albarán de salida). %(n)s entregas por asignar = %(m)s unidades a entregar.') % {'n': rec.assignable_count or 0, 'm': rec.total_demand or 0.0}`
+    (el número M con el MISMO formato que ya usa `_pf_check_coverage`, p. ej. `%.2f`; **sin** sufijos de unidad).
+  - **Verificación:** `fields_get('printflow.flow.lot.assign.bulk')` devuelve los 3 strings nuevos; un bulk poblado
+    trae `selection_note` con "entrega" y las cifras.
+- [x] **T5 — Superficie: vista del bloque (H-031) + vista NUEVA del detalle + `__manifest__.py`.**
+  - `wizard/printflow_flow_lot_assign_bulk_views.xml`: en el `<group string="Selección">` dejar
+    `<field name="omitted_count" readonly="1"/>` **SIN** el `string="Filas omitidas"` (para que gobierne el del
+    modelo) y añadir, como texto **VISIBLE** (no tooltip, no `invisible`), la línea de `selection_note`
+    (p. ej. `<field name="selection_note" readonly="1" nolabel="1" colspan="2"/>` o dentro de un
+    `<div class="text-muted">`). **NO** tocar el resto del form (candidatos, destinos, `reason`, footer).
+  - **CREAR** `wizard/printflow_flow_lot_assign_bulk_result_views.xml`: form
+    `create="false" edit="false" delete="false"`, `xml_id = printflow_flow_lot_assign_bulk_result_view_form`, con
+    un `<div class="alert alert-info">` ("Motivo por destino de la asignación en bloque: revisa abajo cada entrega."),
+    un `<group string="Resumen">` con los 4 conteos, el `<field name="line_ids" readonly="1">` con `<tree create="false" edit="false" delete="false">`
+    (`decoration-success="result == 'assigned'"`, `decoration-warning="result == 'partial'"`,
+    `decoration-muted="result == 'skipped'"`, `decoration-danger="result == 'error'"`) y las columnas
+    `seq` (#) · `label` (Entrega) · `kind` (Tipo) · `demand_qty` (Demanda) · `result` (Resultado) · `result_note` (Motivo);
+    y un `<footer>` con **"Cerrar"** (`special="cancel"`).
+  - `__manifest__.py`: agregar `'wizard/printflow_flow_lot_assign_bulk_result_views.xml'` en `data`, **DESPUÉS** de
+    `'wizard/printflow_flow_lot_assign_bulk_views.xml'`.
+  - **Verificación:** `-u` sin error; el form del detalle abre con el resumen y la tabla de motivos.
+- [x] **T6 — `wizard/printflow_flow_lot_assign_bulk.py`: encadenar el detalle en `action_assign_lot_bulk` (H-029).**
+  - `_pf_result_notification(self, result=None)`: **conservar** el `display_notification` con el **mismo texto** de
+    los 4 conteos y agregar `params['next']`: si `result` ⇒
+    `{'type': 'ir.actions.act_window', 'name': _('Detalle de la asignación en bloque'), 'res_model': 'printflow.flow.lot.assign.bulk.result', 'res_id': result.id, 'view_mode': 'form', 'target': 'new'}`;
+    si no ⇒ se mantiene `{'type': 'ir.actions.act_window_close'}` (retro-compatible).
+  - Al final de `action_assign_lot_bulk` (hoy `return self._pf_result_notification()`): construir
+    `result = self.env['printflow.flow.lot.assign.bulk.result']._pf_build_from_bulk(self)` y
+    `return self._pf_result_notification(result)`.
+  - **NO** cambiar el bucle de escritura, la guardia, el motivo, la política ni los conteos.
+  - **Verificación:** la notificación conserva el texto y ahora `params['next']['res_model'] ==
+    'printflow.flow.lot.assign.bulk.result'`.
+
+#### Lote 3 (T7–T9) — H-030 (preservar la reserva por excepción) + tests
+
+- [x] **T7 — CREAR `models/stock_move.py` + registrar en `models/__init__.py` (H-030).**
+  - **CREAR** `models/stock_move.py`: `_EPS = 1e-6`; `class StockMove(models.Model): _inherit = 'stock.move'`; docstring
+    del "por qué" (H-030: el nativo `_action_assign` NO re-asigna un movimiento ya reservado, pero la rama EXCLUSIVA
+    del motor sí ⇒ perdía la excepción; este guardián aplica la regla del core a esa rama. Motor SIN CAMBIOS).
+  - `_pf_keep_current_lot_reservation(self)` (`ensure_one`): `False` si `self.product_id.tracking != 'lot'`; `False`
+    si no hay línea activa con lote (`self.move_line_ids.filtered(lambda ml: ml.lot_id and not ml.picked and ml.quantity > _EPS)`);
+    `lot = self._get_exclusive_delivery_lot()`; `False` si no hay lote exclusivo (el motor ya no toca nada);
+    `free = self.env['stock.quant']._get_available_quantity(self.product_id, self.location_id, lot_id=lot)`;
+    `return free <= _EPS`. Docstring explicando que "ya reservado ⇒ no se toca" es la regla del propio core.
+  - `_assign_exclusive_lot(self)`: si `self._pf_keep_current_lot_reservation()` ⇒ `self._recompute_state(); return True`;
+    si no ⇒ `return super()._assign_exclusive_lot()`.
+  - `models/__init__.py`: agregar `from . import stock_move` en la sección de extensiones del motor heredadas (junto a
+    `mrp_technical_sheet` / `printflow_stock_remedy`), con comentario del motivo.
+  - **NO** tocar `x_product_dimensional_pricing`; **NO** `cr.execute`/`cr.commit`.
+  - **Verificación:** `type(env['stock.move']).mro()` contiene la clase de PrintFlow; `-u` sin error; el fuente del
+    motor sin cambios (git diff vacío en esa ruta).
+- [x] **T8 — Test de H-030: `tests/test_pf_bulk_validate_preserves_lot.py` (+ `tests/__init__.py`).**
+  - **CREAR** el archivo (`TransactionCase`, rollback; sellado `@tagged('post_install', '-at_install')` como los vecinos).
+    Escenario: producto `type='product'`, `tracking='lot'`, `x_is_printflow_managed=True` (+ `pf_purchase_on_order=True`),
+    **SO confirmado** con una línea del producto (⇒ `move.sale_line_id` existe ⇒ `_is_exclusive_delivery()` = `True`)
+    y su **lote exclusivo** (`<SO>-L<línea>`) **creado y VACÍO**; la mercancía real en un **lote GENÉRICO** con
+    existencia en la ubicación de origen.
+  - **CA-1/CA-2a (preserva):** reservar el lote GENÉRICO en el movimiento de salida con el protocolo NATIVO
+    (`move._pf_reassign_lot(generic_lot, move.product_uom_qty)`); luego `picking.action_assign()` ⇒ asertar que
+    `move.move_line_ids.mapped('lot_id') == generic_lot` (la excepción SOBREVIVE) y `picking.state == 'assigned'`.
+  - **CA-2b (valida):** `env['stock.picking'].with_context(active_ids=[picking.id], active_domain=[]).action_pf_bulk_validate_deliveries()`
+    ⇒ la ventana `printflow.delivery.bulk.result` trae la fila con `result == 'done'`, `reason` vacío y
+    `picking.state == 'done'`; y **NO** aparece `reason == 'Sin stock reservado.'`.
+  - **CA-2c (honesto, no regresión):** una SEGUNDA entrega del mismo producto **sin** reserva y **sin** existencia ⇒
+    sigue `result == 'skipped'` con *"Sin stock reservado."*.
+  - **CA-5 (motor intacto):** una TERCERA entrega **con** el lote exclusivo **CON existencia**, sin reserva previa ⇒
+    `action_assign()` reserva el **lote EXCLUSIVO** (comportamiento del motor sin cambios).
+  - Candado: el archivo nuevo no contiene `cr.execute(`/`cr.commit(`; el motor no se modificó.
+  - Registrar en `tests/__init__.py` al final del bloque de lote.
+  - **Verificación:** el test pasa con el arreglo de T7 y **falla sin él** (regresión real, no decorativa).
+- [x] **T9 — Test de H-029/H-031: `tests/test_product_flow_lot_assign_bulk_result.py` (+ `tests/__init__.py`).**
+  - **CREAR** el archivo (misma base y helpers que `tests/test_product_flow_lot_assign_bulk.py`).
+  - **CA-3 (H-029):** poblar un `bulk` con al menos 2 destinos, uno asignable con `result` `error`/`partial`
+    (p. ej. lote elegido que no cubre) y uno NO asignable (`skipped` con nota); tras `bulk.action_assign_lot_bulk()`
+    asertar que la acción es `display_notification` con el **MISMO** texto de los 4 conteos y que
+    `params['next']['res_model'] == 'printflow.flow.lot.assign.bulk.result'`; que el detalle
+    (`result.line_ids`) trae **una fila por destino** (mismo número que `bulk.line_ids`) y que las filas
+    `error`/`skipped` tienen `result_note` NO vacío.
+  - **CA-4 (H-031):** `fields_get('printflow.flow.lot.assign.bulk')` devuelve `'Unidades a entregar'`,
+    `'Entregas por asignar'` y `'Entregas omitidas'`; `bulk.selection_note` contiene `'entrega'` y las cifras.
+  - Candado: sin `cr.execute(`/`cr.commit(`.
+  - Registrar en `tests/__init__.py`.
+  - **Verificación:** los 2 tests nuevos verdes + `test_product_flow_lot_assign_bulk.py`,
+    `test_product_flow_lot_pending_order_assign.py`, `test_product_flow_lot_tray*`,
+    `test_product_flow_lot_picker*` y `test_product_flow_over_reservation_scoped.py` verdes.
+
+**Verificación (turno del Verificador, fuera del dev).** `--test-tags` sobre
+`/printflow_gestion_inventario:TestPfBulkValidatePreservesLot`,
+`/printflow_gestion_inventario:TestProductFlowLotAssignBulkResult`,
+`...:TestProductFlowLotAssignBulk`, `...:TestProductFlowLotPendingOrderAssign`, `...:TestProductFlowLotTray`,
+`...:TestProductFlowLotTrayOrders`, `...:TestProductFlowLotTrayDocument`, `...:TestProductFlowLotTrayAuthorize`,
+`...:TestProductFlowLotPicker`, `...:TestProductFlowLotPickerUX`, `...:TestProductFlowOverReservationScoped`,
+`...:TestProductFlowLotCoupledChain` y `...:TestLotManagement`. Al hilo solo vuelve el exit code, N/N y, si falla,
+la aserción + cola del traceback. **Los 8 rojos de B1 (p. ej. `test_diagnostic_delivery_orders.py`,
+`test_product_flow_lot_tray_ux.py`, `test_node_pending_enumeration`) NO cuentan como fallo de esta tarea**, pero
+el Dev **reporta** si su delta cambió por el arreglo de T7.
+
+### 3.13 Contratos que NO deben romperse (resumen de cierre)
+
+- **CA-1..CA-5** de 3.8 y los contratos de 3.10.
+- Motor `x_product_dimensional_pricing`: **SIN CAMBIOS**; PrintFlow solo **hereda** `stock.move`.
+- Un solo escritor (D5); cero `cr.execute` de escritura / `cr.commit()`; `models/` nunca importa `wizard/`.
+- La bandeja clásica, el selector por documento, la autorización en bloque y el dedupe FIFO: **intactos**.
 
 ## 3.K (ANEXO · TAREA CERRADA) — Asignación de lote en bloque desde la bandeja
 
@@ -1363,6 +1951,7 @@ Evidencia (log del servidor + BD `Ciber Estudios 2015 RESTAURADA`):
 - `__manifest__.py`: **SIN cambios**.
 
 ---
+
 ## 3.G (ANEXO · TAREA CERRADA) — El lote de la Compra Rápida no viaja a la OC ni al albarán
 
 > **Turno:** Odoo Analista (revisión del PLAN del Planificador; paso 3 → **`odoo-dev`**). **Estado:**
@@ -1663,6 +2252,7 @@ N/N y, si falla, la aserción + cola del traceback.
 - `models/` nunca importa `wizard/`.
 
 ---
+
 ## 3.F (ANEXO · TAREA CERRADA) — Botón "Recalcular" en el diagrama de flujo del producto (paridad de UX)
 
 > **Turno:** Odoo Analista (paso 3: revisar el plan y delegar el Lote 1 a `odoo-dev`). **Estado:** PLAN COMPLETO (D1-D6 cerradas; T1-T4 en 2 lotes).
@@ -4358,3 +4948,220 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   `descartado`: son `<delete>` **intencionales** del módulo sobre xmlids del motor. Ficha y Sección 3 cerradas;
   bitácora escrita. **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071
   (`-u printflow_gestion_inventario`). Turno devuelto a **Odoo Analista** (tarea CERRADA).
+- [2026-10-17 · Odoo Dev] **Lote 1 de 3 (T1–T3) — Detalle del resultado de la asignación en bloque
+  (H-029 · modelos + registro).** NUEVOS: (T1) `wizard/printflow_flow_lot_assign_bulk_result_line.py`
+  (`printflow.flow.lot.assign.bulk.result.line`, `_order='seq asc, id asc'`, 7 campos:
+  `result_id` m2o required/ondelete cascade/indexado + `seq`/`label`/`kind`/`demand_qty`
+  (`digits='Product Unit of Measure'`)/`result` (los MISMOS 5 códigos `pending/assigned/partial/skipped/error`
+  del contenedor)/`result_note`, los 6 readonly: es SOLO LECTURA, snapshot sin escribir `stock.*`);
+  (T2) `wizard/printflow_flow_lot_assign_bulk_result.py` (`printflow.flow.lot.assign.bulk.result`, campos
+  `bulk_id`/`product_id`/`source_label`/`line_ids` + `assigned_count`/`partial_count`/`omitted_count`/`error_count`
+  con `_compute_counts` y `@api.depends('line_ids.result')`, y `@api.model _pf_build_from_bulk(bulk)` que copia
+  **UNA fila por `bulk.line_ids`** — TODAS: `assigned/partial/skipped/error/pending` — con `seq/label/kind/demand_qty/
+  result/result_note`, devolviendo el recordset creado). Patrón **PORTADO** del motor
+  `x_product_dimensional_pricing/wizard/printflow_delivery_bulk_result*.py` (leído, NO editado). (T3) MODIFICADOS:
+  `wizard/__init__.py` (2 imports — línea ANTES de cabecera por el One2many — justo DESPUÉS de
+  `printflow_flow_lot_assign_bulk` y ANTES de `printflow_flow_lot_picker`, con comentario del motivo) y
+  `security/ir.model.access.csv` (2 filas `base.group_user,1,1,1,1` al final:
+  `access_printflow_flow_lot_assign_bulk_result` / `..._result_line`). **`_description` de la línea = 64 caracteres**
+  (bajo el umbral de 68) y el `string` de la línea es **"Motivo"** (no "Nota del resultado"), para que la columna de la
+  vista de T5 lea el motivo completo. NO se tocó el contenedor del bloque, la bandeja, el motor ni
+  `models/`. **Sin `cr.execute` de escritura / `cr.commit`** (verificado por búsqueda en los 2 archivos nuevos);
+  `wizard/` no importa `models/` de forma inversa. **Evidencia de sintaxis:** `py_compile` de los 3 archivos ⇒
+  exit 0. **Evidencia en BD (solo lectura, `odoo-impreven` / `Ciber Estudios 2015 RESTAURADA`):**
+  `ir.model` ⇒ `printflow.flow.lot.assign.bulk` **1** (ya registrado), `printflow.flow.lot.assign.bulk.result` **0** y
+  `...result.line` **0** ⇒ los 2 modelos nuevos aparecerán al actualizar el módulo. **NO se corrieron tests:** los
+  del ciclo (T8/T9) pertenecen al **Lote 3**, y T1–T3 no añade lógica ejecutable hasta el `-u` (el Dev no reinicia
+  Odoo ni hace upgrade por su cuenta). **Verificación de T1–T3 pendiente del `-u`** (`fields_get` de los 2 modelos +
+  carga del tree nuevo ⇒ la hace el dueño / el lote siguiente). Trabajo **solo de CÓDIGO**: 0 registros de la BD
+  tocados. **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071
+  (`-u printflow_gestion_inventario`). **SIGUE EL LOTE 2 (T4–T6):** rótulos + `selection_note` (H-031), vista del
+  bloque + vista NUEVA del detalle + `__manifest__.py` y el encadenado del detalle en `action_assign_lot_bulk`
+  (H-029). Turno → **Odoo Dev** (sesión NUEVA, Lote 2).
+- [2026-10-17 · Odoo Dev] **Lote 2 de 3 (T4–T6) — H-031 (rótulos + texto visible) y encadenado del detalle
+  (H-029).** MODIFICADOS: (T4/T6) `wizard/printflow_flow_lot_assign_bulk.py` — (a) **rótulos**:
+  `total_demand` → `string='Unidades a entregar'`, `assignable_count` → `string='Entregas por asignar'`,
+  `omitted_count` → `string='Entregas omitidas'` (SIN tocar `digits='Product Unit of Measure'`, `compute` ni la
+  lógica de cálculo: 26 filas = 30 u sigue siendo CORRECTO); (b) **campo NUEVO computado**
+  `selection_note = fields.Char(string='Resumen de la selección', compute='_compute_selection_note', readonly=True)`
+  con `@api.depends('assignable_count', 'total_demand')` y texto **por `_()`** (traducible): *"Cada fila es una
+  entrega (albarán de salida). %(n)s entregas por asignar = %(m)s unidades a entregar."* — `n` = `assignable_count`,
+  `m` = `total_demand` formateado con **`%.2f`** (el MISMO formato que ya usa `_pf_check_coverage`), **SIN** sufijos
+  de unidad (la palabra "unidades" va en la oración, D3); (c) **`_pf_result_notification(self, result=None)`**:
+  **CONSERVA** el `display_notification` con el **texto EXACTO** de los 4 conteos (contrato CA-7) y ahora arma
+  `params['next']`: con `result` ⇒ `ir.actions.act_window` (`name='Detalle de la asignación en bloque'`,
+  `res_model='printflow.flow.lot.assign.bulk.result'`, `res_id=result.id`, `view_mode='form'`, `target='new'`); sin
+  `result` ⇒ `{'type': 'ir.actions.act_window_close'}` (retro-compatible); (d) al final de `action_assign_lot_bulk`
+  (antes `return self._pf_result_notification()`): `result = env['printflow.flow.lot.assign.bulk.result']
+  ._pf_build_from_bulk(self)` y `return self._pf_result_notification(result)` — **DESPUÉS** del bucle de escritura,
+  sin tocar la guardia, el `reason`, la política, el bucle FIFO ni los conteos. **`__manifest__.py`** (T5):
+  `'wizard/printflow_flow_lot_assign_bulk_result_views.xml'` en `data`, **DESPUÉS** de
+  `'wizard/printflow_flow_lot_assign_bulk_views.xml'` (con comentario del motivo). VISTA MODIFICADA (T5):
+  `wizard/printflow_flow_lot_assign_bulk_views.xml` — en el `<group string="Selección">` se QUITÓ el
+  `string="Filas omitidas"` de `omitted_count` (para que gobierne el del modelo; R-5) y se añadió **`selection_note`
+  como texto VISIBLE** (`readonly="1" nolabel="1" colspan="2"`, sin `invisible` y sin tooltip) en la ranura
+  "Selección"; el resto del form (candidatos, destinos, motivo, footer, aviso `multi_location`) **INTACTO**.
+  VISTA NUEVA (T5): `wizard/printflow_flow_lot_assign_bulk_result_views.xml`
+  (`printflow_flow_lot_assign_bulk_result_view_form`, `model='printflow.flow.lot.assign.bulk.result'`,
+  `form create="false" edit="false" delete="false"`) con el `<div class="alert alert-info">` ("Motivo por destino de
+  la asignación en bloque: revisa abajo cada entrega."), el `<group string="Resumen">` con los **4 conteos** y
+  `line_ids` readonly con `<tree create="false" edit="false" delete="false">` y decoraciones
+  `success=assigned` / `warning=partial` / `muted=skipped` / `danger=error`, columnas `#`·`Entrega`·`Tipo`·`Demanda`·
+  `Resultado`·`Motivo`, y `<footer>` con **"Cerrar"** (`special="cancel"`). Patrón **PORTADO** del motor
+  `x_product_dimensional_pricing/wizard/printflow_delivery_bulk_result_views.xml` (**leído, NO editado**) y del
+  precedente de encadenado `models/printflow_node_pending_line.py::action_pf_validate_selected` (L221-233:
+  notificación + `next` = ventana). **NO** se tocó: el contenedor del bloque salvo lo anterior, el candidato y su
+  tree, `printflow_flow_lot_picker*`, la bandeja, `models/`, `security/`, ni NINGÚN archivo de
+  `x_product_dimensional_pricing` (**sin cambios** ⇒ sin autorización del dueño). **Sin `cr.execute` de escritura /
+  `cr.commit()`**; `models/` no se tocó ⇒ `wizard/` sigue sin ser importado por `models/`. **Evidencia de sintaxis:**
+  `py_compile` de los 3 `.py` + parseo XML de las 2 vistas ⇒ **OK (exit 0)**. **Evidencia de tests (BD de test
+  `pf_picker_tests` —NO la de producción—, `--data-dir` temporal, `--no-http`, `-u printflow_gestion_inventario`,
+  `--test-tags` por clase, salida a `--logfile`):** exit **0**, **0 failed / 0 error(s) de 12 tests** ⇒
+  `TestProductFlowLotAssignBulk` **9/9** (incluye **CA-7**, que fija el texto EXACTO de los 4 conteos ⇒ la cadena
+  nueva **no** lo rompió) y `TestProductFlowLotPendingOrderAssign` **2/2**. El log confirma
+  `loading …/wizard/printflow_flow_lot_assign_bulk_result_views.xml` **sin error**. **Evidencia en BD (solo lectura,
+  `pf_picker_tests`):** `ir_model_fields` ⇒ `assignable_count` = *"Entregas por asignar"*, `omitted_count` =
+  *"Entregas omitidas"*, `total_demand` = *"Unidades a entregar"* y `selection_note` (char, *"Resumen de la
+  selección"*); `ir_model_data` ⇒ `printflow_gestion_inventario.printflow_flow_lot_assign_bulk_result_view_form`
+  (ir.ui.view) registrado. Los avisos del log son los **pre-existentes** de O-6 (`Skipping deletion for missing XML
+  ID` de `x_product_dimensional_pricing.menu_printflow_dashboards` / `printflow_health_center_*`): **ajenos** a T4–T6
+  y NO se tocan. Trabajo **solo de CÓDIGO**: 0 registros de la BD de producción tocados. **SIGUE EL LOTE 3 (T7–T9):**
+  `models/stock_move.py` (guardián ADITIVO de H-030) + los 2 tests nuevos. Turno → **Odoo Dev** (sesión NUEVA, Lote 3).
+  **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071 (`-u printflow_gestion_inventario`).
+- [2026-10-17 · Odoo Dev] **Lote 3 de 3 (T7–T9) — H-030 (preservar la reserva de lote por excepción) +
+  los 2 tests del ciclo.** NUEVOS: (T7) `models/stock_move.py` — `_EPS = 1e-6`; `class StockMove(models.Model):
+  _inherit = 'stock.move'` con docstring del "por qué" (H-030: el NATIVO `_action_assign` NO re-asigna un
+  movimiento ya reservado, pero la rama EXCLUSIVA del motor llama SIEMPRE a `_assign_exclusive_lot()` ⇒
+  `_pf_reassign_lot` soltaba la excepción del operador y reservaba el lote exclusivo `S…-Lyyy` VACÍO ⇒
+  reserva 0 ⇒ el albarán quedaba sin lote y el bulk lo omitía con *"Sin stock reservado."*). Método
+  `_pf_keep_current_lot_reservation(self)` (`ensure_one`) ⇒ `False` si `product_id.tracking != 'lot'`;
+  `False` si no hay línea activa con lote (`move_line_ids.filtered(lambda ml: ml.lot_id and not ml.picked
+  and ml.quantity > _EPS)`); `False` si `self._get_exclusive_delivery_lot()` no devuelve lote; si lo hay,
+  `free = env['stock.quant']._get_available_quantity(product, location_id, lot_id=lot)` y **CONSERVA** la
+  reserva (`return free <= _EPS`). Override ADITIVO del seam MÁS PEQUEÑO `_assign_exclusive_lot(self)`: con
+  el guardián activo ⇒ `self._recompute_state(); return True` (solo re-sincroniza el `state`); en cualquier
+  otro caso ⇒ `return super()._assign_exclusive_lot()` ⇒ **el motor `x_product_dimensional_pricing` queda
+  INTACTO** (mejor: su comportamiento actual no cambia). Es la MISMA regla del core ("si ya está reservado no
+  se toca") aplicada a la rama EXCLUSIVA; NO se inventa regla nueva. (T7) MODIFICADO `models/__init__.py`:
+  `from . import stock_move` en la sección 19 de extensiones heredadas del motor, con comentario del motivo.
+  (T8) NUEVO `tests/test_pf_bulk_validate_preserves_lot.py` (`TestPfBulkValidatePreservesLot`,
+  `TransactionCase` sellado `@tagged('post_install','-at_install')`, 4 casos): **CA-1/CA-2a** la excepción
+  SOBREVIVE (`move.move_line_ids.mapped('lot_id') == generic_lot`, `picking.state == 'assigned'` tras
+  `action_assign()`); **CA-2b** el bulk valida de verdad (`result == 'done'`, `reason` vacío,
+  `picking.state == 'done'`, y NO aparece *"Sin stock reservado."*); **CA-2c** sin reserva y sin existencia
+  SIGUE `skipped` con *"Sin stock reservado."* (honesto, no regresión); **CA-5** con el lote exclusivo CON
+  existencia y sin reserva previa ⇒ `action_assign()` reserva el **lote EXCLUSIVO** (motor sin cambios);
+  + candado `test_touched_files_have_no_raw_sql_and_motor_untouched` (sin `cr.execute(`/`cr.commit(`, y el
+  fuente del motor sin cambios). (T9) NUEVO `tests/test_product_flow_lot_assign_bulk_result.py`
+  (`TestProductFlowLotAssignBulkResult`, 4 casos): **CA-3 (H-029)** `bulk.action_assign_lot_bulk()` sigue
+  devolviendo `display_notification` con el **MISMO** texto de los 4 conteos y ahora
+  `params['next']['res_model'] == 'printflow.flow.lot.assign.bulk.result'` + el detalle trae **UNA fila por
+  destino** (mismo número que `bulk.line_ids`) y las filas `error`/`skipped` con `result_note` NO vacío
+  (incluye el caso de destino OMITIDO listado en el detalle); **CA-4 (H-031)**
+  `fields_get('printflow.flow.lot.assign.bulk')` ⇒ *"Unidades a entregar"* / *"Entregas por asignar"* /
+  *"Entregas omitidas"* y `bulk.selection_note` contiene `'entrega'` y las cifras; + candado de SQL crudo.
+  Ambos registrados en `tests/__init__.py` al final del bloque de lote (líneas 166 y 170). **NO** se tocó el
+  motor, el contenedor del bloque, la bandeja, `security/`, ni ningún archivo de `x_product_dimensional_pricing`
+  (sin autorización del dueño). Sin `cr.execute` de escritura / `cr.commit`; sin `stock.quant`/`stock.move` a
+  mano; sin `button_validate` (solo el flujo NATIVO del bulk). **Nota de docstring:** se escribió `cr.commit`
+  (sin paréntesis) en el "por qué" para no disparar el candado textual `cr.commit(`.
+  **Evidencia de sintaxis:** `py_compile` de los 5 archivos (2 nuevos + `models/__init__.py` +
+  `tests/__init__.py`) ⇒ exit 0. **Evidencia de tests (BD de test `pf_picker_tests` —NO la de producción—,
+  `--data-dir` temporal, `--no-http`, `--max-cron-threads=0`, `-u printflow_gestion_inventario`, `--test-tags`
+  con prefijo `/printflow_gestion_inventario:<Clase>` por clase, salida a `--logfile`):** exit **1**,
+  **1 failed / 0 error(s) de 104 tests** ⇒ VERDES: `TestPfBulkValidatePreservesLot` **4/4** (T8),
+  `TestProductFlowLotAssignBulkResult` **4/4** (T9), `TestProductFlowLotAssignBulk` **9/9**,
+  `TestProductFlowLotPendingOrderAssign`, `TestProductFlowLotPicker`, `TestProductFlowLotTray`,
+  `TestProductFlowLotTrayOrders`, `TestProductFlowLotTrayDocument`, `TestProductFlowLotTrayAuthorize`,
+  `TestProductFlowOverReservationScoped`, `TestProductFlowLotCoupledChain`, `TestLotManagement`,
+  `TestPendingNativeValidate`. **Único rojo — B1 PRE-EXISTENTE:**
+  `TestDiagnosticDeliveryOrders.test_bulk_validate_mixed_success_and_failure`
+  (`tests/test_diagnostic_delivery_orders.py:200`, `AssertionError: 'done' == 'done'`), ya documentado en B1
+  de la Sección 1 (mismo archivo y línea). **Delta documentado:** sus productos NO van por lote ⇒ el override
+  (que solo actúa en la rama EXCLUSIVA por lote) NO está en su ruta; el rojo es ajeno a T7–T9 y no se toca.
+  **Nota de evidencia:** la primera corrida usó `--test-tags` sin prefijo `/modulo:` en el segundo tag, que se
+  interpretó como tag literal y no corrió `TestProductFlowLotAssignBulkResult`; se repitió con prefijos
+  completos y ya aparece 4/4. El test de T8/T9 pasa; el fallo **sin** T7 está razonado (el motor des-reserva la
+  excepción), no re-verificado revirtiendo código. Los avisos del log son los **pre-existentes** de O-6
+  (`Skipping deletion for missing XML ID` de `x_product_dimensional_pricing.menu_printflow_dashboards` /
+  `printflow_health_center_*`, labels duplicados, `<i>` sin `title`, `unknown parameter 'placeholder'`):
+  ajenos a T7–T9 y NO se tocan. Trabajo **solo de CÓDIGO**: 0 registros de la BD de producción tocados.
+  **Plan T1–T9 COMPLETO en 3 lotes (0 pendientes).** Turno → **Odoo Verificador** (verificación LIGERA, una
+  sola pasada al final del ciclo). **Pendiente del dueño:** reiniciar/actualizar el módulo en el servidor 8071
+  (`-u printflow_gestion_inventario`) para recargar `models/stock_move.py`.
+- [2026-10-17 · Odoo Analista] **Cierre de ciclo (compuerta de convergencia §4.3).** Evidencia aceptada del
+  `odoo-verificador`: **veredicto `cumple`**, sin hallazgos nuevos. Cadena completa: contrato (Analista) →
+  **PLAN D1–D7 + T1–T9 en 3 lotes** (Planificador) → **3 sesiones NUEVAS de `odoo-dev`** (Lote 1: T1–T3 ·
+  Lote 2: T4–T6 · Lote 3: T7–T9, cada una marcando `[x]` y dejando su bitácora) → **verificación LIGERA**
+  (una sola pasada al final). **Plan T1–T9 COMPLETO, 0 pendientes.**
+  **Evidencia de tests del Dev (BD de test `pf_picker_tests`, NUNCA la de producción):** exit **1**,
+  **1 failed / 0 errors de 104**; único rojo = **B1 PRE-EXISTENTE** (`tests/test_diagnostic_delivery_orders.py:200`);
+  nuevos en VERDE: `TestPfBulkValidatePreservesLot` **4/4** (H-030) y `TestProductFlowLotAssignBulkResult`
+  **4/4** (H-029/H-031); candados del ciclo verdes (`TestProductFlowLotAssignBulk` 9/9, picker/tray/orders/
+  coupled/over-reservation/lot-management). **Verificado por el Verificador (sin re-correr la suite):** sin
+  `cr.execute`/`cr.commit`; el override `models/stock_move.py::_assign_exclusive_lot` **solo PRESERVA** (lee
+  `move_line_ids`, el lote exclusivo y `_get_available_quantity`; NO escribe `stock.quant`/`stock.move`; NO
+  fuerza `state`/`quantity`); el motor `x_product_dimensional_pricing` **SIN CAMBIOS** (mtime previo a la
+  tarea); el detalle de H-029 es un TransientModel de **SOLO LECTURA**; rótulos + `selection_note` conformes
+  a lo DECIDIDO con el dueño; convenciones OCA OK.
+  **Hallazgos: H-029, H-030 y H-031 pasan a `resuelto`** → **8 abiertos** (H-001 · H-002 · H-005 · H-006 ·
+  H-015 · H-016 · H-018 · H-028). **Tarea CERRADA.**
+  **Pendiente del dueño:** (1) **reiniciar/actualizar el módulo** en el servidor 8071
+  (`-u printflow_gestion_inventario`) para recargar `models/stock_move.py` y las vistas; (2) **acción de DATOS
+  (H-018)**: en la bandeja "Asignar lote" elegir un lote **CON existencia** (`666634` = 23 u) sobre las 26
+  entregas, con el check de **asignación parcial** (la demanda sumada es 30 u), y volver a validar con
+  "validar entregas en lote" (que ya **NO** des-reservará la excepción). **Regla respetada: código sí, datos no**
+  — 0 registros de la BD de producción tocados.
+- [2026-10-17 · Odoo Dev] **Lote único (T1–T3) del ciclo 17/10-bis — fix del crash al abrir el detalle del bloque
+  (H-032 · H-033).** Tarea **NORMAL** (cableado de una ACCIÓN; nada del flujo de inventario). **Causa raíz:** Odoo
+  normaliza `views` SOLO en la acción `ir.actions.act_window` de **PRIMER nivel** que devuelve un botón; una acción
+  **ANIDADA** en `params['next']` de un `display_notification` **NO** se normaliza y el cliente revienta en
+  `action_service.js::_preprocessAction` (`action.views.map` ⇒ `TypeError ... reading 'map'`). (T1) MODIFICADO
+  `wizard/printflow_flow_lot_assign_bulk.py`: en `_pf_result_notification` el dict `nxt` (L548-556) ahora incluye
+  `'views': [(False, 'form')]` (MISMA convención del core al normalizar; `False` = vista por defecto del modelo) —
+  se conservan `type='ir.actions.act_window'`, `name`, `res_model`, `res_id`, `view_mode='form'`, `target='new'`; el
+  texto de los 4 conteos, el bucle de escritura, la guardia, el motivo y la política quedan **INTACTOS**. (T2)
+  MODIFICADO `models/printflow_node_pending_line.py`: en `action_pf_validate_selected` (rama `others`) la acción
+  anidada en `'next'` se arma sobre una **COPIA** del retorno del motor (`next_action = dict(result)` +
+  `next_action.setdefault('views', [(False, 'form')])`) ⇒ se agrega `views` **sin mutar** el dict del motor
+  (`x_product_dimensional_pricing`: **SIN CAMBIOS**, solo lectura). (T3) MODIFICADO
+  `tests/test_product_flow_lot_assign_bulk_result.py`: se fija **CA-1** con
+  `assertEqual(nxt['views'], [(False, 'form')])` en `test_ca3_notification_chains_detail_with_reasons` (junto a
+  `res_model`/`res_id`) y la misma aserción en `test_ca3_omitted_destination_is_listed_in_detail`; se documentó
+  CA-1/H-032 en el docstring del módulo. **NO** se tocó: la lógica de conteo/`result_note`/`state`/`quantity`,
+  `_action_assign`, la vista ni ningún archivo de `x_product_dimensional_pricing`. Sin `cr.execute` de escritura /
+  `cr.commit()`. **Evidencia de sintaxis:** `py_compile` de los 3 `.py` ⇒ **OK (exit 0)**. **Evidencia de tests
+  (BD de test `pf_picker_tests` —NO la de producción—, `--data-dir` temporal, `--no-http`, `--max-cron-threads=0`,
+  `-u printflow_gestion_inventario`, `--test-tags` con prefijo `/printflow_gestion_inventario:<Clase>` por clase,
+  salida a `--logfile`):** exit **0**, **0 failed / 0 error(s) de 19 tests** ⇒ `TestProductFlowLotAssignBulkResult`
+  **4/4** (incluye CA-1 con `views`), `TestProductFlowLotAssignBulk` **10/10** (CA-2..CA-9; su CA-7 fija el texto
+  EXACTO de los 4 conteos ⇒ la cadena nueva **no** lo rompió) y `TestPendingNativeValidate` **5/5** (cubre la rama
+  `others` de T2 sin regresión). Los avisos del log son los **pre-existentes** de O-6 (`Skipping deletion for
+  missing XML ID` de `x_product_dimensional_pricing.menu_printflow_dashboards` / `printflow_health_center_*`):
+  **ajenos** a T1–T3 y NO se tocan. Trabajo **solo de CÓDIGO**: 0 registros de la BD de producción tocados.
+  **Plan §3.5 T1–T3 COMPLETO (0 pendientes en el lote).** Turno → **Odoo Verificador** (al cerrar el ciclo).
+  **Pendiente del dueño:** recargar el módulo en el servidor 8071 (`-u printflow_gestion_inventario`) y volver a
+  pulsar **"Asignar lote"**: el detalle debe abrir **sin error** mostrando el motivo por entrega.
+- [2026-10-17 · Odoo Analista] **Cierre de ciclo 17/10-bis (compuerta de convergencia §4.3).** Evidencia
+  aceptada del `odoo-verificador`: **veredicto `cumple`**, sin hallazgos nuevos. Cadena: contrato (Analista) →
+  **UN lote `odoo-dev` (T1–T3)** → **verificación LIGERA** (una sola pasada). **Tarea NORMAL** (cableado de una
+  ACCIÓN, no del flujo de inventario) ⇒ camino con Verificador por tocar 2 archivos de código + 1 de test.
+  **Evidencia de tests del Dev (BD de test `pf_picker_tests`, NUNCA la de producción):** exit **0**,
+  **0 failed / 0 error(s) de 19** ⇒ `TestProductFlowLotAssignBulkResult` **4/4** (incl. la nueva aserción CA-1
+  de `views`), `TestProductFlowLotAssignBulk` **10/10** (su CA-7 fija el texto EXACTO de los 4 conteos ⇒ la
+  cadena nueva no lo rompió) y `TestPendingNativeValidate` **5/5** (ejercita la rama `others` de T2).
+  **Verificado por el Verificador (sin re-correr la suite):** `_preprocessAction` es el punto exacto del crash y
+  la convención `[(False, 'form')]` es la MISMA que usa el core al normalizar acciones de primer nivel; el fix de
+  T2 es **no mutante** (`dict(result)` + `setdefault`) ⇒ motor intacto; `py_compile` OK; sin `cr.execute` de
+  escritura / `cr.commit()`; motor `x_product_dimensional_pricing` **SIN CAMBIOS** (mtime 01/10 y 15/10, previos
+  al ciclo); texto CA-7 y `nxt` sin `result` (⇒ `act_window_close`) **retro-compatibles**.
+  **Hallazgos: H-032 y H-033 pasan a `resuelto`** → **8 abiertos** (H-001 · H-002 · H-005 · H-006 · H-015 ·
+  H-016 · H-018 · H-028). **Tarea CERRADA.**
+  **Nota de cobertura (H-033):** no tiene candado propio; su rama `others` queda ejercitada por
+  `TestPendingNativeValidate` (5/5). Si se quiere blindar, se abre como tarea aparte — **no** es defecto.
+  **Pendiente del dueño:** (1) **reiniciar/actualizar el módulo** en el servidor 8071
+  (`-u printflow_gestion_inventario`) para recargar `wizard/printflow_flow_lot_assign_bulk.py` y
+  `models/printflow_node_pending_line.py`; (2) **reprobar** el botón **"Asignar lote"** (debe abrir el detalle
+  sin error, con el motivo por entrega); (3) sigue en pie la **acción de DATOS (H-018)**: asignar lote a las 26
+  entregas con un lote **CON existencia** (`666634` = 23 u) y el check de asignación parcial (demanda 30 u).
+  **Regla respetada: código sí, datos no** — 0 registros de la BD de producción tocados.
