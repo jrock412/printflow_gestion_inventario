@@ -220,6 +220,14 @@ class PrintflowNodePendingLine(models.TransientModel):
             }
             if result and result.get('type') == 'ir.actions.act_window':
                 # Aviso + ventana única del resultado existente (encadenada).
+                # Odoo solo normaliza ``views`` en la acción de PRIMER nivel; una
+                # acción ANIDADA en ``params['next']`` sin ``views`` revienta el
+                # cliente en ``action_service.js::_preprocessAction``
+                # (``action.views.map(...)``). Se agrega la convención del core
+                # ``[(False, 'form')]`` sobre una COPIA ⇒ el dict del motor queda
+                # intacto (solo lectura).
+                next_action = dict(result)
+                next_action.setdefault('views', [(False, 'form')])
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
@@ -228,7 +236,7 @@ class PrintflowNodePendingLine(models.TransientModel):
                         'message': message,
                         'type': 'warning',
                         'sticky': False,
-                        'next': result,
+                        'next': next_action,
                     },
                 }
             return self._pf_notify(message, 'warning')

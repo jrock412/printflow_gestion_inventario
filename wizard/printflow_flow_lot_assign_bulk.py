@@ -76,10 +76,11 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         help='Verdadero si los destinos NO comparten una única ubicación: los '
              'candidatos muestran disponibilidad AGREGADA (aviso visible).')
     total_demand = fields.Float(
-        string='Demanda total', readonly=True,
+        string='Unidades a entregar', readonly=True,
         digits='Product Unit of Measure',
-        help='Suma de la demanda de los destinos asignables. Con ella se decide '
-             'si el lote alcanza (o la asignación es parcial).')
+        help='Suma de la demanda de los destinos asignables, en UNIDADES de '
+             'producto. Con ella se decide si el lote alcanza (o la asignación '
+             'es parcial).')
     line_ids = fields.One2many(
         'printflow.flow.lot.assign.bulk.line', 'bulk_id',
         string='Destinos',
@@ -111,12 +112,20 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         help='Justificación COMÚN de la asignación en bloque (queda en la '
              'bitácora de cada documento).')
     omitted_count = fields.Integer(
-        string='Omitidos', readonly=True,
-        help='Filas seleccionadas que NO se asignan (no asignables, sin '
-             'movimiento, duplicadas o no elegibles).')
+        string='Entregas omitidas', readonly=True,
+        help='Filas seleccionadas (ENTREGAS) que NO se asignan (no asignables, '
+             'sin movimiento, duplicadas o no elegibles).')
     assignable_count = fields.Integer(
-        string='Asignables', compute='_compute_assignable_count',
-        help='Número de destinos que SÍ admiten la asignación en bloque.')
+        string='Entregas por asignar', compute='_compute_assignable_count',
+        help='Número de destinos (ENTREGAS = albaranes de salida) que SÍ '
+             'admiten la asignación en bloque. Es una cuenta de FILAS, no de '
+             'unidades.')
+    selection_note = fields.Char(
+        string='Resumen de la selección',
+        compute='_compute_selection_note', readonly=True,
+        help='Texto VISIBLE que declara la UNIDAD de cada ranura: cada fila es '
+             'una ENTREGA (albarán de salida); las cifras de demanda van en '
+             'UNIDADES de producto (H-031).')
 
     # ══════════════════════════════════════════════════════════════════════
     # CÓMPUTOS
@@ -133,6 +142,23 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         """Cuenta los destinos asignables (los que sí se procesan)."""
         for rec in self:
             rec.assignable_count = len(rec.line_ids.filtered('assignable'))
+
+    @api.depends('assignable_count', 'total_demand')
+    def _compute_selection_note(self):
+        """Texto VISIBLE que declara la UNIDAD de cada ranura (H-031).
+
+        Aclara que cada fila es una ENTREGA (albarán de salida) y que la demanda
+        va en UNIDADES de producto: N entregas por asignar = M unidades. Así el
+        operador no lee "26 vs 30" como una contradicción. Sin sufijos de unidad
+        en los campos: la palabra "unidades" va en la oración (D3).
+        """
+        for rec in self:
+            rec.selection_note = _(
+                'Cada fila es una entrega (albarán de salida). %(n)s entregas '
+                'por asignar = %(m)s unidades a entregar.') % {
+                'n': rec.assignable_count or 0,
+                'm': '%.2f' % (rec.total_demand or 0.0),
+            }
 
     # ══════════════════════════════════════════════════════════════════════
     # POBLADO BAJO DEMANDA
@@ -414,7 +440,7 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
            reserva), capturando el ``UserError`` POR DESTINO (nunca aborta el
            barrido) y marcando el resultado (asignado/parcial/error);
         5. bitácora por documento (solo modelos con chatter) y notificación con
-           los conteos (CA-7).
+           los conteos (CA-7), ENCADENADA al DETALLE por destino (H-029).
         """
         self.ensure_one()
         self.env['printflow.stock.remedy']._pf_assert_can_clean()
@@ -458,7 +484,11 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
                 line.result = 'assigned'
                 line.result_note = _('Lote asignado.')
             self._pf_log_document(line, chosen)
-        return self._pf_result_notification()
+        # H-029: se materializa el motivo POR DESTINO en una ventana de solo
+        # lectura y se ENCADENA a la notificación. La escritura ya terminó.
+        result = self.env[
+            'printflow.flow.lot.assign.bulk.result']._pf_build_from_bulk(self)
+        return self._pf_result_notification(result)
 
     # ══════════════════════════════════════════════════════════════════════
     # HELPERS DE ESCRITURA / BITÁCORA
@@ -494,8 +524,17 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
             },
             message_type='notification', subtype_xmlid='mail.mt_note')
 
-    def _pf_result_notification(self):
-        """Notificación con los 4 conteos (asignadas/parciales/omitidas/error)."""
+    def _pf_result_notification(self, result=None):
+        """Notificación con los 4 conteos (asignadas/parciales/omitidas/error).
+
+        Conserva EXACTAMENTE el texto de cierre (contrato CA-7) y, cuando recibe
+        el detalle, añade ``params['next']`` con la ventana de SOLO LECTURA
+        ``printflow.flow.lot.assign.bulk.result`` (H-029): la notificación no se
+        desplaza y con 26+ motivos no se alcanza a leer, así que el motivo real
+        por destino se muestra en esa ventana. Sin ``result`` el comportamiento
+        es el de siempre (cerrar el modal), igual que el precedente
+        ``printflow_node_pending_line.action_pf_validate_selected``.
+        """
         assigned = partial = error = 0
         for line in self.line_ids:
             if line.result == 'assigned':
@@ -504,6 +543,24 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
                 partial += 1
             elif line.result == 'error':
                 error += 1
+        nxt = {'type': 'ir.actions.act_window_close'}
+        if result:
+            nxt = {
+                'type': 'ir.actions.act_window',
+                'name': _('Detalle de la asignación en bloque'),
+                'res_model': 'printflow.flow.lot.assign.bulk.result',
+                'res_id': result.id,
+                'view_mode': 'form',
+                # Odoo solo normaliza ``views`` en la acción de PRIMER nivel que
+                # devuelve un botón; las acciones ANIDADAS en ``params['next']``
+                # NO se normalizan y revientan en el cliente
+                # (``action_service.js::_preprocessAction`` hace
+                # ``action.views.map(...)``). Se declara la MISMA convención que
+                # usa el core al normalizar: ``[(False, 'form')]`` ⇒ vista por
+                # defecto del modelo.
+                'views': [(False, 'form')],
+                'target': 'new',
+            }
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -519,6 +576,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
                     'error': error,
                 },
                 'sticky': False,
-                'next': {'type': 'ir.actions.act_window_close'},
+                'next': nxt,
             },
         }

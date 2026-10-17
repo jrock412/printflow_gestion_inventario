@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================================================================
+         DETALLE DEL RESULTADO DE LA ASIGNACIÓN EN BLOQUE (PrintFlow)
+         Ventana de SOLO LECTURA que la propia acción en bloque
+         (``printflow.flow.lot.assign.bulk.action_assign_lot_bulk``) ENCADENA a
+         su notificación de cierre (``params['next']``).
+
+         Por qué existe (H-029): la notificación se trunca y desaparece; con 26+
+         motivos el operador NO alcanza a leer por qué falló cada entrega. Aquí
+         el motivo por destino queda VISIBLE, desplazable y persistente: una fila
+         por entrega (incluidas las OMITIDAS) con su resultado y su motivo
+         completo.
+
+         No crea, no edita ni borra nada: la ÚNICA escritura sigue siendo la
+         reasignación NATIVA de reserva que ya hizo la acción en bloque. El botón
+         "Cerrar" devuelve a la bandeja de origen (H-029/CA-3).
+         ================================================================== -->
+    <record id="printflow_flow_lot_assign_bulk_result_view_form"
+            model="ir.ui.view">
+        <field name="name">printflow.flow.lot.assign.bulk.result.form</field>
+        <field name="model">printflow.flow.lot.assign.bulk.result</field>
+        <field name="arch" type="xml">
+            <form string="Detalle de la asignación en bloque"
+                  create="false" edit="false" delete="false">
+                <div class="alert alert-info" role="alert">
+                    Motivo por destino de la asignación en bloque: revisa abajo
+                    cada entrega.
+                </div>
+
+                <group string="Resumen">
+                    <field name="assigned_count"/>
+                    <field name="partial_count"/>
+                    <field name="omitted_count"/>
+                    <field name="error_count"/>
+                </group>
+
+                <field name="line_ids" readonly="1">
+                    <tree create="false" edit="false" delete="false"
+                          decoration-success="result == 'assigned'"
+                          decoration-warning="result == 'partial'"
+                          decoration-muted="result == 'skipped'"
+                          decoration-danger="result == 'error'">
+                        <field name="seq" string="#"/>
+                        <field name="label" string="Entrega"/>
+                        <field name="kind" string="Tipo"/>
+                        <field name="demand_qty" string="Demanda"/>
+                        <field name="result" string="Resultado"/>
+                        <field name="result_note" string="Motivo"/>
+                    </tree>
+                </field>
+
+                <footer>
+                    <button string="Cerrar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

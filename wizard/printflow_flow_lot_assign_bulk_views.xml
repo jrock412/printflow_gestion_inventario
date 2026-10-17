@@ -41,8 +41,13 @@
                     <group>
                         <field name="location_id" readonly="1"/>
                         <field name="assignable_count" readonly="1"/>
-                        <field name="omitted_count" string="Filas omitidas"
-                               readonly="1"/>
+                        <field name="omitted_count" readonly="1"/>
+                        <!-- Texto VISIBLE (no tooltip): declara la UNIDAD de
+                             cada ranura. Cada fila es una ENTREGA (albarán de
+                             salida); la demanda va en UNIDADES. Evita la
+                             lectura confusa "26 vs 30" (H-031). -->
+                        <field name="selection_note" readonly="1" nolabel="1"
+                               colspan="2"/>
                     </group>
                 </group>
 

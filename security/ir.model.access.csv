@@ -32,3 +32,5 @@ access_printflow_finding_exception_authorize_line,printflow.finding.exception.au
 access_printflow_lot_risk_confirm,printflow.lot.risk.confirm,model_printflow_lot_risk_confirm,base.group_user,1,1,1,1
 access_printflow_flow_lot_assign_bulk,printflow.flow.lot.assign.bulk,model_printflow_flow_lot_assign_bulk,base.group_user,1,1,1,1
 access_printflow_flow_lot_assign_bulk_line,printflow.flow.lot.assign.bulk.line,model_printflow_flow_lot_assign_bulk_line,base.group_user,1,1,1,1
+access_printflow_flow_lot_assign_bulk_result,printflow.flow.lot.assign.bulk.result,model_printflow_flow_lot_assign_bulk_result,base.group_user,1,1,1,1
+access_printflow_flow_lot_assign_bulk_result_line,printflow.flow.lot.assign.bulk.result.line,model_printflow_flow_lot_assign_bulk_result_line,base.group_user,1,1,1,1

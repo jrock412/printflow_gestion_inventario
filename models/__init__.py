@@ -113,3 +113,9 @@ from . import mrp_technical_sheet
 #     sana con su lote y existencia. El método global del motor queda INTACTO; se hereda,
 #     no se edita (motor ``x_product_dimensional_pricing`` SIN CAMBIOS).
 from . import printflow_stock_remedy
+# 19) PRESERVACIÓN de la reserva de lote EXCEPTUADA al re-asignar (H-030): hereda
+#     ``stock.move`` para sobrescribir con ``super()`` el seam ``_assign_exclusive_lot``
+#     y aplicar a la rama EXCLUSIVA del motor la regla del propio core ("ya reservado ⇒
+#     no se toca"). Solo PRESERVA (no escribe inventario); el motor
+#     ``x_product_dimensional_pricing`` queda INTACTO.
+from . import stock_move

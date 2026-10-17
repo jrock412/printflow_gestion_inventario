@@ -66,6 +66,9 @@ y solo LEE su cerebro de reglas (health engine / stock.health / stock.remedy).
         # Modal de ASIGNACIÓN DE UN LOTE EN BLOQUE (lo abre la acción sobre la
         # SELECCIÓN de la bandeja): candidatos + destinos + un motivo.
         'wizard/printflow_flow_lot_assign_bulk_views.xml',
+        # Detalle (SOLO LECTURA) del resultado del bloque: una fila por entrega
+        # con su motivo (H-029). Va DESPUÉS del modal del bloque, que lo encadena.
+        'wizard/printflow_flow_lot_assign_bulk_result_views.xml',
         # Modal para AUTORIZAR el lote de una fila como excepción documentada
         # (lo abre el botón de fila "Autorizar excepción" de la bandeja).
         'wizard/printflow_flow_lot_exception_authorize_views.xml',

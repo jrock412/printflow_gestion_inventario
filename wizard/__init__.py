@@ -27,6 +27,11 @@ from . import printflow_flow_lot_candidate
 # de arriba (``bulk_id``) y el selector por documento de abajo.
 from . import printflow_flow_lot_assign_bulk_line
 from . import printflow_flow_lot_assign_bulk
+# DETALLE del resultado del bloque (H-029): hace LEGIBLE el motivo por destino.
+# La LÍNEA se importa ANTES que la cabecera que la referencia (One2many). Va
+# justo después del contenedor porque consume sus destinos (``bulk.line_ids``).
+from . import printflow_flow_lot_assign_bulk_result_line
+from . import printflow_flow_lot_assign_bulk_result
 from . import printflow_flow_lot_picker
 # Modal de AUTORIZACIÓN de un lote como excepción documentada: lo abre el botón
 # de fila "Autorizar excepción" de la bandeja de lote. TransientModel propio.
