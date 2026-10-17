@@ -4,8 +4,16 @@
 - Entorno: Odoo v17 Community
 - Servidor Odoo: odoo-impreven / http://localhost:8071
 - Base de Datos: Ciber Estudios 2015 RESTAURADA
+- Tipo de BD: **PRUEBA** (copia restaurada) — lo confirmó el usuario: **SÍ (2026-10-17)**
+  → en lotes `[pantalla]` el verificador puede **abrir** la pantalla (acción de lectura), pero **nunca
+  acciona** botones con efecto (Confirmar/Guardar/Validar/Publicar). Receta: `VIEW-LIVE-CHECK.md`
+  (skill `odoo-view-design`). *Si este campo se borra o queda sin confirmar, se lee como PRODUCCIÓN.*
 - Ruta del Módulo: C:\odoo_custom\printflow_gestion_inventario
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **11 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **13 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+  **17/10-d:** se ABREN **H-039** (el modo `single` es un subconjunto **estricto** del `split` ⇒ duplicidad +
+  premisa equivocada: "UN lote para TODA la selección") y **H-040** (el eje de decisión está centrado en el
+  **LOTE**, no en la **ORDEN/UNIDAD**; la fila `pending_order` **suma** la demanda). **H-034 pasa a `en tarea`**
+  (lo cierra la tarea §3.O). Los tres entran al plan de **§3.O**.
   **Cierre 17/10 · reparto multi-lote (verificado `cumple`): H-036 y H-037 pasan a `resuelto`** → **11 abiertos**.
   **17/10-c (Lote 1 · aviso fuera de alcance):** se ABRE **H-038** (el repo del **MOTOR**
   `x_product_dimensional_pricing` tiene **143 entradas sin commitear** en `main`; riesgo de proceso, NO del módulo
@@ -76,7 +84,17 @@
   **Acción de código RESUELTA (17/10 · ciclo T1–T9):** mostrar el motivo por destino (**H-029**), no
   des-reservar la excepción al validar en lote (**H-030**) y los rótulos "Entregas/Unidades" (**H-031**).
   Los TRES pasan a `resuelto` en `HALLAZGOS.md` (verificado por el `odoo-verificador`: `cumple`).
-- Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
+- **⚠️ TAREA ABIERTA (17/10-d · GRANDE · turno 1/5):** **asignación de lote POR ORDEN (eje en las órdenes)**.
+  El operador decide **qué caja (`stock.lot`) va a qué movimiento/unidad** de la entrega, en una sola pasada.
+  Ataca **H-039** (el modo `single` es subconjunto estricto del `split` ⇒ duplicidad + premisa equivocada) y
+  **H-040** (eje centrado en el LOTE, no en la ORDEN/UNIDAD), y **CIERRA H-034** (una entrega con 2 unidades = 2
+  filas). **Decidido por el dueño (D1/D2):** grano = **MOVIMIENTO** · se **retiran los DOS modos** y queda **UNA**
+  acción **"Asignar lote"**. Ver **§3.O** (contrato §3.3 completo + CA-1…CA-11 + qué se retira).
+- Tarea Activa: **§3.O — plan COMPLETO pendiente** (lo escribe el **Odoo Planificador**: `T1..Tn` en lotes ≤3,
+  cada tarea con su dueño `[motor]` / `[pantalla]`).
+- **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
+- Responsable Activo (Turno): **Odoo Planificador** (paso 2 — plan completo; **no** escribe código).
+- (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
   en git; test nuevo `TestProductFlowLotAssignBulkSplit` **8/8 verde** y **regresión real de T1** comprobada
   (revertir el patrón aditivo ⇒ **CA-1 falla**). Verificación del Analista en el punto crítico: `_pf_reserve_lot`
@@ -242,6 +260,162 @@ flowchart TD
 | 🟠 Naranja | TRANSMISIÓN | Adaptadores/hooks (`_inherit` + `super()`) que propagan | Sí, con cuidado |
 | 🟢 Verde | RUEDAS | Piezas intercambiables (widgets, vistas, options) | Sí, es lo normal |
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
+
+## 3.O (TAREA ABIERTA) — Asignación de lote POR ORDEN: el operador decide qué caja va a qué unidad (H-039 · H-040 · cierra H-034)
+
+> **Turno:** Odoo Analista (apertura · paso 1) → **Odoo Planificador** (paso 2: plan COMPLETO por lotes).
+> **Estado:** ⏳ **ABIERTA** — **pendiente el plan** (`T1..Tn`). **Autorización del dueño: SÍ (2026-10-17)** —
+> *"aplica las acciones recomendadas"* (D1 = grano por MOVIMIENTO · D2 = retirar los dos modos y dejar UNA sola
+> acción centrada en las órdenes).
+> **Tarea GRANDE** (toca el **flujo NATIVO de reserva de entregas** ⇒ SIEMPRE Grande: Analista → Planificador →
+> Analista → Agente del lote → Verificador → Analista).
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`.
+> **Dónde:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: **aquí se escribe**) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor; **SOLO LECTURA — NO se edita**).
+> **Qué (objeto concreto):** el contenedor `printflow.flow.lot.assign.bulk` (+ su `.line`, su candidato
+> `printflow.flow.lot.candidate`, sus vistas y los botones de cabecera de `printflow.flow.lot.tray`).
+> **Regla vigente:** código sí, datos no (`regla-trabajo-odoo-17-ce`).
+> **Hallazgos que ataca:** **H-039** (el modo `single` es un **subconjunto estricto** del `split`) · **H-040** (el
+> eje de decisión está centrado en el **LOTE**, no en la **ORDEN/UNIDAD**) · **H-034** (pasa a `en tarea`: una
+> entrega con **2 unidades** son **2 filas**, una por movimiento).
+
+### 3.1 Problema (evidencia)
+
+El dueño pregunta *"¿por qué se llama REPARTIR lotes si lo que queremos es ASIGNAR un lote a una orden?"* y pide
+que **el operador decida qué lote va a qué OC**. El análisis (**solo lectura**) confirma que el eje está invertido:
+
+| # | Hecho | Evidencia |
+|---|---|---|
+| **P1** | La paridad del negocio es **1 unidad = 1 `stock.move` = 1 línea de pedido = 1 lote `<pedido>-L<línea>`**. Una entrega con **N unidades** tiene **N movimientos/líneas** ⇒ **N decisiones**, no una. | `stock.move.sale_line_id` en los 5 movimientos pendientes (109861→línea **10430** · 120603→**12141** · 120604→**12142** · 122295→**14496** · 127869→**11419**) · motor `sale_order_line.py` L160 ⇒ `'%s-L%s' % (order.name, self.id)` · la reserva vive en `stock.move.line.lot_id` (move 109861 → move line **94907**, `SN0001`, 1 u) |
+| **P2** | En el contenedor el eje es **el LOTE**: el operador marca **cajas** (`is_in_split`) y **la máquina** reparte las entregas **en el orden de la tabla**. | `wizard/printflow_flow_lot_assign_bulk.py` L499-511 (`_pf_split_lots` = `candidate_ids.filtered('is_in_split')`, en `_order`) · `wizard/printflow_flow_lot_candidate.py` L48 (`_order = 'available desc, lot_name asc'`) · `models/stock_move.py` L167-171 (`_pf_reassign_lots`: recorre el plan y llena la demanda de **esa** entrega) |
+| **P3** | El modo **`single`** es un **subconjunto estricto** del `split` ⇒ **dos botones que hacen lo mismo**. | L547-607 (`action_assign_lot_bulk`: `for line in …: _pf_assign_lot_to_document(..., chosen)`) vs L609-675 (`action_split_lot_bulk`: `… _pf_assign_lots_to_document(..., lots)`) — con **UN lote marcado**, el resultado es idéntico (mismos destinos, mismo lote, misma guarda) |
+| **P4** | La fila de entrega **suma** la demanda: un albarán con **2 movimientos** del producto se ve como **UNA** fila de `demand_qty=2`, y la escritura resuelve **1 solo** movimiento. | `wizard/printflow_flow_lot_tray.py` L563-598 (`demand_by_picking[picking_id] += product_uom_qty`) vs L498-516 (`missing_move`: **UNA fila por `stock.move`**) · `wizard/printflow_product_flow.py` L1118-1123 (`limit=1`) · BD: bloque id **8**, fila picking **36004** (WH/OUT/06483) `demand_qty=2` |
+| **P5** | El caso real del dueño queda **explicado al 100 %** por P3 + P4. | bloque id **8** (17:48) — 4 destinos, demanda **5** = 1 + 1 + **2** + 1, lote `SN0001` (**1 u**): WH/OUT/10857 `assigned`; WH/OUT/10859 / WH/OUT/06483 / WH/OUT/07271 en `error` *"El lote \"SN0001\" no tiene existencia disponible…"* |
+
+### 3.2 Objetivo (acotado)
+
+Que el operador, en **una sola pasada**, **asigne a cada movimiento (unidad/línea) su caja**, eligiéndola él.
+**Qué SÍ:** una fila por movimiento, un selector de lote por fila, pre-llenado con el lote propio del pedido
+cuando tenga existencia, un motivo y un aplicar. **Qué NO:** no se rediseña la bandeja ni el motor, no se
+tocan datos y no se crean lotes automáticamente.
+
+### 3.3 Contrato (§3.3 del método — los 7 puntos)
+
+1. **Dónde.** `Fuente: odoo-impreven / Ciber Estudios 2015 RESTAURADA`. Ruta de escritura:
+   `C:\odoo_custom\printflow_gestion_inventario`. El motor `C:\odoo_custom\x_product_dimensional_pricing`
+   es **SOLO LECTURA**.
+2. **Qué.** `printflow.flow.lot.assign.bulk` (un solo camino de decisión, centrado en las órdenes) + su
+   `.line` + la tabla de candidatos (queda **INFORMATIVA**) + las vistas del contenedor + los botones de
+   cabecera de `printflow.flow.lot.tray`.
+3. **Objetivo acotado.** Una **única** acción en bloque ("Asignar lote") donde **cada fila es un movimiento**
+   y cada fila tiene **su** selector de lote; el operador decide el par **caja ↔ orden/unidad**.
+4. **Definición de terminado.** Ver §3.5 (CA-1…CA-11), todos verificables en pantalla y en la BD (solo lectura).
+5. **Restricciones duras** (+ **conejeras**, dentro del alcance, se usan con cuidado):
+   - **No forzar ni reemplazar flujos NATIVOS**: `_inherit` + `super()`; prohibido escribir
+     `stock.quant` / `stock.move` / `stock.move.line` a mano, tocar estados (`state`, `quantity`, `qty_done`),
+     `cr.execute` de escritura o `cr.commit()`.
+   - **Código sí, datos no** (`regla-trabajo-odoo-17-ce`).
+   - **Convenciones OCA** (skill `odoo-17-clean-architecture` §2.5).
+   - ⚠️ **Conejera (H-034 · `limit=1` es CONTEXTO, no el bug):** `_pf_document_move`
+     (`printflow_flow_lot_tray.py` L786-820) usa `limit=1` **a propósito** para traer el **contexto** del lote
+     exclusivo esperado. Ese `limit=1` **NO se toca**; lo que cambia es el **grano de la fila** y el **alcance de
+     la ESCRITURA**.
+   - ⚠️ **Conejera (`_pf_reassign_move_lot` NO es aditiva):** en el motor, `_pf_reassign_lot` **libera la reserva
+     entera y luego reserva** ⇒ **dos llamadas con dos lotes borran el primero**. Para escribir por fila, usar el
+     camino **aditivo** que ya existe (`_pf_reassign_lots`: **1 liberación + N reservas**) — **NO** llamar dos
+     veces al camino no-aditivo.
+   - ⚠️ **Conejera (retirar sin dejar residuo ni tests rotos):** el modo `single` tiene contrato **H-021** y
+     tests propios, y `is_selected` / `_pf_enforce_single_selection` los usa **también el selector por
+     documento**: se retira **solo el uso en el contenedor**; el `picker` se queda intacto.
+   - ⚠️ **Conejera (pre-llenado sin reinventar):** el lote propio de la línea **ya viene resuelto en la fila**
+     (`own_lot_name`): reutilizarlo (una lectura, **sin N+1**), no recalcular el lote exclusivo por otra vía.
+   - **Registro de conejeras** (`C:\odoo_custom\CONEJERAS.md`): **consultado — vacío** (`n/a`): las de arriba
+     nacen del análisis de esta tarea.
+6. **Qué se RETIRA** (sustitución, no acumulación — se borra en el mismo lote, sin dejar residuo):
+   - El **modo `single`**: `action_assign_lot_bulk`, su valor en `mode`, el botón de cabecera **"Asignar lote"**
+     actual, el campo `lot_id` del contenedor y `_pf_check_coverage` (guarda de cobertura del lote único).
+   - El **modo `split`** como **superficie**: el botón **"Repartir lotes"**, `action_split_lot_bulk`,
+     `is_in_split`, `_pf_split_lots`, `_pf_check_split_coverage` y `_pf_log_split_document`.
+   - Las **marcas** de la tabla de candidatos **en el contenedor** (`is_selected` / `is_in_split` como eje de
+     decisión): la tabla queda **INFORMATIVA** (Lote · Existencia · Reservado · Disponible · Rol).
+   - Los **tests** de los modos retirados: se **retiran o adaptan** (nunca se dejan en rojo).
+   - **SE CONSERVA** (no es residuo, es la pieza que escribe bien por unidad): el motor de escritura aditivo
+     `_pf_assign_lots_to_document` / `stock.move._pf_reassign_lots` y el registro por chatter.
+7. **Fuera de alcance** (lo que el dueño dijo que **NO** y lo que **no** se decide por cuenta propia):
+   - ❌ **Ninguna pantalla nueva**: se reutiliza el contenedor existente (el dueño rechazó expresamente una
+     "interfaz distinta").
+   - ❌ **No** se toca el **selector por documento** `printflow.flow.lot.picker` ni `is_selected` /
+     `_pf_enforce_single_selection` (los usa el picker), ni su vista/acciones.
+   - ❌ **No** se cambia **qué** lista la bandeja ni su clasificación de `kind`s (solo el **grano** de la fila
+     de entrega).
+   - ❌ **No** se toca el **MOTOR** `x_product_dimensional_pricing` (si algo pareciera faltar allí, se
+     **reporta**, no se edita).
+   - ❌ **Ningún DATO**: ni re-etiquetar las **18 u sin lote**, ni los **31 lotes de pedido con 0 existencia**,
+     ni lotes con nombre basura (`dwqdqwd`, `6265`), ni las **5 compras canceladas** (P00303/P00320/P00333/
+     P00334/P00373), ni las **reservas colgadas** de **H-035** (move lines 94880/94881). Eso es **DATO**
+     (operación aparte, consciente y autorizada), **no** código.
+   - ❌ **No** se tipifica ni se categoriza el **motivo**: sigue siendo **texto libre obligatorio** en el
+     chatter (el dueño lo decidió así: *"es responsabilidad del operador decir por qué"*).
+   - ❌ **No** se crean lotes automáticamente (eso es el botón "Crear lote sugerido", ajeno a esta tarea).
+   - ❌ **No** se revisa el desfase de `pf_lot_name = 'LOTE-000001'` repitido en todos los pedidos (frente
+     propio, sin tarea).
+
+### 3.4 Decisiones de diseño CERRADAS por el dueño (17/10/2026)
+
+| # | Decisión | Razón |
+|---|---|---|
+| **D1** | **El grano de la fila es el MOVIMIENTO** (`stock.move` = unidad = línea de pedido): una entrega con N unidades produce **N filas**. | Es la paridad del negocio (P1) y **cierra H-034 por construcción** (la segunda unidad deja de ser inalcanzable). |
+| **D2** | **Se retiran los DOS modos** (`single` y `split`) y queda **UNA sola** acción en bloque llamada **"Asignar lote"**, con el eje en **las órdenes**. | El `single` está duplicado (P3) y su premisa ("un lote para todas") es la que produce los errores masivos; el `split` decide por la máquina (P2). |
+| **D3** | **Pre-llenado**: cada fila llega con el **lote propio de su línea** (`<pedido>-L<línea>`) **si ese lote tiene existencia**; si no, queda **vacía** y visible. | La Ley #1 ("cada lote nace atado a su pedido") se cumple **sola** en el camino normal; la excepción la hace el operador. |
+| **D4** | El desplegable **"Lote a asignar"** lista **solo lotes con existencia**; el **lote propio** va en **columna informativa** con su existencia (`0.00` visible). | El operador **ve** que la caja del pedido está vacía y por eso elige otra: elección consciente, no a ciegas. |
+| **D5** | El **motivo** sigue siendo **obligatorio** y se registra en el **chatter** del documento (lote + motivo + usuario). | Ya funciona y el dueño lo aceptó como suficiente. |
+| **D6** | La **escritura** sigue siendo el **protocolo NATIVO** (reserva), con el **motor sin cambios**. | `regla-trabajo-odoo-17-ce` + cero reinvención. |
+
+### 3.5 Criterios de aceptación (verificables)
+
+- **CA-1** — La bandeja ofrece **UNA** acción de lote en bloque (la nueva **"Asignar lote"**); **"Repartir lotes"**
+  y el modo `single` **no existen** (ni botón, ni acción, ni valor de `mode`).
+- **CA-2** — El contenedor lista **UNA fila por movimiento** del producto: para **WH/OUT/06483** ⇒ **2 filas**
+  (líneas **12141** y **12142**), no una de demanda 2.
+- **CA-3** — Cada fila muestra **OC/entrega · línea de pedido · unidad · lote propio (con su existencia)** y un
+  **selector de lote** con **solo lotes con existencia**.
+- **CA-4** — Las filas llegan **pre-llenadas** con el lote propio cuando su existencia > 0; **vacías** si es 0.
+- **CA-5** — Al aplicar, cada fila con lote queda en **`assigned`** con el `stock.move.line.lot_id` correcto, y
+  una entrega con **2 unidades se cubre COMPLETA (2/2)** ⇒ **H-034 cerrado**.
+- **CA-6** — Cada documento afectado recibe su mensaje de **chatter** con **lote + motivo + usuario**; el motivo
+  es obligatorio (vacío ⇒ `UserError`).
+- **CA-7** — Una fila cuyo lote no cubra la demanda queda **`partial`** y **no revienta** las demás (captura por
+  fila) y el resultado se ve en la ventana de detalle (H-029).
+- **CA-8** — El **selector por documento** (`printflow.flow.lot.picker`) sigue funcionando **igual** (sus tests
+  verdes).
+- **CA-9** — El **motor** `x_product_dimensional_pricing` **sin cambios** (sin diff en ese repo).
+- **CA-10** — **Código sí, datos no**: abrir/cerrar el contenedor **no** modifica `stock.quant` / `stock.lot` /
+  `stock.move`; solo la escritura NATIVA de las filas aplicadas.
+- **CA-11** — Tests relevantes **N/N verdes** (`--test-tags /printflow_gestion_inventario`); los tests de los
+  modos retirados quedan **retirados o adaptados**, nunca en rojo.
+
+### 3.6 Contratos que NO deben romperse
+
+| Contrato | Pieza |
+|---|---|
+| Selector por documento | `printflow.flow.lot.picker` + `is_selected` / `_pf_enforce_single_selection` + su vista |
+| Bandeja de lote | `printflow.flow.lot.tray` y su clasificación de `kind`s (qué se lista) |
+| Registro auditable | `_pf_log_document` (chatter: lote + motivo + usuario) |
+| Detalle por destino (H-029) | `printflow.flow.lot.assign.bulk.result` y sus vistas/test |
+| Primitivas del MOTOR | `_pf_reassign_lots`, `_pf_unassign_reservation`, `_pf_reserve_lot` (SIN cambios) |
+| Escritura NATIVA | `_update_reserved_quantity` / protocolo de reserva (no se escribe a mano) |
+
+### 3.7 Plan de ejecución (checklist por LOTES de máximo 3) — LO ESCRIBE EL PLANIFICADOR
+
+> El **Odoo Planificador** escribe aquí el plan **COMPLETO** (`T1..Tn`), **ordenado por dependencia** (**motor
+> antes que pantalla**) y con el **dueño** de cada tarea: `[motor]` (`odoo-dev`) o `[pantalla]` (`odoo-vistas`).
+> Un lote = ≤3 tareas **sin mezclar dueños**. El agente marca `[x]`; **la marca ES el estado**.
+
+**Lote 1 (T1–T3)**
+- [ ] _(pendiente del Planificador)_
+
+> ⚠️ **Secuencia obligatoria:** las tareas del **modelo/acción** (`[motor]`) van **ANTES** que las de **vista**
+> (`[pantalla]`): una vista no puede pintar una columna que todavía no existe.
 
 ## 3.N (ANEXO · TAREA CERRADA) — Reparto multi-lote en bloque (H-037 · H-036)
 
