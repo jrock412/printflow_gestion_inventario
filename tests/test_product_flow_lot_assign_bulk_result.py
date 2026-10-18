@@ -2,21 +2,25 @@
 """Detalle del resultado y rótulos del wizard de asignación en bloque (H-029/H-031).
 
 Custodia los criterios CA-3/CA-4 del plan de las incidencias del wizard de
-asignación en bloque:
+asignación en bloque, ya con el grano NUEVO (§3.O · H-039/H-040): cada fila del
+contenedor es un MOVIMIENTO (una unidad / línea de pedido) y los conteos del
+detalle se llevan POR UNIDAD.
 
 * **CA-3 (H-029)** — tras una asignación en bloque con errores/omisiones, el
   operador LEE el motivo por destino: la acción sigue devolviendo la
   ``display_notification`` con el MISMO texto de los 4 conteos y AHORA encadena
   (``params['next']``) el detalle ``printflow.flow.lot.assign.bulk.result``, con
-  UNA fila por destino (incluidas las omitidas) y ``result_note`` NO vacío en las
-  filas ``error``/``skipped``.
+  UNA fila por MOVIMIENTO (una unidad) y ``result_note`` NO vacío en las filas
+  ``error``/``skipped``. Los 4 conteos (asignadas/parciales/omitidas/error) son
+  por UNIDAD: una fila = un movimiento.
 * **CA-1 (H-032)** — la acción ANIDADA en ``params['next']`` declara
   ``views == [(False, 'form')]``: Odoo solo normaliza ``views`` en la acción de
   PRIMER nivel, así que sin ella el cliente revienta en
   ``action_service.js::_preprocessAction`` (``action.views.map``).
-* **CA-4 (H-031)** — la ranura "Selección" declara su unidad: "Entregas por
-  asignar" / "Unidades a entregar" / "Entregas omitidas" + el texto aclaratorio
-  VISIBLE ``selection_note``; ``total_demand`` CONSERVA su ``digits``.
+* **CA-4 (H-031)** — la ranura "Selección" declara su unidad: "Unidades por
+  asignar" / "Unidades a entregar" / "Filas omitidas" + el texto aclaratorio
+  VISIBLE ``selection_note`` que declara que CADA FILA es una UNIDAD (un
+  movimiento); ``total_demand`` CONSERVA su ``digits``.
 
 Es de SOLO LECTURA sobre datos ajenos salvo la ÚNICA escritura del flujo (la
 reasignación NATIVA de reserva que dispara el wizard con su guardia y su motivo):
@@ -158,12 +162,15 @@ class TestProductFlowLotAssignBulkResult(TransactionCase):
         self.assertEqual(set(pending.mapped('res_id')), {pick_a.id, pick_b.id})
 
         bulk = self._wizard_for(pending)
-        bulk.lot_id = lot.id
+        # Decisión POR UNIDAD (H-039/H-040): el MISMO lote (2 u) se elige en
+        # CADA fila; la parcial ya no se bloquea en bloque (CA-7).
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Detalle por destino.'
-        bulk.confirm_partial = True
         result = bulk.action_assign_lot_bulk()
 
-        # (a) la notificación conserva el MISMO texto de los 4 conteos (CA-7).
+        # (a) la notificación conserva el MISMO texto de los 4 conteos (CA-7),
+        # ahora POR UNIDAD: una entrega con N unidades produce N filas.
         self.assertEqual(result['type'], 'ir.actions.client')
         self.assertEqual(result['tag'], 'display_notification')
         self.assertEqual(
@@ -226,9 +233,9 @@ class TestProductFlowLotAssignBulkResult(TransactionCase):
         self.assertEqual(bulk.assignable_count, 2)
         self.assertEqual(bulk.omitted_count, 1)
         self.assertEqual(len(bulk.line_ids), 3)
-        bulk.lot_id = lot.id
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Detalle con omitidas.'
-        bulk.confirm_partial = True
         result = bulk.action_assign_lot_bulk()
 
         self.assertEqual(
@@ -256,8 +263,8 @@ class TestProductFlowLotAssignBulkResult(TransactionCase):
              'selection_note'])
         self.assertEqual(fields['total_demand']['string'], 'Unidades a entregar')
         self.assertEqual(
-            fields['assignable_count']['string'], 'Entregas por asignar')
-        self.assertEqual(fields['omitted_count']['string'], 'Entregas omitidas')
+            fields['assignable_count']['string'], 'Unidades por asignar')
+        self.assertEqual(fields['omitted_count']['string'], 'Filas omitidas')
         # ``total_demand`` CONSERVA su ``digits`` (D3): sin sufijos inventados.
         field = self.env['printflow.flow.lot.assign.bulk']._fields['total_demand']
         self.assertEqual(field._digits, 'Product Unit of Measure')
@@ -275,8 +282,8 @@ class TestProductFlowLotAssignBulkResult(TransactionCase):
         self.assertEqual(bulk.assignable_count, 2)
         self.assertEqual(
             bulk.selection_note,
-            'Cada fila es una entrega (albarán de salida). 2 entregas por '
-            'asignar = 6.00 unidades a entregar.')
+            'Cada fila es una unidad (un movimiento de la entrega = una línea '
+            'de pedido). 2 unidades por asignar = 6.00 unidades a entregar.')
 
     # ==================================================================
     # Candado — sin SQL crudo

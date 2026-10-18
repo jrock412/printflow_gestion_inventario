@@ -97,7 +97,10 @@
   **Lote 3 (T6–T8) `[motor]` ✅ CERRADO** (residuo **0** de los símbolos retirados; el test del `split`
   **borrado**; `test_product_flow_lot_assign_bulk.py` adaptado; test NUEVO por unidad **8/8** con **regresión
   real** probada: revertir T3 ⇒ `test_ca2` falla con 1 fila; revertir T2 ⇒ `test_ca5` falla). Lote en curso:
-  **Lote 4 (T9) `[motor]`** (adaptación del detalle `..._bulk_result.py` + revisión de los candados de bandeja).
+  **Lote 4 (T9) `[motor]` ✅ CERRADO** (detalle `..._assign_bulk_result.py` al grano **por unidad** **4/4**;
+  `..._pending_order_assign.py` **sin cambios** —usa el selector por documento—; candados de bandeja/picker
+  **delta = NINGUNO**; pasada de **110** tests ⇒ **1 rojo pre-existente B1/H-002**, ajeno). Lote en curso:
+  **Lote 5 (T10) `[pantalla]`**.
   Añadida **T10 `[pantalla]` (Lote 5)** por **regresión de T4** (se perdió el campo `confirm_exception`, que
   `action_assign_lot_bulk` exige con política ≠ `warn` ⇒ callejón sin salida; ver §3.7).
   Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR (Lote 3) → adaptar (Lote 4) → T10 (Lote 5)**.
@@ -116,10 +119,9 @@
   El único rojo de esa pasada es **B1 pre-existente** (`test_product_flow_lot_picker_ux.py:143`, ya en **H-002**),
   **ajeno** a §3.O.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
-- Responsable Activo (Turno): **Odoo Dev** (paso 4 · **Lote 4 `[motor]` T9** = adaptar el detalle
-  `..._assign_bulk_result.py` al grano por unidad, revisar `..._pending_order_assign.py` y los candados de
-  bandeja/picker, y **reportar el delta**). **Lotes 1, 2 y 3 cerrados.** El **motor
-  `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
+- Responsable Activo (Turno): **Odoo Vistas** (paso 4 · **Lote 5 `[pantalla]` T10** = restituir el campo
+  `confirm_exception` en el form del contenedor; **camino rápido §4.1**: 1 archivo, sin decisión de diseño).
+  **Lotes 1–4 cerrados.** El **motor `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
 - (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
   en git; test nuevo `TestProductFlowLotAssignBulkSplit` **8/8 verde** y **regresión real de T1** comprobada
@@ -705,7 +707,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
 
 #### Lote 4 (T9) — `[motor]` · Retiro/adaptación de los tests de los modos retirados (parte 2)
 
-- [ ] **T9 — Adaptación del detalle y del camino `pending_order`.**
+- [x] **T9 — Adaptación del detalle y del camino `pending_order`.**
   - **ADAPTAR** `tests/test_product_flow_lot_assign_bulk_result.py` al detalle por **movimiento**: los conteos
     (asignadas/parciales/omitidas/error) son por **unidad**, y el `params['next']` sigue apuntando a
     `printflow.flow.lot.assign.bulk.result` con **una fila por destino** (H-029 intacto).
@@ -6560,5 +6562,56 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   **Plan §3.O · Lote 3 (T6–T8) COMPLETO (0 pendientes).** **Turno → siguiente: Lote 4 (T9) `[motor]` (`odoo-dev`,
   sesión NUEVA).** Ojo: **T10** (`[pantalla]`, §3.O · Lote 5) sigue PENDIENTE por el gap de `confirm_exception` que
   reportó `odoo-vistas` en el Lote 2.
+  **Pendiente del dueño:** reiniciar/actualizar el 8071 (`-u printflow_gestion_inventario`).
+- [2026-10-18 · Odoo Dev] **§3.O · Lote 4 `[motor]` (T9) COMPLETO.** Adaptación de los tests del DETALLE (H-029)
+  y revisión del camino `pending_order` al grano por UNIDAD, + revisión de los candados de bandeja/picker (delta
+  reportado). Fuente: `odoo-impreven` / `Ciber Estudios 2015 RESTAURADA` (**solo lectura**: no se le ejecutó `-u`
+  ni tests). Ruta escrita: `C:\odoo_custom\printflow_gestion_inventario`. Motor
+  `x_product_dimensional_pricing`: **no se tocó** (0 archivos del motor abiertos para escritura).
+  *BD de trabajo (NUNCA la de producción):* clon `pf_lote4_verif` restaurado desde `pg_dump` de la BD de PRUEBA;
+  TODA la evidencia (`-u` + tests) se tomó ahí; el clon se **elimina** al cerrar el lote. La BD de PRUEBA quedó con
+  **0 escrituras**.
+  *Archivos (1 modificado):*
+  (1) **T9 — ADAPTADO** `tests/test_product_flow_lot_assign_bulk_result.py` al detalle por MOVIMIENTO: los dos casos
+  de CA-3 (`test_ca3_notification_chains_detail_with_reasons`, `test_ca3_omitted_destination_is_listed_in_detail`)
+  pasan de `bulk.lot_id = lot.id` + `bulk.confirm_partial = True` (campos RETIRADOS en T6) a **lote POR FILA**
+  (`for line in bulk.line_ids: line.lot_id = lot.id`): el MISMO lote (2 u) se elige en cada unidad y la parcial ya
+  NO se bloquea en bloque (CA-7). Los 4 conteos del detalle (asignadas/parciales/omitidas/error) quedan **por
+  UNIDAD** (`len(detail.line_ids) == len(bulk.line_ids)`) y `params['next']` sigue apuntando a
+  `printflow.flow.lot.assign.bulk.result` con `views == [(False, 'form')]` (H-029/H-032 intactos).
+  `test_ca4_selection_labels_and_note` actualiza los rótulos al grano nuevo: `assignable_count` =
+  **"Unidades por asignar"**, `omitted_count` = **"Filas omitidas"** y el `selection_note` =
+  *"Cada fila es una unidad (un movimiento de la entrega = una línea de pedido). N unidades por asignar = M
+  unidades a entregar."*; `total_demand` CONSERVA su `digits` (D3). Docstring del módulo re-escrito al grano por
+  unidad. **Ningún test en `skip`.**
+  (2) **REVISADO sin cambio** `tests/test_product_flow_lot_pending_order_assign.py`: la fila `pending_order` de la
+  bandeja sigue apuntando al ALBARÁN (`res_model='stock.picking'`; la bandeja NO cambia su grano) y el test ejercita
+  el **selector por documento** (`action_open_lot_picker` → `Picker.action_assign_lot`), NO el contenedor ⇒ **0
+  adaptaciones** (sus 2 casos verdes).
+  (3) **REVISADOS los candados (delta = NINGUNO):** `test_product_flow_lot_tray.py`, `..._tray_orders.py`,
+  `..._tray_document.py`, `..._tray_authorize.py`, `..._tray_authorize_bulk.py`, `..._lot_picker*.py`,
+  `test_lot_management.py` y `test_pf_bulk_validate_preserves_lot.py` **no referencian** el contenedor
+  (`grep "assign\.bulk|action_assign_lot_bulk"` ⇒ **0** coincidencias en esos archivos): su contrato es la BANDEJA y
+  el SELECTOR POR DOCUMENTO, ajenos al grano del contenedor (§3.6). `grep` de los símbolos retirados
+  (`is_in_split|split_note|action_split_lot_bulk|_pf_split_*`) sobre `tests/` ⇒ solo las **aserciones negativas**
+  de `TestProductFlowLotAssignBulkPerMove.test_ca1_only_one_bulk_action_exists` (que comprueban justamente su
+  AUSENCIA); **0** usos residuales.
+  *Evidencia (clon `pf_lote4_verif`):* `python -m py_compile tests/test_product_flow_lot_assign_bulk_result.py` ⇒
+  **exit 0**; `-u printflow_gestion_inventario` ⇒ **sin error de carga** (módulos cargados); corrida acotada
+  `--test-tags` sobre el set de lote/bandeja/picker (14 clases) ⇒ **exit 1**, **1 failed / 0 error(s) de 110**; el
+  set del lote, VERDE: `TestProductFlowLotAssignBulkResult` **4/4** (los 3 adaptados + el candado de SQL crudo),
+  `TestProductFlowLotAssignBulkPerMove` **9/9**, `TestProductFlowLotAssignBulk` **10/10**,
+  `TestProductFlowLotPendingOrderAssign` **2/2**, `TestProductFlowLotTray`, `…TrayOrders`, `…TrayDocument`,
+  `TestTrayAuthorizeCurrentLot`, `…TrayAuthorizeBulk`, `TestProductFlowLotPicker` **11/11**, `…CoupledChain`,
+  `TestLotManagement`, `TestPfBulkValidatePreservesLot` VERDES. El ÚNICO rojo es **PRE-EXISTENTE y AJENO (delta =
+  0, B1/H-002)**: `TestProductFlowLotPickerUx.test_own_and_current_lots_are_listed_and_labeled`
+  (`test_product_flow_lot_picker_ux.py:143`, `AssertionError: 6.0 != 8.0 within 7 places (2.0 difference)`), ya
+  documentado en **H-002** y en las bitácoras de los lotes anteriores (§3.K · O-4 / §3.O · Lote 3).
+  *Restricciones:* ✅ el archivo tocado NO contiene `cr.execute(`/`cr.commit(` (lo custodia su propio candado);
+  ✅ **código sí, datos no** — **0** registros de `Ciber Estudios 2015 RESTAURADA` escritos (todo en el clon);
+  ✅ motor `x_product_dimensional_pricing` **sin cambios**.
+  *Desviaciones:* **ninguna** (T9 es solo adaptación/revisión de tests; no se tocó el motor del contenedor).
+  **Plan §3.O · Lote 4 (T9) COMPLETO (0 pendientes).** **Turno → siguiente: Lote 5 (T10) `[pantalla]`
+  (`odoo-vistas`, sesión NUEVA):** restituir `confirm_exception` en el form del contenedor (regresión de T4).
   **Pendiente del dueño:** reiniciar/actualizar el 8071 (`-u printflow_gestion_inventario`).
 
