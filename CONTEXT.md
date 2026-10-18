@@ -9,7 +9,7 @@
   acciona** botones con efecto (Confirmar/Guardar/Validar/Publicar). Receta: `VIEW-LIVE-CHECK.md`
   (skill `odoo-view-design`). *Si este campo se borra o queda sin confirmar, se lee como PRODUCCIÓN.*
 - Ruta del Módulo: C:\odoo_custom\printflow_gestion_inventario
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **13 abiertos** (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **11 abiertos** · 24 `resuelto` · 7 `descartado` (**42** filas; **0** en tarea) (compañero del CONTEXT.md; ver skill §2.2).
   **17/10-d:** se ABREN **H-039** (el modo `single` es un subconjunto **estricto** del `split` ⇒ duplicidad +
   premisa equivocada: "UN lote para TODA la selección") y **H-040** (el eje de decisión está centrado en el
   **LOTE**, no en la **ORDEN/UNIDAD**; la fila `pending_order` **suma** la demanda). **H-034 pasa a `en tarea`**
@@ -93,7 +93,7 @@
 - Tarea Activa: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
   **Lote 1 (T1–T3) `[motor]` ✅ CERRADO** (dev: T1–T3 `[x]`; 41/41 candados de bandeja/pending/**picker** verdes).
   **Lote 2 (T4–T5) `[pantalla]` ✅ CERRADO** (vistas: 1 solo form por unidad, form del reparto borrado, botón
-  re-rotulado; **sin verificación en vivo todavía** — la hace el Verificador al final).
+  re-rotulado; **verificación en vivo HECHA (§3.8)**).
   **Lote 3 (T6–T8) `[motor]` ✅ CERRADO** (residuo **0** de los símbolos retirados; el test del `split`
   **borrado**; `test_product_flow_lot_assign_bulk.py` adaptado; test NUEVO por unidad **8/8** con **regresión
   real** probada: revertir T3 ⇒ `test_ca2` falla con 1 fila; revertir T2 ⇒ `test_ca5` falla). Lote en curso:
@@ -101,7 +101,7 @@
   `..._pending_order_assign.py` **sin cambios** —usa el selector por documento—; candados de bandeja/picker
   **delta = NINGUNO**; pasada de **110** tests ⇒ **1 rojo pre-existente B1/H-002**, ajeno). Lote en curso:
   **Lote 5 (T10) `[pantalla]` ✅ CERRADO** (restituido `confirm_exception` en el form del contenedor: **+1 campo**,
-  cirugía mínima; XML OK; **1** sola ocurrencia). **CICLO DE LOTES COMPLETO (1–5)** ⇒ turno al **Verificador**
+  cirugía mínima; XML OK; **1** sola ocurrencia). **CICLO DE LOTES COMPLETO (1–5) + verificación en vivo hecha (§3.8)** ⇒ turno al **Verificador**
   (una sola pasada, al final).
   Añadida **T10 `[pantalla]` (Lote 5)** por **regresión de T4** (se perdió el campo `confirm_exception`, que
   `action_assign_lot_bulk` exige con política ≠ `warn` ⇒ callejón sin salida; ver §3.7).
@@ -124,9 +124,18 @@
   pendiente.** El único rojo conocido de las pasadas es **B1 pre-existente**
   (`test_product_flow_lot_picker_ux.py:143`, ya en **H-002**), **ajeno** a §3.O.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
-- Responsable Activo (Turno): **Odoo Verificador** (paso 5 · **una sola pasada al final**). **Lotes 1–5
-  cerrados.** **Upgrade del módulo CONFIRMADO en la BD de PRUEBA** (ver arriba) ⇒ **verificación EN VIVO
-  habilitada** (puede abrir la pantalla y medir; **nunca** accionar botones con efecto: BD de PRUEBA). El
+- ✅ **VERIFICACIÓN EN VIVO HECHA (17/10-d · el Analista) — ver §3.8 (informe de mirada, con fotos en
+  `docs/evidencia/`).** Se midió en pantalla: la bandeja (**CA-1**: "Repartir lotes" NO existe; con la fila
+  marcada queda **"Asignar lote"** como **única** acción de lote) y **el contenedor por unidad** (**CA-2** 26
+  filas = 26 unidades · **CA-3** entrega/línea/unidad/lote propio + selector por fila · **CA-4** lote propio
+  visible con su `0.00` y fila vacía si no tiene existencia). **Cero escrituras** (no se pulsó `Asignar lote`).
+  **Por qué lo hizo el Analista:** el **navegador es por sesión** y la sesión del Verificador **no tenía
+  navegador** ⇒ ese fue **el único** motivo de su `no cumple`. Workaround declarado: la ventana mide 736 px ⇒
+  modo compacto nativo ⇒ se forzó `ui.isSmall=false` para medir (**H-042**, `descartado`).
+- Responsable Activo (Turno): **Odoo Verificador** (paso 5 · **pasada final de RATIFICACIÓN**). **Lotes 1–5
+  cerrados** y **verificación en vivo ya hecha y documentada** en **§3.8** (con las fotos **dentro del repo**:
+  puede previsualizarlas; y re-medir si su sesión ya tiene navegador, siguiendo §3.8). **Upgrade del módulo
+  CONFIRMADO en la BD de PRUEBA** (ver arriba). **Nunca** accionar botones con efecto (BD de PRUEBA). El
   **motor `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
 - (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
@@ -765,6 +774,85 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
 `...:TestProductFlowLotPicker`, `...:TestProductFlowLotPickerUX`, `...:TestProductFlowLotCoupledChain`,
 `...:TestLotManagement`, `...:TestPfBulkValidatePreservesLot`. Veredicto de CA-1…CA-11 (§3.5) y de que **no** se
 forzó ningún flujo nativo (`grep cr.execute|cr.commit`; `git diff` del motor **vacío**).
+
+### 3.8 Informe de mirada (VERIFICACIÓN EN VIVO) — 2026-10-17 · lo hizo el **Analista**
+
+> **Qué es esto.** La verificación en pantalla de §3.O, con números y **fotos**. La hizo el **Analista** en su
+> **sesión principal** porque **el navegador es por sesión** y la sesión del `odoo-verificador` **no tenía
+> navegador** — ese fue **el único** motivo de su `no cumple` (todo lo demás lo dio por bueno). Las fotos quedan
+> **dentro del repo** para que cualquiera las previsualice sin depender del temporal.
+
+**Entorno y honestidad de la medición**
+
+- **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**). Login: el del MCP.
+- **Cero escrituras**: **no** se pulsó ningún botón con efecto (`Recalcular` del diagrama, `Corrección automática`
+  de la bandeja ni **`Asignar lote`** del contenedor). Abrir la bandeja/el contenedor **solo** crea registros
+  transitorios (permitido por la receta `VIEW-LIVE-CHECK.md`).
+- ⚠️ **Workaround de medición declarado:** la ventana del navegador mide **736 × 724 px** ⇒ el cliente de Odoo 17
+  entra en modo **compacto** (`env.isSmall = true`) y **no pinta la columna de selección** (`list_renderer.js`
+  L271) ⇒ los botones de cabecera `display="selection"` **no aparecen**. Para medir se forzó el modo escritorio:
+  `odoo.__WOWL_DEBUG__.root.env.services.ui.isSmall = false` (+ `innerWidth/innerHeight` falsos + `resize`).
+  **Es comportamiento NATIVO de Odoo 17, no un defecto del módulo** (ver **H-042**, `descartado`); en la ventana
+  amplia del operador los botones se ven. El forzado **se pierde con cualquier recarga** ⇒ el camino UI se hizo
+  **sin recargar**.
+- **Fotos (en el repo):** `docs/evidencia/3.O_bandeja_lote_seleccion_asignar.png` (bandeja con la fila marcada y
+  el botón **"Asignar lote"**) · `docs/evidencia/3.O_contenedor_por_unidad.png` (**el contenedor por unidad**).
+
+**Camino real hasta la pantalla (el que usa el operador)**
+
+```text
+Menú "Productos" (#menu_id=3333 → server action 4512 · action_open_catalog)
+   └─ buscador (lupa) → propuesta "Producto para: X" → fila del producto
+        └─ enlace de la fila (a.o_pf_open_timeline) → "Flujo de <producto>" (diagrama)
+             └─ nodo ".o_pf_node_button" "4. ENTREGA"
+                  └─ botón ".o_pf_flow_row_action" "Solucionar – …"
+                       └─ ABRE la bandeja (printflow.flow.lot.tray)
+```
+
+**Medición 1 — bandeja `printflow.flow.lot.tray` (producto 13571 IMPRESION BANNER)**
+
+| # | Medición | Resultado |
+|---|---|---|
+| B1 | Breadcrumb / columnas | `Productos > Flujo de IMPRESION BANNER > Bandeja de lote: IMPRESION BANNER` · `Cliente · Documento · Lote sugerido · Lote propio · Existencia sugerida · Lote usado · Existencia usada · Disponible usado · Albarán` |
+| B2 | Renglones | **1** fila (`S06302/Mercancia>Customers`, lote usado `SN0001`) |
+| B3 | **"Repartir lotes"** | **NO existe**: ni el botón ni `action_split_lot_bulk` en el DOM (`hayRepartir: NO`) ⇒ **modo `split` retirado** ✅ |
+| B4 | Con la fila **marcada** | Aparecen los botones de cabecera: `Autorizar excepción` · `Autorizar lotes` · **`Asignar lote`** (`action_assign_lot_bulk`) · `Crear lote sugerido` ⇒ **UNA sola** acción de lote ✅ |
+
+⇒ **CA-1 verificado en vivo** (una sola acción de lote; el modo reparto y el `single` ya no existen).
+
+**Medición 2 — el contenedor `printflow.flow.lot.assign.bulk` ("Asignar lote en bloque")**
+
+> **Cómo se llegó (honesto):** en la bandeja del BANNER el hallazgo es de tipo **`generic_lot`**, que **no** es
+> asignable en bloque (`_BULK_ASSIGNABLE_KINDS = ('missing_move', 'pending_order')`) ⇒ al pulsar "Asignar lote"
+> responde el aviso *"No había entregas sin lote asignables en la selección…"* (**H-041**, `abierto`; el aviso es
+> amigable y **no escribe**). Para medir el contenedor se abrió la bandeja del producto **DTF** (estado
+> `lot_missing`, **25 filas asignables**) invocando **la MISMA acción pública** que usa el botón "Solucionar" del
+> panel — `printflow.product.flow.action_run_pf_plan(cause='lot_missing', which='solution', product_id=13797)` —
+> se **marcaron todas** las filas y se pulsó **"Asignar lote"**.
+
+| # | Medición (en pantalla) | Resultado |
+|---|---|---|
+| C1 | Título / acción | **"Asignar lote en bloque"** (`printflow.flow.lot.assign.bulk`) |
+| C2 | Cabecera "SELECCIÓN" | Producto `DTF` · Origen `Asignación en bloque: DTF (26 entrega(s))` · Unidades a entregar `71,820000` · Ubicación `WH/Existencia/Mercancía` · **Unidades por asignar `26`** · Filas omitidas `6` |
+| C3 | Microcopy | *"Cada fila es una unidad (un movimiento de la entrega = una línea de pedido). **26 unidades por asignar = 71.82 unidades a entregar**."* |
+| C4 | **Tabla de UNIDADES** | **26 renglones** (una fila = **una** unidad/movimiento), columnas `# · Entrega · Línea de pedido · Unidad · Lote propio · Existencia · Lote a asignar · Demanda · Resultado · Nota` |
+| C5 | Muestras de fila | ① `Movimiento WH/PDV/05797 · Shop/17727/Mercancia>Customers · Demanda 1,000000 · Pendiente` · ② `Entrega WH/OUT/02338 · S02504 - DTF (FUNDACION ESPERANZA VENEZUELA) · Unidad S02504/Mercancia>Customers · **Lote propio S02504-L3955** · Existencia **0,000000** · Lote a asignar **(vacío)** · Demanda 19,000000 · Pendiente` · ③ ídem con `S02504-L3956` |
+| C6 | Resultado inicial | **26 / 26** en `Pendiente` (ninguna unidad pre-asignada) |
+| C7 | Tabla informativa de LOTES | `Lote · Existencia · Reservado · Disponible · Rol` (fila `SN000001`: `0,206000 / 0,206000 / 0,000000`) — **informativa**, ya sin marcas de decisión (D4) |
+| C8 | Botones del modal | `Asignar lote` (`action_assign_lot_bulk`) · `Cancelar` (**no se pulsó `Asignar lote`**: escribe) |
+
+⇒ **CA-2** ✅ una fila **por unidad/movimiento** (26 filas = 26 unidades, demanda **sumada** por fila) ·
+**CA-3** ✅ cada fila muestra entrega · línea de pedido · unidad · lote propio con su existencia + **selector por
+fila** · **CA-4** ✅ el lote propio se ve con su existencia `0,00` y la fila llega **vacía** cuando ese lote no
+tiene existencia (aquí `S02504-L3955/3956` = 0) — exactamente **D3/D4**.
+
+**Lo que NO se verificó en vivo (declarado a propósito)**
+
+- **CA-5** (aplicar: `assigned` + `stock.move.line.lot_id` correcto) y **CA-7** (parcial por fila): **escriben
+  inventario** ⇒ no se pulsan en una BD de PRUEBA desde la verificación. Quedan cubiertos por el test del camino
+  nuevo (**`TestProductFlowLotAssignBulkPerMove` 9/9 verde**), con regresión real probada (revertir T2/T3 ⇒ fallan).
+- **CA-6** (motivo obligatorio + chatter): el campo `confirm_exception` y el motivo están **en el form** (T10
+  restituido); su efecto **no** se disparó por lo mismo (escribe).
 
 ## 3.N (ANEXO · TAREA CERRADA) — Reparto multi-lote en bloque (H-037 · H-036)
 
