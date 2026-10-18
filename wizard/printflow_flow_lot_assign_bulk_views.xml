@@ -118,6 +118,13 @@
                 <group string="Motivo de la asignación" col="1">
                     <field name="reason" nolabel="1" required="1"
                            placeholder="¿Por qué se asigna este lote a cada unidad?"/>
+                    <!-- Restituido (T10 · regresión de T4): la acción
+                         ``action_assign_lot_bulk`` EXIGE este check cuando la
+                         política de excepción es distinta a ``warn`` (CA-6).
+                         Sin él, una política estricta deja al operador sin
+                         forma de confirmar desde la UI. -->
+                    <field name="confirm_exception"
+                           help="La política vigente exige confirmar la excepción."/>
                     <div class="text-muted">
                         El motivo es OBLIGATORIO y queda en la bitácora de cada
                         documento. La asignación requiere jefe de

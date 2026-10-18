@@ -100,7 +100,9 @@
   **Lote 4 (T9) `[motor]` ✅ CERRADO** (detalle `..._assign_bulk_result.py` al grano **por unidad** **4/4**;
   `..._pending_order_assign.py` **sin cambios** —usa el selector por documento—; candados de bandeja/picker
   **delta = NINGUNO**; pasada de **110** tests ⇒ **1 rojo pre-existente B1/H-002**, ajeno). Lote en curso:
-  **Lote 5 (T10) `[pantalla]`**.
+  **Lote 5 (T10) `[pantalla]` ✅ CERRADO** (restituido `confirm_exception` en el form del contenedor: **+1 campo**,
+  cirugía mínima; XML OK; **1** sola ocurrencia). **CICLO DE LOTES COMPLETO (1–5)** ⇒ turno al **Verificador**
+  (una sola pasada, al final).
   Añadida **T10 `[pantalla]` (Lote 5)** por **regresión de T4** (se perdió el campo `confirm_exception`, que
   `action_assign_lot_bulk` exige con política ≠ `warn` ⇒ callejón sin salida; ver §3.7).
   Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR (Lote 3) → adaptar (Lote 4) → T10 (Lote 5)**.
@@ -119,9 +121,10 @@
   El único rojo de esa pasada es **B1 pre-existente** (`test_product_flow_lot_picker_ux.py:143`, ya en **H-002**),
   **ajeno** a §3.O.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
-- Responsable Activo (Turno): **Odoo Vistas** (paso 4 · **Lote 5 `[pantalla]` T10** = restituir el campo
-  `confirm_exception` en el form del contenedor; **camino rápido §4.1**: 1 archivo, sin decisión de diseño).
-  **Lotes 1–4 cerrados.** El **motor `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
+- Responsable Activo (Turno): **Odoo Verificador** (paso 5 · **una sola pasada al final**). **Lotes 1–5
+  cerrados.** **Bloqueo declarado para la verificación EN VIVO:** el módulo **no está actualizado en la BD de
+  PRUEBA** (ver la observación de cierre más arriba) ⇒ el *informe de mirada* necesita el **`-u`** previo. El
+  **motor `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
 - (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
   en git; test nuevo `TestProductFlowLotAssignBulkSplit` **8/8 verde** y **regresión real de T1** comprobada
@@ -723,7 +726,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
 
 #### Lote 5 (T10) — `[pantalla]` · **Camino rápido (§4.1)**: restituir la confirmación de excepción (regresión de T4)
 
-- [ ] **T10 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: restituir el campo `confirm_exception`.**
+- [x] **T10 — `wizard/printflow_flow_lot_assign_bulk_views.xml`: restituir el campo `confirm_exception`.**
   - **Motivo (gap reportado por el Lote 2, verificado por el Analista):** el form **anterior** traía
     `confirm_exception` (junto a `lot_id` y `confirm_partial`); el form **nuevo** de T4 **no lo pinta**, pero
     `action_assign_lot_bulk` (T2) lo **exige** cuando la política de excepción ≠ `'warn'` (CA-6) ⇒ con una política
@@ -6614,4 +6617,26 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   **Plan §3.O · Lote 4 (T9) COMPLETO (0 pendientes).** **Turno → siguiente: Lote 5 (T10) `[pantalla]`
   (`odoo-vistas`, sesión NUEVA):** restituir `confirm_exception` en el form del contenedor (regresión de T4).
   **Pendiente del dueño:** reiniciar/actualizar el 8071 (`-u printflow_gestion_inventario`).
+- [2026-10-17 · Odoo Vistas] **Lote 5 (T10) `[pantalla]` · camino rápido §4.1 · COMPLETO (0 pendientes).**
+  Tarea: restituir `confirm_exception` en el form del contenedor (regresión de T4). **1 archivo, sin decisión
+  de diseño.**
+  (1) **Modificado** `wizard/printflow_flow_lot_assign_bulk_views.xml`: dentro del `<group string="Motivo de la
+  asignación" col="1">`, se AÑADIÓ `<field name="confirm_exception" help="La política vigente exige confirmar la
+  excepción."/>` **después** de `reason` (+ comentario XML breve con el motivo). **Nada más**: no se tocó ningún
+  otro campo, grupo, ni el `<footer>`; no se tocó `confirm_partial` (retirado a propósito en T6 — la parcial se
+  reporta por fila, CA-7). El campo **ya existe** en el modelo `printflow.flow.lot.assign.bulk`
+  (`printflow_flow_lot_assign_bulk.py` L103-106, Boolean *"Confirmo la excepción"*), que la acción
+  `action_assign_lot_bulk` exige cuando la política ≠ `'warn'` (CA-6) ⇒ era una **regresión de T4** (callejón sin
+  salida para el operador con política estricta), no un campo nuevo.
+  *Evidencia:* `python -c "xml.dom.minidom.parse(...)"` ⇒ **XML OK**; `grep confirm_exception` sobre la vista ⇒
+  **1** ocurrencia. **Métricas de diseño (§2):** archivo **8634** chars · **4** `<div>` · **2** `colspan` · **6**
+  `<group>` · **1** `help` · línea de texto más larga **204** chars. Mi delta es **+1 campo y +1 comentario**;
+  el tamaño por encima del presupuesto del core (~6K) es **PRE-EXISTENTE de T4** (3 paneles informativos), **no**
+  de esta tarea — **observación para el Analista**, no se corrige aquí (T10 dice "nada más").
+  *Restricciones:* ✅ código sí, datos no — **0** escrituras a `Ciber Estudios 2015 RESTAURADA` (solo se editó un
+  XML); ✅ motor `x_product_dimensional_pricing` **sin cambios**; ✅ no se forzó ningún flujo nativo.
+  *Desviaciones:* **ninguna** (la vista no se pudo abrir en navegador: no se reinició Odoo/`-u` por regla §6
+  ⇒ **sin verificación en vivo**, la hace el `odoo-verificador` al cerrar el ciclo, junto con CA-6).
+  **Plan §3.O: Lotes 1–5 CERRADOS. Ciclo completo para el Verificador.**
+  **Pendiente del dueño:** reiniciar/actualizar el 8071 (`-u printflow_gestion_inventario`) y probar el camino.
 
