@@ -90,7 +90,7 @@
   **H-040** (eje centrado en el LOTE, no en la ORDEN/UNIDAD), y **CIERRA H-034** (una entrega con 2 unidades = 2
   filas). **Decidido por el dueño (D1/D2):** grano = **MOVIMIENTO** · se **retiran los DOS modos** y queda **UNA**
   acción **"Asignar lote"**. Ver **§3.O** (contrato §3.3 completo + CA-1…CA-11 + qué se retira).
-- Tarea Activa: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
+- Tarea Activa: **NINGUNA — §3.O CERRADA y ratificada (`cumple`)** (ver el CIERRE, abajo). Antes: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
   **Lote 1 (T1–T3) `[motor]` ✅ CERRADO** (dev: T1–T3 `[x]`; 41/41 candados de bandeja/pending/**picker** verdes).
   **Lote 2 (T4–T5) `[pantalla]` ✅ CERRADO** (vistas: 1 solo form por unidad, form del reparto borrado, botón
   re-rotulado; **verificación en vivo HECHA (§3.8)**).
@@ -132,7 +132,13 @@
   **Por qué lo hizo el Analista:** el **navegador es por sesión** y la sesión del Verificador **no tenía
   navegador** ⇒ ese fue **el único** motivo de su `no cumple`. Workaround declarado: la ventana mide 736 px ⇒
   modo compacto nativo ⇒ se forzó `ui.isSmall=false` para medir (**H-042**, `descartado`).
-- Responsable Activo (Turno): **Odoo Verificador** (paso 5 · **pasada final de RATIFICACIÓN**). **Lotes 1–5
+- ✅ **CIERRE DEL CICLO (compuerta §4.3) — turno: NINGUNO (TAREA CERRADA).** `odoo-verificador` (pasada final de
+  ratificación) = **`cumple`** (CA-1…CA-11, **sin hallazgos**): suite **671** tests con **8 rojos pre-existentes
+  y ajenos** (B1/H-002 · H-035 · H-038) ⇒ **delta 0**; `TestProductFlowLotAssignBulkPerMove` **9/9**; **residuo 0**
+  del `single`/`split`; **motor sin diff imputable**. Push: `25c27ab..865fda2` en `origin/main` (incluyó el
+  `a3e49e1` que estaba local). **Pendiente del dueño (funcional, no bloqueante):** probar el camino en su ventana
+  amplia (Productos → producto → Flujo → **ENTREGA** → *Solucionar* → bandeja → marcar filas → **Asignar lote**).
+- (Historial · turno previo) Responsable Activo (Turno): **Odoo Verificador** (paso 5 · **pasada final de RATIFICACIÓN**). **Lotes 1–5
   cerrados** y **verificación en vivo ya hecha y documentada** en **§3.8** (con las fotos **dentro del repo**:
   puede previsualizarlas; y re-medir si su sesión ya tiene navegador, siguiendo §3.8). **Upgrade del módulo
   CONFIRMADO en la BD de PRUEBA** (ver arriba). **Nunca** accionar botones con efecto (BD de PRUEBA). El
@@ -304,10 +310,11 @@ flowchart TD
 | 🟢 Verde | RUEDAS | Piezas intercambiables (widgets, vistas, options) | Sí, es lo normal |
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
 
-## 3.O (TAREA ABIERTA) — Asignación de lote POR ORDEN: el operador decide qué caja va a qué unidad (H-039 · H-040 · cierra H-034)
+## 3.O (ANEXO · TAREA CERRADA) — Asignación de lote POR ORDEN: el operador decide qué caja va a qué unidad (H-039 · H-040 · cierra H-034)
 
 > **Turno:** Odoo Analista (apertura · paso 1) → **Odoo Planificador** (paso 2: plan COMPLETO por lotes) ✅
-> **Estado:** ⏳ **ABIERTA** — **plan COMPLETO escrito** en §3.7 (`T1..Tn` = **9 tareas · 4 lotes**; listo para el
+> **Estado:** ✅ **TAREA CERRADA (17/10/2026)** — `odoo-verificador` = **`cumple`** (CA-1…CA-11, **sin
+> hallazgos**, **delta 0**); **verificación en vivo = §3.8** (con fotos). — **plan COMPLETO** (§3.7) **ejecutado en 5 lotes** (**9 tareas · 4 lotes**; desde el primer lote
 > primer lote `[motor]` → `odoo-dev`). **Autorización del dueño: SÍ (2026-10-17)** —
 > *"aplica las acciones recomendadas"* (D1 = grano por MOVIMIENTO · D2 = retirar los dos modos y dejar UNA sola
 > acción centrada en las órdenes).
@@ -6730,4 +6737,25 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   ⇒ **sin verificación en vivo**, la hace el `odoo-verificador` al cerrar el ciclo, junto con CA-6).
   **Plan §3.O: Lotes 1–5 CERRADOS. Ciclo completo para el Verificador.**
   **Pendiente del dueño:** reiniciar/actualizar el 8071 (`-u printflow_gestion_inventario`) y probar el camino.
+- [2026-10-17 · Odoo Analista] **CIERRE §3.O — asignación de lote POR ORDEN (grano = MOVIMIENTO)**: ciclo de
+  **5 lotes COMPLETO** (`d1a1bc5` Lote 1 · `982aeb4` Lote 2 · `9414f02`+`b73c218` Lote 3 · `e9f05fc` Lote 4 ·
+  `25c27ab` Lote 5). **VERIFICACIÓN EN VIVO hecha por el Analista** (el navegador es **por sesión** y la sesión
+  del Verificador no lo tenía ⇒ ese fue **el único** motivo de su `no cumple`): **§3.8** (informe de mirada con
+  números + **2 fotos dentro del repo**, `docs/evidencia/`) ⇒ **CA-1** (bandeja: "Repartir lotes" **no existe**;
+  con la fila marcada queda **"Asignar lote"** como **única** acción de lote) · **CA-2/CA-3/CA-4** (contenedor:
+  **26 filas = 26 unidades**, columnas entrega·línea·unidad·lote propio, selector por fila, lote propio con su
+  `0,00` y fila vacía si no tiene existencia). **Cero escrituras** (no se pulsó "Asignar lote": escribe).
+  **Hallazgos:** **H-034**, **H-039** y **H-040** → `resuelto` (evidencia en §3.8); **H-041** (`abierto`: el botón
+  de lote se ofrece en selecciones no asignables ⇒ **avisa**, no escribe) y **H-042** (`descartado`: en ventana
+  angosta Odoo 17 no pinta la columna de selección — es **NATIVO**, no del módulo).
+- [2026-10-17 · Odoo Verificador] **Pasada final de ratificación = `cumple`** (CA-1…CA-11), **sin hallazgos**.
+  Suite: **671** tests ⇒ **8 rojos, TODOS pre-existentes (B1/H-002 · H-035 · H-038)** ⇒ **delta = 0**;
+  `TestProductFlowLotAssignBulkPerMove` **9/9 verde**; **residuo 0** del `single`/`split`; **motor sin diff
+  imputable** (último mtime **15/10 00:10**). Sin navegador en su sesión ⇒ **ratificó sobre §3.8 y las fotos** y
+  lo declaró. **CA-5/CA-6/CA-7** (aplicar el lote) **no** se dispararon en vivo (escriben inventario): cubiertos
+  por test.
+- [2026-10-17 · Odoo Analista] **CIERRE DEL CICLO (compuerta §4.3)**: §3.O pasa a **ANEXO · TAREA CERRADA**;
+  turno devuelto a **NINGUNO**. Push: `25c27ab..865fda2` (incluyó `a3e49e1`) en `origin/main`.
+  **Pendiente del dueño (funcional, no bloqueante):** probar el camino en su ventana amplia
+  (Productos → producto → Flujo → ENTREGA → Solucionar → bandeja → marcar filas → **Asignar lote**).
 
