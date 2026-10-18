@@ -622,7 +622,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
 
 #### Lote 3 (T6–T8) — `[motor]` · Retiro del residuo (sin residuo ni tests rotos) + test del camino nuevo
 
-- [ ] **T6 — Retiro COMPLETO del modo retirado: `wizard/printflow_flow_lot_assign_bulk.py` +
+- [x] **T6 — Retiro COMPLETO del modo retirado: `wizard/printflow_flow_lot_assign_bulk.py` +
       `wizard/printflow_flow_lot_candidate.py`.**
   - `printflow_flow_lot_assign_bulk.py`: **BORRAR** `mode` (campo y valor), `split_note`, `_compute_split_note`,
     `lot_id` (del contenedor), `_pf_selected_lot`, `_pf_check_coverage`, `_pf_split_lots`,
@@ -648,7 +648,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
     selector por documento (`test_product_flow_lot_picker*.py`) **verdes** (CA-8) y `git diff` de
     `C:\odoo_custom\x_product_dimensional_pricing` **vacío** (CA-9).
 
-- [ ] **T7 — Test NUEVO del camino por unidad: `tests/test_product_flow_lot_assign_bulk_per_move.py` (+
+- [x] **T7 — Test NUEVO del camino por unidad: `tests/test_product_flow_lot_assign_bulk_per_move.py` (+
       `tests/__init__.py`).**
   - Partir de la MISMA base/helpers de `tests/test_product_flow_lot_assign_bulk.py` (`TransactionCase`;
     `@tagged('post_install', '-at_install')`; `_product`, `_lot`, `_stock`, `_outgoing`, `_open_tray`, `_user`,
@@ -682,7 +682,7 @@ escritura de cada fila reutiliza el camino **NATIVO ADITIVO** que ya existe
     (sin expandir a movimientos) `test_ca2` **falla** con 1 fila en vez de 2; si se revierte T2 (sin selector por
     fila) `test_ca5` **falla**. Dejarlo escrito en la bitácora.
 
-- [ ] **T8 — Retiro/adaptación de los tests de los modos retirados (parte 1).**
+- [x] **T8 — Retiro/adaptación de los tests de los modos retirados (parte 1).**
   - **RETIRAR** `tests/test_product_flow_lot_assign_bulk_split.py` (el modo `split` ya no existe) y su import en
     `tests/__init__.py`. **SE RETIRA del ciclo §3.N** (T8 del anexo).
   - **ADAPTAR** `tests/test_product_flow_lot_assign_bulk.py` al contrato por fila: sustituir
@@ -6458,4 +6458,98 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   sitúa la **verificación en vivo del `odoo-verificador` una sola vez, al final del ciclo** (tras los lotes 3–4).
   **Pendiente del dueño:** `-u printflow_gestion_inventario` en el 8071 (recarga de vistas) cuando lo indique el
   Analista. **Turno → siguiente: Lote 3 (T6–T8) `[motor]` (`odoo-dev`).**
+- [2026-10-17 · Odoo Dev] **§3.O · Lote 3 `[motor]` (T6–T8) COMPLETO.** Retiro verificado del residuo del modo
+  retirado + test NUEVO del camino POR UNIDAD (una fila = un movimiento = su lote) + retiro/adaptación de los tests
+  de los modos viejos. Fuente: `odoo-impreven` / `Ciber Estudios 2015 RESTAURADA` (**solo lectura**: no se le
+  ejecutó `-u` ni tests). Ruta escrita: `C:\odoo_custom\printflow_gestion_inventario`. Motor
+  `x_product_dimensional_pricing`: **no se tocó** (solo se LEYÓ `models/sale_order_line.py:160-174` para confirmar
+  que `_get_exclusive_lot_name` no depende de cantidades). Aviso: el `git diff` del repo del motor **no** es vacío,
+  pero ese estado es **PRE-EXISTENTE** (repo del motor sin commits: todo el árbol figura modificado/untracked), así
+  que **no** se usa como evidencia de CA-9; la evidencia es que ningún archivo del motor se abrió para escritura.
+  *BD de trabajo (NUNCA la de producción):* se restauró un **clon** `pf_lote3_verif` desde `pg_dump` de la BD de
+  PRUEBA y TODA la evidencia (`-u` + tests) se tomó ahí; el clon se **elimina** al cerrar el lote. La BD de PRUEBA
+  quedó con **0 escrituras**.
+  *Archivos (1 nuevo, 3 modificados, 1 borrado):*
+  (1) **T6 — sin código nuevo en este turno: se VERIFICÓ el retiro que dejó la sesión cortada.**
+  `wizard/printflow_flow_lot_assign_bulk.py` ya NO tiene `mode`, `split_note`, `_compute_split_note`, `lot_id` (del
+  contenedor), `_pf_selected_lot`, `_pf_check_coverage`, `_pf_split_lots`, `_pf_check_split_coverage`,
+  `_pf_log_split_document`, `action_split_lot_bulk` ni `confirm_partial` (y `_pf_populate` ya recibe solo
+  `records`); `wizard/printflow_flow_lot_candidate.py` ya NO tiene `is_in_split`: `_compute_is_picked` depende solo
+  de `picker_id.lot_id` + `lot_id`, `_pf_enforce_single_selection` espeja SOLO sobre `picker_id` (el contenedor no
+  espeja nada) y el docstring declara las DOS superficies (selector + tabla informativa). `grep -E
+  "is_in_split|split_note|action_split_lot_bulk|_pf_split_|_pf_check_coverage|_pf_log_split_document"` sobre
+  `wizard/` ⇒ **0** en el contenedor y en el candidato. Lo que sí sobrevive es de OTRAS superficies y se conserva a
+  propósito: `_pf_selected_lot` de `printflow_flow_lot_picker.py` y `_pf_split_target_move` de
+  `printflow_product_flow.py` (los consume el camino VIVO) y `_pf_split_line_commands` del wizard de diagnóstico
+  (parte líneas de pedido, ajeno).
+  (2) **T7 NUEVO** `tests/test_product_flow_lot_assign_bulk_per_move.py` (`TestProductFlowLotAssignBulkPerMove`,
+  **9 casos**, `@tagged('post_install','-at_install')`): CA-1 (superficie única: `mode`/`split_note`/`lot_id`/
+  `confirm_partial` fuera del contenedor e `is_in_split` fuera del candidato), CA-2 (**cierra H-034**: 2 movimientos
+  ⇒ 2 `line_ids` con 2 `move_id` distintos y `demand_qty = 1` cada una), CA-3/CA-4 (lote propio por fila + pre-llenado
+  SOLO si tiene existencia; el vacío llega vacío y visible), CA-5 (2 lotes elegidos uno por fila ⇒ 2/2 reservado,
+  cada movimiento con SU lote), CA-6 (guardia de permisos al ABRIR y al EJECUTAR, motivo obligatorio, política ≠
+  `warn` sin `confirm_exception`), CA-7 (la fila parcial no frena a la otra; la fila sin lote queda `skipped` y no
+  escribe), CA-10 (abrir/poblar el contenedor no altera `stock.quant`/`stock.lot`/`stock.move`) y el **candado** de
+  SQL crudo sobre los archivos tocados (`cr.execute(`/`cr.commit(`).
+  **Ajuste necesario del TEST (no del motor):** los helpers heredados creaban los 2 movimientos con
+  `sale_line_id = False`; `sale_stock` agrega `sale_line_id` a `_prepare_merge_moves_distinct_fields`, así que dos
+  movimientos IDÉNTICOS se **fusionan** en uno y el caso medía 1 fila. El camino por unidad es "una unidad = una
+  línea de pedido" ⇒ CA-2/CA-5/CA-7/CA-10 crean **líneas de pedido distintas** (`_sale_lines(count=2)`) y las pasan a
+  `_outgoing(...)`: el albarán conserva sus **2 movimientos** y el test mide lo que debe medir.
+  (3) **T8** RETIRADO `tests/test_product_flow_lot_assign_bulk_split.py` (`git rm`) y su import en
+  `tests/__init__.py` (sustituido por el registro del test nuevo, con el comentario del motivo **H-039/H-040 ·
+  cierre H-034**). ADAPTADO `tests/test_product_flow_lot_assign_bulk.py`: `bulk.lot_id = lot.id` ⇒ **lote por FILA**
+  (`line.lot_id`); `test_ca4_partial_requires_confirmation` REEMPLAZADO por `test_ca4_partial_is_reported_per_row`
+  (ya no existe el check global de parcial) y `test_ca4_scarce_lot_reports_error_on_starved_destination`
+  renombrado/adaptado a `test_ca4_scarce_lot_reports_error_on_starved_row` (clasificación POR FILA con nota).
+  **Ningún test quedó en `skip`.** `grep -E "is_in_split|action_split_lot_bulk|split_note"` sobre `tests/` ⇒ solo
+  las aserciones del test NUEVO (que comprueban justamente su ausencia).
+  (4) **Desviación DEV-1 (declarada, mano `[motor]`)** — `wizard/printflow_flow_lot_assign_bulk_line.py`: el dominio
+  de `lot_id` pasó de `bulk_id.product_id`/`bulk_id.candidate_lot_ids` a
+  `parent.product_id`/`parent.candidate_lot_ids`. **Motivo:** con la ruta `bulk_id.` el módulo **NO CARGABA**
+  (`Field 'bulk_id' used in domain of python field 'lot_id' … must be present in view but is missing`): Odoo 17
+  exige que el campo del prefijo esté pintado en la sub-vista. La ruta `parent.` es el patrón NATIVO del core
+  (`test_domain_on_field_in_subview_with_parent`) y la semántica es **IDÉNTICA** (solo lotes con existencia del
+  producto, D4); el contenedor ya pinta `product_id` y `candidate_lot_ids`. Se resuelve en Python porque el árbol de
+  T4 (vista) **no se tocó**; queda a ratificación del Analista / `odoo-vistas`.
+  *Evidencia (clon `pf_lote3_verif`):* `py_compile` de los `.py` tocados ⇒ **exit 0**;
+  `-u printflow_gestion_inventario` ⇒ **sin error de carga** (tras DEV-1).
+  Corrida acotada del lote (antes de añadir el candado de SQL crudo):
+  `--test-tags "/printflow_gestion_inventario:TestProductFlowLotAssignBulkPerMove,
+  /printflow_gestion_inventario:TestProductFlowLotAssignBulk"` ⇒ **exit 0**, **0 failed / 0 error(s) de 18**
+  (`PerMove` **8/8** + `Bulk` adaptado **10/10**). Pasada FINAL (ya con el candado = 9.º caso de `PerMove`):
+  las MISMAS 2 clases (19 tests) + el set de candado del picker (`TestProductFlowLotPicker`, `…Candidates`,
+  `…Component`, `…Exception`, `TestPickerAuthorizeSharedLot`, `TestFlowLotPickerNegativeReserved`, `…PickerUx`)
+  ⇒ **exit 1**, **1 failed / 0 error(s) de 49**; **las 19 del lote, VERDES**. El ÚNICO rojo es
+  **PRE-EXISTENTE y AJENO (delta = 0, B1)**:
+  `TestProductFlowLotPickerUx.test_own_and_current_lots_are_listed_and_labeled`
+  (`test_product_flow_lot_picker_ux.py:143`, `AssertionError: 6.0 != 8.0 within 7 places (2.0 difference)`), ya
+  documentado en **H-002** y en las bitácoras de los lotes anteriores (§3.K · O-4). Todos los demás candados VERDES.
+  *Regresión REAL, no decorativa (lo que exige T7), con reversiones TEMPORALES y restauración verificada:*
+  (a) **T3 revertido** (`_pf_bulk_rows`: `for move in moves:` ⇒ `moves[:1]`, sin expandir a movimientos) ⇒
+  `test_ca2_two_moves_of_one_delivery_are_two_rows` **FALLA**: `AssertionError: 1 != 2` (**1 failed / 0 error de 1**):
+  el contenedor trae 1 fila en vez de 2.
+  (b) **T2 revertido** (el contenedor decide UN solo lote para todas las filas — el gesto pre-T2 "una caja para
+  todas") ⇒ `test_ca5_per_row_lots_cover_both_moves` **FALLA**: `AssertionError: '2 asignadas' not found in
+  '1 asignadas · 0 parciales · 0 omitidas · 1 con error.'` (**1 failed / 0 error de 1**): la segunda unidad se queda
+  sin su lote.
+  Los dos archivos se restauraron desde respaldo y se **verificó el SHA256** contra el original
+  (`printflow_flow_lot_tray.py` = `DCDE79B7…505BB`; `printflow_flow_lot_assign_bulk.py` = `5494CC25…7F65C`): **en
+  disco no quedó ningún cambio** de las reversiones (solo los cambios declarados de este lote).
+  *Restricciones:* ✅ sin `cr.execute` de escritura ni `cr.commit()`; ✅ **no** se forzó ningún flujo nativo (la
+  ÚNICA escritura sigue siendo `_pf_assign_lots_to_document` → `stock.move._pf_reassign_lots` → primitivas NATIVAS
+  del motor: **0** `stock.quant` escritos a mano, **0** `stock.move` creados fuera de un picking, **0** estados
+  forzados); ✅ motor `x_product_dimensional_pricing` **sin cambios** (solo lectura); ✅ **código sí, datos no** —
+  **0** registros de `Ciber Estudios 2015 RESTAURADA` escritos.
+  *Reportes (fuera de alcance; NO se toca):* (R-1) `tests/test_product_flow_lot_assign_bulk_result.py` sigue usando
+  `bulk.confirm_partial`/`bulk.lot_id` ⇒ **esperado en ROJO hasta T9 (Lote 4)**. (R-2) El CA-4 por fila del set
+  adaptado y el CA-7 del test nuevo cubren lo mismo desde dos superficies: se conservan ambos porque así lo manda el
+  plan (T8 el primero, T7 el segundo); si el Analista quiere deduplicar, es tarea de retiro. (R-3) En la BD de
+  PRUEBA el esquema del contenedor seguía **viejo** (`mode`/`lot_id`/`confirm_partial` en `fields_get`) porque el
+  último `-u` real de esa BD **nunca completó** (rollback por el error de vista); el `-u` correcto lo debe correr el
+  dueño.
+  **Plan §3.O · Lote 3 (T6–T8) COMPLETO (0 pendientes).** **Turno → siguiente: Lote 4 (T9) `[motor]` (`odoo-dev`,
+  sesión NUEVA).** Ojo: **T10** (`[pantalla]`, §3.O · Lote 5) sigue PENDIENTE por el gap de `confirm_exception` que
+  reportó `odoo-vistas` en el Lote 2.
+  **Pendiente del dueño:** reiniciar/actualizar el 8071 (`-u printflow_gestion_inventario`).
 

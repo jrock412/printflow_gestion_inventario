@@ -164,10 +164,11 @@ from . import test_product_flow_lot_pending_order_assign
 # la notificación (una fila por destino, incluidas las omitidas, con su motivo) y
 # la ranura "Selección" declara su unidad (entregas vs unidades). CA-3/CA-4.
 from . import test_product_flow_lot_assign_bulk_result
-# H-037/H-036: el MODO reparto del contenedor cubre la demanda de las entregas
-# sin lote con VARIOS lotes en UNA pasada (reserva ADITIVA NATIVA, sin perder
-# ninguno) y "Incluir" es multi-tick sin tocar la selección ÚNICA. CA-1..CA-8.
-from . import test_product_flow_lot_assign_bulk_split
+# H-039/H-040 · cierra H-034: la asignación en bloque es POR UNIDAD (cada fila
+# es un movimiento = una unidad / línea de pedido) con SU selector de lote; los
+# modos `single` ("un lote para todo") y `split` ("Repartir lotes") se retiraron.
+# CA-1..CA-10.
+from . import test_product_flow_lot_assign_bulk_per_move
 # H-030: el "validar entregas en lote" PRESERVA la reserva de lote EXCEPTUADA por
 # el operador (la rama EXCLUSIVA del motor ya no la des-reserva); el motor queda
 # SIN CAMBIOS (solo se hereda ``stock.move``). CA-1/CA-2/CA-5.

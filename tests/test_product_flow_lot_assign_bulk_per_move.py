@@ -27,7 +27,10 @@ reserva NATIVA que dispara el contenedor con su guardia y su motivo): crea sus
 propios productos/albaranes y ``TransactionCase`` hace rollback al terminar.
 """
 
+import os
+
 from odoo.exceptions import UserError
+from odoo.modules.module import get_module_path
 from odoo.tests.common import TransactionCase, tagged
 
 # Configuración de nodos de pendientes (0 = sin tope): hace DETERMINISTA el
@@ -42,6 +45,16 @@ PARAM_NODE_PENDING_NODES = (
 # para que la única fricción de los casos base sea la que cada test monta.
 PARAM_EXCEPTION_POLICY = (
     'x_product_dimensional_pricing.pf_lot_assign_exception_policy')
+
+# Candado (§0.2): el candado mira el CÓDIGO del módulo, NUNCA a este propio
+# archivo de test (auditarse a sí mismo lo delataría por las agujas literales).
+_MODULE = 'printflow_gestion_inventario'
+_TOUCHED_FILES = (
+    os.path.join('wizard', 'printflow_flow_lot_assign_bulk.py'),
+    os.path.join('wizard', 'printflow_flow_lot_assign_bulk_line.py'),
+    os.path.join('wizard', 'printflow_flow_lot_candidate.py'),
+    os.path.join('wizard', 'printflow_flow_lot_tray.py'),
+)
 
 
 @tagged('post_install', '-at_install')
@@ -196,7 +209,9 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
     # ==================================================================
     def test_ca2_two_moves_of_one_delivery_are_two_rows(self):
         product = self._product('BULK POR UNIDAD CA2')
-        _pick, moves = self._outgoing(product, qtys=(1.0, 1.0))
+        _order, sale_lines = self._sale_lines(product, count=2)
+        _pick, moves = self._outgoing(
+            product, qtys=(1.0, 1.0), sale_lines=sale_lines)
         self.assertEqual(len(moves), 2)
 
         tray = self._open_tray(product)
@@ -260,7 +275,9 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
         product = self._product('BULK POR UNIDAD CA5')
         lot_a = self._lot(product, 'BULK-PORUNIDAD-CA5-A')
         lot_b = self._lot(product, 'BULK-PORUNIDAD-CA5-B')
-        _pick, moves = self._outgoing(product, qtys=(1.0, 1.0))
+        _order, sale_lines = self._sale_lines(product, count=2)
+        _pick, moves = self._outgoing(
+            product, qtys=(1.0, 1.0), sale_lines=sale_lines)
         move_a, move_b = moves[0], moves[1]
         self._stock(product, 1.0, lot=lot_a)
         self._stock(product, 1.0, lot=lot_b)
@@ -301,7 +318,6 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
 
         tray = self._open_tray(product)
         rows = self._pending_row(tray)
-        manager = manager.with_user(manager)
 
         # (a) ABRIR exige jefe de taller/administrador.
         with self.assertRaises(UserError):
@@ -315,7 +331,6 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
             bulk.with_user(user).action_assign_lot_bulk()
 
         # (c) el motivo es obligatorio.
-        bulk.with_user(manager).lot_id
         bulk = bulk.with_user(manager)
         with self.assertRaises(UserError):
             bulk.action_assign_lot_bulk()
@@ -340,7 +355,9 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
         product = self._product('BULK POR UNIDAD CA7')
         lot_small = self._lot(product, 'BULK-PORUNIDAD-CA7-SMALL')
         lot_full = self._lot(product, 'BULK-PORUNIDAD-CA7-FULL')
-        _pick, moves = self._outgoing(product, qtys=(2.0, 1.0))
+        _order, sale_lines = self._sale_lines(product, count=2)
+        _pick, moves = self._outgoing(
+            product, qtys=(2.0, 1.0), sale_lines=sale_lines)
         move_partial, move_full = moves[0], moves[1]
         self._stock(product, 1.0, lot=lot_small)
         self._stock(product, 1.0, lot=lot_full)
@@ -366,7 +383,9 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
     def test_ca7_row_without_lot_is_skipped(self):
         product = self._product('BULK POR UNIDAD CA7 SKIP')
         lot = self._lot(product, 'BULK-PORUNIDAD-CA7-SKIP-LOTE')
-        _pick, moves = self._outgoing(product, qtys=(1.0, 1.0))
+        _order, sale_lines = self._sale_lines(product, count=2)
+        _pick, moves = self._outgoing(
+            product, qtys=(1.0, 1.0), sale_lines=sale_lines)
         move_touched, move_untouched = moves[0], moves[1]
         self._stock(product, 1.0, lot=lot)
 
@@ -394,7 +413,9 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
     def test_ca10_opening_writes_nothing(self):
         product = self._product('BULK POR UNIDAD CA10')
         lot = self._lot(product, 'BULK-PORUNIDAD-CA10-LOTE')
-        _pick, moves = self._outgoing(product, qtys=(1.0, 1.0))
+        _order, sale_lines = self._sale_lines(product, count=2)
+        _pick, moves = self._outgoing(
+            product, qtys=(1.0, 1.0), sale_lines=sale_lines)
         self._stock(product, 5.0, lot=lot)
         Quant = self.env['stock.quant']
         Lot = self.env['stock.lot']
@@ -415,3 +436,15 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
         self.assertEqual(
             bulk.line_ids.mapped('result'), ['pending', 'pending'])
         self.assertEqual(before, snapshot())
+
+    # ==================================================================
+    # Candado — el código tocado no usa SQL crudo (§0.2)
+    # ==================================================================
+    def test_touched_files_have_no_raw_sql(self):
+        module_path = get_module_path(_MODULE)
+        for relative in _TOUCHED_FILES:
+            target = os.path.join(module_path, relative)
+            with open(target, encoding='utf-8') as handle:
+                source = handle.read()
+            self.assertNotIn('cr.execute(', source, relative)
+            self.assertNotIn('cr.commit(', source, relative)

@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
-"""Asignación de UN lote EN BLOQUE desde la bandeja (PrintFlow · H-021).
+"""Asignación de lote EN BLOQUE POR UNIDAD desde la bandeja (PrintFlow · H-021).
 
 Custodia los criterios CA-2/CA-3/CA-4/CA-5/CA-6/CA-7/CA-9 del plan de
-"ASIGNACIÓN DE LOTE EN BLOQUE desde la bandeja":
+"ASIGNACIÓN DE LOTE EN BLOQUE desde la bandeja", ya con el grano NUEVO
+(§3.O · H-039/H-040 · cierre **H-034**): cada fila del contenedor es un
+**MOVIMIENTO** (una unidad / línea de pedido) y lleva **SU PROPIO** selector de
+lote; el modo ``single`` (un lote para toda la selección) y el modo ``split``
+("Repartir lotes") se retiraron.
 
 * **CA-2** — con N filas de entrega sin lote seleccionadas, el botón de cabecera
   abre UN solo wizard (``printflow.flow.lot.assign.bulk``) que muestra producto,
   demanda SUMADA, la tabla de candidatos (Lote · Existencia · Reservado ·
-  Disponible · Rol) y la lista de destinos; al ejecutar con UN motivo, TODOS los
-  destinos asignables quedan reservados con el lote elegido.
+  Disponible · Rol) y la lista de destinos (una fila por movimiento); al ejecutar
+  con UN motivo, TODOS los destinos asignables quedan reservados con el lote
+  elegido EN SU FILA.
 * **CA-3** — las filas NO asignables (otros tipos) se OMITEN y su conteo se
   reporta: no abortan el resto.
-* **CA-4** — si ``libre < total_demand`` y NO se marcó "Confirmo la asignación
-  parcial" se bloquea con mensaje guía y NO se escribe; con el check se asigna lo
-  disponible y se reporta.
+* **CA-4** — la parcial ya NO se bloquea en bloque (ya no existe
+  ``confirm_partial``): se asigna lo disponible y cada fila se reporta como
+  ``partial``/``error`` sin frenar a las demás (CA-7).
 * **CA-5** — sin jefe de taller/administrador, ABRIR y EJECUTAR lanzan
   ``UserError`` (``_pf_assert_can_clean``).
 * **CA-6** — sin ``reason`` ejecutar lanza ``UserError``; con política ≠ ``warn``,
@@ -24,8 +29,8 @@ Custodia los criterios CA-2/CA-3/CA-4/CA-5/CA-6/CA-7/CA-9 del plan de
   producen UNA sola asignación y el duplicado se reporta como omitido.
 
 Es de SOLO LECTURA sobre datos ajenos salvo la ÚNICA escritura del flujo (la
-reasignación NATIVA de reserva que dispara el wizard con su guardia y su motivo):
-crea sus propios productos/albaranes y ``TransactionCase`` hace rollback.
+reserva NATIVA ADITIVA que dispara el wizard con su guardia y su motivo): crea
+sus propios productos/albaranes y ``TransactionCase`` hace rollback.
 """
 
 from odoo.exceptions import UserError
@@ -47,7 +52,7 @@ PARAM_EXCEPTION_POLICY = (
 
 @tagged('post_install', '-at_install')
 class TestProductFlowLotAssignBulk(TransactionCase):
-    """El wizard en bloque asigna UN lote a la SELECCIÓN (con guardia y motivo)."""
+    """El contenedor asigna a CADA unidad (movimiento) su lote (guardia + motivo)."""
 
     @classmethod
     def setUpClass(cls):
@@ -155,7 +160,7 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         ])
 
     # ==================================================================
-    # CA-2 — el wizard asigna UN lote a TODA la selección
+    # CA-2 — el wizard asigna a CADA unidad el lote de SU fila
     # ==================================================================
     def test_ca2_bulk_assigns_lot_to_all_destinations(self):
         product = self._product('BULK CA2')
@@ -186,8 +191,11 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         self.assertTrue(candidate.is_elective, 'Con libre > 0 es elegible.')
         self.assertIn(lot, bulk.candidate_lot_ids)
 
-        # (c) ejecutar con UN motivo reserva el lote en TODOS los destinos.
-        bulk.lot_id = lot.id
+        # (c) elegir el MISMO lote en CADA fila (gesto "una caja para todas",
+        # pero decidido fila por fila) y ejecutar con UN motivo lo reserva en
+        # TODOS los movimientos.
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Asignación masiva de prueba.'
         result = bulk.action_assign_lot_bulk()
 
@@ -257,9 +265,9 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         self.assertEqual(set(bulk.line_ids.mapped('move_id')), {move})
 
     # ==================================================================
-    # CA-4 — la asignación PARCIAL exige confirmación explícita
+    # CA-4 — la parcial se reporta POR FILA (ya no hay check global)
     # ==================================================================
-    def test_ca4_partial_requires_confirmation(self):
+    def test_ca4_partial_is_reported_per_row(self):
         product = self._product('BULK CA4')
         lot = self._lot(product, 'BULK-CA4-LOTE')
         _pick, move = self._outgoing(product, 5.0)
@@ -269,16 +277,12 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         bulk = self._wizard_for(
             tray.filtered(lambda r: r.kind == 'pending_order'))
         self.assertAlmostEqual(bulk.total_demand, 5.0)
-        bulk.lot_id = lot.id
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Reparto de lo disponible.'
 
-        # libre (2) < demanda (5) y sin el check -> bloquea y NO escribe.
-        with self.assertRaises(UserError):
-            bulk.action_assign_lot_bulk()
-        self.assertFalse(move.move_line_ids.mapped('lot_id'))
-
-        # Con el check -> asigna lo disponible y lo reporta como parcial.
-        bulk.confirm_partial = True
+        # Ya NO hay bloqueo global de parcial: se reserva lo disponible (2 u) y
+        # la fila se reporta como parcial, sin frenar la corrida (CA-7).
         result = bulk.action_assign_lot_bulk()
         self.assertIn('1 parciales', result['params']['message'])
         self.assertEqual(set(bulk.line_ids.mapped('result')), {'partial'})
@@ -286,8 +290,8 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         self.assertAlmostEqual(
             sum(move.move_line_ids.mapped('quantity')), 2.0)
 
-    def test_ca4_scarce_lot_reports_error_on_starved_destination(self):
-        """Un lote que se agota tras el primer destino se REPORTA (no revienta)."""
+    def test_ca4_scarce_lot_reports_error_on_starved_row(self):
+        """Un lote que se agota tras la primera fila se REPORTA (no revienta)."""
         product = self._product('BULK CA4 ESCASO')
         lot = self._lot(product, 'BULK-CA4-ESCASO-LOTE')
         pick_a, move_a = self._outgoing(product, 3.0)
@@ -298,9 +302,10 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         pending = tray.filtered(lambda r: r.kind == 'pending_order')
         self.assertEqual(set(pending.mapped('res_id')), {pick_a.id, pick_b.id})
         bulk = self._wizard_for(pending)
-        bulk.lot_id = lot.id
+        # El MISMO lote (2 u) elegido en AMBAS filas: la 1.ª fila (FIFO) lo agota.
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Reparto FIFO del sobrante.'
-        bulk.confirm_partial = True
 
         result = bulk.action_assign_lot_bulk()
 
@@ -308,7 +313,7 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         results = set(bulk.line_ids.mapped('result'))
         self.assertIn('partial', results)
         self.assertIn('error', results)
-        # El primer destino (FIFO) se queda con lo disponible; el otro se reporta.
+        # La primera fila (FIFO) se queda con lo disponible; la otra se reporta.
         self.assertAlmostEqual(
             sum(move_a.move_line_ids.mapped('quantity')), 2.0)
         self.assertFalse(move_b.move_line_ids.mapped('lot_id'))
@@ -332,7 +337,8 @@ class TestProductFlowLotAssignBulk(TransactionCase):
 
         # EJECUTAR: el wizard vuelve a exigir la misma guardia.
         bulk = self._wizard_for(rows)
-        bulk.lot_id = lot.id
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Intento sin permiso.'
         with self.assertRaises(UserError):
             bulk.with_user(user).action_assign_lot_bulk()
@@ -351,7 +357,8 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         rows = self._open_tray(product).filtered(
             lambda r: r.kind == 'pending_order')
         bulk = self._wizard_for(rows)
-        bulk.lot_id = lot.id
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         self.assertFalse(bulk.reason)
         with self.assertRaises(UserError):
             bulk.action_assign_lot_bulk()
@@ -371,7 +378,8 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         rows = self._open_tray(product).filtered(
             lambda r: r.kind == 'pending_order')
         bulk = self._wizard_for(rows)
-        bulk.lot_id = lot.id
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Motivo con política estricta.'
         # Política ≠ ``warn`` sin el check -> bloquea.
         with self.assertRaises(UserError):
@@ -396,7 +404,8 @@ class TestProductFlowLotAssignBulk(TransactionCase):
             lambda r: r.kind == 'pending_order')
         self.assertEqual(set(rows.mapped('res_id')), {pick_a.id, pick_b.id})
         bulk = self._wizard_for(rows)
-        bulk.lot_id = lot.id
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Cierre de la asignación.'
         result = bulk.action_assign_lot_bulk()
 
@@ -444,7 +453,8 @@ class TestProductFlowLotAssignBulk(TransactionCase):
         self.assertEqual(bulk.line_ids.move_id, move)
         self.assertGreaterEqual(bulk.omitted_count, 1)
 
-        bulk.lot_id = lot.id
+        for line in bulk.line_ids:
+            line.lot_id = lot.id
         bulk.reason = 'Dedupe por movimiento.'
         result = bulk.action_assign_lot_bulk()
         self.assertIn('1 asignadas', result['params']['message'])

@@ -55,10 +55,17 @@ class PrintflowFlowLotAssignBulkLine(models.TransientModel):
         help='``stock.move`` que respalda esta UNIDAD de la entrega (una fila = '
              'un movimiento = una unidad / línea de pedido). Es lo único que se '
              'escribe al aplicar.')
+    # El dominio del selector POR FILA usa la RUTA AL PADRE (``parent.``): el
+    # contenedor (``printflow.flow.lot.assign.bulk``) declara ``product_id`` y
+    # ``candidate_lot_ids`` en su form, así el dominio resuelve en el cliente y la
+    # validación de vistas de Odoo 17 lo acepta (un dominio que apunte a
+    # ``bulk_id.<campo>`` obligaría a pintar ``bulk_id`` en la sub-vista y hoy
+    # rompe la carga del módulo). Semántica idéntica: SOLO lotes con existencia
+    # del producto (D4).
     lot_id = fields.Many2one(
         'stock.lot', string='Lote a asignar',
-        domain="[('product_id', '=', bulk_id.product_id), "
-               "('id', 'in', bulk_id.candidate_lot_ids)]",
+        domain="[('product_id', '=', parent.product_id), "
+               "('id', 'in', parent.candidate_lot_ids)]",
         help='Lote que el operador decide asignar a ESTA unidad. El desplegable '
              'solo lista lotes con existencia del producto (D4); la decisión es '
              'fila por fila, no una caja para toda la selección.')
