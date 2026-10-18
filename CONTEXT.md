@@ -93,24 +93,33 @@
 - Tarea Activa: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
   **Lote 1 (T1–T3) `[motor]` ✅ CERRADO** (dev: T1–T3 `[x]`; 41/41 candados de bandeja/pending/**picker** verdes).
   **Lote 2 (T4–T5) `[pantalla]` ✅ CERRADO** (vistas: 1 solo form por unidad, form del reparto borrado, botón
-  re-rotulado; **sin verificación en vivo todavía** — la hace el Verificador al final). Lote en curso:
-  **Lote 3 (T6–T8) `[motor]`**. Añadida **T10 `[pantalla]` (Lote 5)** por **regresión de T4** (se perdió el campo
-  `confirm_exception`, que `action_assign_lot_bulk` exige con política ≠ `warn` ⇒ callejón sin salida; ver §3.7).
+  re-rotulado; **sin verificación en vivo todavía** — la hace el Verificador al final).
+  **Lote 3 (T6–T8) `[motor]` ✅ CERRADO** (residuo **0** de los símbolos retirados; el test del `split`
+  **borrado**; `test_product_flow_lot_assign_bulk.py` adaptado; test NUEVO por unidad **8/8** con **regresión
+  real** probada: revertir T3 ⇒ `test_ca2` falla con 1 fila; revertir T2 ⇒ `test_ca5` falla). Lote en curso:
+  **Lote 4 (T9) `[motor]`** (adaptación del detalle `..._bulk_result.py` + revisión de los candados de bandeja).
+  Añadida **T10 `[pantalla]` (Lote 5)** por **regresión de T4** (se perdió el campo `confirm_exception`, que
+  `action_assign_lot_bulk` exige con política ≠ `warn` ⇒ callejón sin salida; ver §3.7).
   Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR (Lote 3) → adaptar (Lote 4) → T10 (Lote 5)**.
-- **⚠️ NOTA DE ESTADO (17/10-d · corte de red):** la **1.ª sesión del Lote 3 se cortó por red** (`getaddrinfo
-  ENOTFOUND opencode.ai`) y dejó **trabajo parcial SIN marcar y SIN verificar** en disco:
-  `wizard/printflow_flow_lot_assign_bulk.py` y `wizard/printflow_flow_lot_candidate.py` con **T6 aparentemente
-  aplicado** (`grep` de los símbolos retirados sobre `wizard/` + vistas + CSV ⇒ **0** resultados; `py_compile`
-  OK; `_compute_is_picked` ya no depende del campo borrado `bulk_id.lot_id`), y
-  `tests/test_product_flow_lot_assign_bulk_per_move.py` **creado pero NO registrado** en `tests/__init__.py`.
-  ⇒ El **Lote 3 se RELANZA en sesión NUEVA**, que debe **completar T7 (registrar el test en `tests/__init__.py` y
-  correrlo en verde), ejecutar T8** (retirar el test del `split` + adaptar `test_product_flow_lot_assign_bulk.py`)
-  y **hacer la verificación completa de T6–T8** antes de marcar `[x]`. El trabajo previo **NO se da por bueno por
-  estar en disco**: se valida.
+- ✅ **INCIDENCIA DE PROCESO RESUELTA (17/10-d · corte de red):** la **1.ª sesión del Lote 3** se cortó por red y
+  dejó trabajo parcial en disco; se aseguró en un commit `wip`, se anotó aquí su estado exacto y el lote se
+  **relanzó en sesión NUEVA**, que lo **completó y verificó** (T6–T8 `[x]`). **Sin pendientes de esa incidencia.**
+- **Ratificación del Analista — DEV-1 (desviación declarada del Lote 3):** el dominio del selector **por fila**
+  pasó de `bulk_id.` a **`parent.`** (`wizard/printflow_flow_lot_assign_bulk_line.py`) porque con `bulk_id.` el
+  módulo **no cargaba** (`Field 'bulk_id' … must be present in view`); `parent.` es el patrón **NATIVO** del core
+  para un campo de una línea y la **semántica no cambia** (mismo producto + lotes con existencia = **D4**).
+  **RATIFICADO.** *(El `odoo-vistas` solo lo mira si vuelve a tocar ese archivo.)*
+- ⚠️ **OBSERVACIÓN PARA EL CIERRE (le importa al Verificador):** en la **BD de PRUEBA** el módulo **no está
+  actualizado** (el último `-u` no completó ⇒ el esquema del contenedor arrastra el viejo). El Lote 3 verificó en
+  un **clon temporal** (`pf_lote3_verif`, creado con `pg_dump`/`pg_restore` y **eliminado** al terminar): `-u`
+  **OK** y **19/19** del lote **verdes**. ⇒ **Antes del informe de mirada hay que actualizar el módulo en 8071**.
+  El único rojo de esa pasada es **B1 pre-existente** (`test_product_flow_lot_picker_ux.py:143`, ya en **H-002**),
+  **ajeno** a §3.O.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
-- Responsable Activo (Turno): **Odoo Dev** (paso 4 · **Lote 3 `[motor]` T6–T8** = retiro del residuo + test nuevo
-  `test_product_flow_lot_assign_bulk_per_move.py` + retiro del test del `split`). **Lotes 1 y 2 cerrados.** El
-  **motor `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
+- Responsable Activo (Turno): **Odoo Dev** (paso 4 · **Lote 4 `[motor]` T9** = adaptar el detalle
+  `..._assign_bulk_result.py` al grano por unidad, revisar `..._pending_order_assign.py` y los candados de
+  bandeja/picker, y **reportar el delta**). **Lotes 1, 2 y 3 cerrados.** El **motor
+  `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
 - (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
   en git; test nuevo `TestProductFlowLotAssignBulkSplit` **8/8 verde** y **regresión real de T1** comprobada
