@@ -114,16 +114,19 @@
   módulo **no cargaba** (`Field 'bulk_id' … must be present in view`); `parent.` es el patrón **NATIVO** del core
   para un campo de una línea y la **semántica no cambia** (mismo producto + lotes con existencia = **D4**).
   **RATIFICADO.** *(El `odoo-vistas` solo lo mira si vuelve a tocar ese archivo.)*
-- ⚠️ **OBSERVACIÓN PARA EL CIERRE (le importa al Verificador):** en la **BD de PRUEBA** el módulo **no está
-  actualizado** (el último `-u` no completó ⇒ el esquema del contenedor arrastra el viejo). El Lote 3 verificó en
-  un **clon temporal** (`pf_lote3_verif`, creado con `pg_dump`/`pg_restore` y **eliminado** al terminar): `-u`
-  **OK** y **19/19** del lote **verdes**. ⇒ **Antes del informe de mirada hay que actualizar el módulo en 8071**.
-  El único rojo de esa pasada es **B1 pre-existente** (`test_product_flow_lot_picker_ux.py:143`, ya en **H-002**),
-  **ajeno** a §3.O.
+- ✅ **UPGRADE EN 8071 HECHO (17/10-d · el dueño reinició el servidor y actualizó el módulo).** El Lote 3 había
+  verificado en un **clon temporal** (`pf_lote3_verif`, `pg_dump`/`pg_restore`, **eliminado** al terminar): `-u`
+  **OK** y **19/19** del lote **verdes**. **Comprobado por el Analista sobre la BD real de PRUEBA**
+  (`odoo-impreven`, **solo lectura**): el esquema YA es el nuevo ⇒ el contenedor **NO** tiene `mode` / `split_note`
+  / `lot_id` / `confirm_partial` y **SÍ** `line_ids`, `candidate_lot_ids`, `confirm_exception`, `selection_note`;
+  el candidato **NO** tiene `is_in_split` y **SÍ** `is_selected`; la línea tiene `move_id`, `lot_id`,
+  `own_lot_name`, `own_lot_qty`, `sale_line_id`. ⇒ **La verificación EN VIVO es posible: no hay paso manual
+  pendiente.** El único rojo conocido de las pasadas es **B1 pre-existente**
+  (`test_product_flow_lot_picker_ux.py:143`, ya en **H-002**), **ajeno** a §3.O.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
 - Responsable Activo (Turno): **Odoo Verificador** (paso 5 · **una sola pasada al final**). **Lotes 1–5
-  cerrados.** **Bloqueo declarado para la verificación EN VIVO:** el módulo **no está actualizado en la BD de
-  PRUEBA** (ver la observación de cierre más arriba) ⇒ el *informe de mirada* necesita el **`-u`** previo. El
+  cerrados.** **Upgrade del módulo CONFIRMADO en la BD de PRUEBA** (ver arriba) ⇒ **verificación EN VIVO
+  habilitada** (puede abrir la pantalla y medir; **nunca** accionar botones con efecto: BD de PRUEBA). El
   **motor `x_product_dimensional_pricing` sigue SOLO LECTURA** (sin diff).
 - (Historial · turno previo) Responsable Activo (Turno): **NINGUNO — TAREA CERRADA** (17/10 · ciclo **H-037/H-036**). `odoo-verificador` =
   **`cumple`** (una sola pasada, **sin hallazgos**). Los **3 lotes** (`T1–T8`) quedaron **COMPLETOS** y asegurados
