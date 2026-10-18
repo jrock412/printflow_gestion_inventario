@@ -1,52 +1,45 @@
 # -*- coding: utf-8 -*-
-"""Asignación EN BLOQUE de lote a N entregas sin lote (PrintFlow).
+"""Asignación EN BLOQUE de lote POR UNIDAD (PrintFlow).
 
 ``TransientModel`` CONTENEDOR que convierte la SELECCIÓN de la bandeja de lote
-(``printflow.flow.lot.tray``) en una decisión masiva. Tiene DOS MODOS (``mode``):
+(``printflow.flow.lot.tray``) en una decisión masiva con **UNA sola acción**
+("Asignar lote"): el operador marca N filas de entrega sin lote, el contenedor
+abre **UNA fila por MOVIMIENTO** (una unidad = una línea de pedido) con **SU**
+selector de lote, y el par caja ↔ unidad lo decide el operador, fila por fila,
+en una sola pasada (H-039/H-040). La tabla de candidatos (Lote · Existencia ·
+Reservado · Disponible · Rol) es **INFORMATIVA**: no se marca nada en ella.
 
-* ``single`` (el de siempre): el operador marca N filas de entrega sin lote,
-  pulsa el botón de cabecera "Asignar lote" y este wizard pregunta UN lote (con
-  la tabla de candidatos: Lote · Existencia · Reservado · Disponible · Rol) y UN
-  motivo, y asigna ese lote a TODOS los destinos.
-* ``split`` (reparto, H-037): el operador pulsa "Repartir lotes", marca VARIOS
-  lotes con la columna "Incluir" y el reparto consume esos lotes —en el orden de
-  la tabla— para cubrir la demanda de los destinos, de forma ADITIVA (1
-  liberación + N reservas por la vía NATIVA). Ver ``_pf_reassign_lots`` en
-  ``models/stock_move.py``.
-
-Por qué un wizard NUEVO y no reutilizar el selector
----------------------------------------------------
+Por qué un wizard propio y no reutilizar el selector
+----------------------------------------------------
 El selector por documento (``printflow.flow.lot.picker``) está amarrado a UN
 documento por diseño (``picker_id`` obligatorio, demanda única, política de
 excepción por documento) y está cubierto por tests. Forzarlo a "varios
 documentos" ensuciaría su contrato. Este contenedor es más simple y limpio: N
-destinos (``line_ids``) + K lotes + UN motivo. El modo NO cambia los destinos ni
-los candidatos: solo el camino de DECISIÓN (un lote vs. reparto multi-lote).
+unidades (``line_ids``) + UN motivo.
 
 Cero reinvención
 ----------------
 Se REUTILIZAN las piezas EXISTENTES: el cálculo de candidatos
 (``printflow.flow.lots._pf_available_lots``, UNA lectura de ``stock.quant``), el
 modelo/vista de candidato (``printflow.flow.lot.candidate``), el ORQUESTADOR
-ÚNICO de escritura ``printflow.product.flow._pf_assign_lot_to_document`` (que
-despacha al protocolo NATIVO de reasignación), la guardia de permisos
+ÚNICO de escritura ``printflow.product.flow._pf_assign_lots_to_document`` (que
+despacha al protocolo NATIVO **aditivo** de reasignación), la guardia de permisos
 ``printflow.stock.remedy._pf_assert_can_clean`` y la política de excepción
 (``pf_lot_assign_exception_policy``, sin hardcodeo).
 
 Código sí, datos no
 -------------------
-La ÚNICA escritura del bloque es el remedio NATIVO por documento (reasignación
+La ÚNICA escritura del bloque es el remedio NATIVO por movimiento (reasignación
 de reserva). No hay ``cr.execute``/``cr.commit``, ni se escribe ``stock.quant`` /
-``stock.move`` a mano, ni se fuerza ningún estado. Los destinos NO asignables se
-OMITEN y se reportan (nunca revientan el lote).
+``stock.move`` a mano, ni se fuerza ningún estado. Las filas NO asignables y las
+que no traen lote elegido se OMITEN y se reportan (nunca revientan la corrida).
 
 Contrato::
 
     bulk = env['printflow.flow.lot.assign.bulk']._pf_populate(product, rows)
-    action = bulk.action_assign_lot_bulk()          # modo 'single'
-    bulk = env['printflow.flow.lot.assign.bulk']._pf_populate(
-        product, rows, mode='split')
-    action = bulk.action_split_lot_bulk()           # modo 'split' (H-037)
+    for line in bulk.line_ids:                     # una fila = un movimiento
+        line.lot_id = env['stock.lot'].browse(...)  # decisión del operador
+    action = bulk.action_assign_lot_bulk()
 """
 
 from odoo import _, api, fields, models
@@ -66,19 +59,11 @@ _CHATTER_MODELS = ('stock.picking', 'mrp.production')
 
 
 class PrintflowFlowLotAssignBulk(models.TransientModel):
-    """Modal que asigna UN lote (con UN motivo) a N entregas sin lote."""
+    """Modal que asigna a CADA unidad (movimiento) su lote con UN motivo común."""
 
     _name = 'printflow.flow.lot.assign.bulk'
     _description = 'Asignación de lote en bloque (PrintFlow)'
 
-    mode = fields.Selection(
-        selection=[('single', 'Un lote (el marcado)'),
-                   ('split', 'Reparto multi-lote')],
-        string='Modo', default='single', readonly=True,
-        help='Camino de DECISIÓN del contenedor: "single" asigna UN lote (el '
-             'marcado) a toda la selección; "split" reparte la demanda entre '
-             'VARIOS lotes marcados con la columna "Incluir" (H-037). El modo NO '
-             'altera destinos ni candidatos, solo el camino de decisión.')
     product_id = fields.Many2one(
         'product.product', string='Producto', required=True, readonly=True,
         ondelete='cascade')
@@ -103,7 +88,8 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
     line_ids = fields.One2many(
         'printflow.flow.lot.assign.bulk.line', 'bulk_id',
         string='Destinos',
-        help='Un destino (entrega sin lote) por fila seleccionada.')
+        help='Una fila por UNIDAD de la selección (cada fila es un '
+             '``stock.move`` = una unidad / línea de pedido).')
     candidate_ids = fields.One2many(
         'printflow.flow.lot.candidate', 'bulk_id',
         string='Lotes con existencia')
@@ -112,16 +98,8 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         'bulk_id', 'lot_id', string='Lotes elegibles',
         compute='_compute_candidate_lot_ids',
         help='Lotes con existencia libre (> 0): los únicos elegibles en el '
-             'desplegable.')
-    lot_id = fields.Many2one(
-        'stock.lot', string='Lote a asignar',
-        domain="[('product_id', '=', product_id), "
-               "('id', 'in', candidate_lot_ids)]",
-        help='Lote que el operador decide asignar a TODA la selección.')
-    confirm_partial = fields.Boolean(
-        string='Confirmo la asignación parcial',
-        help='Autoriza asignar un lote que NO cubre toda la demanda sumada; las '
-             'entregas que no alcancen quedarán parciales.')
+             'desplegable de cada unidad. Alimentan el dominio del selector POR '
+             'FILA (no hay un "lote de toda la selección").')
     confirm_exception = fields.Boolean(
         string='Confirmo la excepción',
         help='Check que exige la política de excepción configurada cuando es '
@@ -146,13 +124,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
         help='Texto VISIBLE que declara la UNIDAD de cada fila: cada fila es una '
              'UNIDAD (un movimiento de la entrega = una línea de pedido); las '
              'cifras de demanda van en UNIDADES de producto (H-031).')
-    split_note = fields.Char(
-        string='Orden del reparto',
-        compute='_compute_split_note', readonly=True,
-        help='Plan VISIBLE del reparto multi-lote: los lotes marcados con '
-             '"Incluir", en el ORDEN en que se consumen (el de la tabla) y el '
-             'total disponible frente a la demanda. Es una ESTIMACIÓN de la '
-             'tabla; la reserva REAL la decide la primitiva NATIVA por destino.')
 
     # ══════════════════════════════════════════════════════════════════════
     # CÓMPUTOS
@@ -189,48 +160,11 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
                 'm': '%.2f' % (rec.total_demand or 0.0),
             }
 
-    @api.depends('candidate_ids.is_in_split', 'candidate_ids.lot_name',
-                 'candidate_ids.available_here', 'candidate_ids.available',
-                 'total_demand')
-    def _compute_split_note(self):
-        """Plan VISIBLE del reparto (D2): lotes marcados EN ORDEN + total.
-
-        El ORDEN es el de la tabla: ``candidate_ids.filtered('is_in_split')``
-        respeta el ``_order`` del candidato (``available desc, lot_name asc``),
-        así que "lo que se ve es el orden que se aplica" (determinista). La
-        cifra por lote es la libre de la ubicación efectiva (``available_here``)
-        o la AGREGADA (``available``) cuando hay varias ubicaciones. Es una
-        estimación de la tabla, sin lecturas extra: la reserva real la decide la
-        primitiva nativa por destino.
-        """
-        for rec in self:
-            marked = rec.candidate_ids.filtered('is_in_split')
-            if not marked:
-                rec.split_note = _(
-                    'Marca en la tabla los lotes a repartir (columna '
-                    '"Incluir"): se consumen en el orden de la tabla, primero '
-                    'el de más disponible.')
-                continue
-            free_by_cand = [
-                (cand.available_here if rec.location_id else cand.available)
-                for cand in marked]
-            plan = ' · '.join(
-                '%s) %s → %.2f' % (idx, cand.lot_name, free)
-                for idx, (cand, free) in enumerate(
-                    zip(marked, free_by_cand), start=1))
-            rec.split_note = _(
-                '%(plan)s. Total disponible: %(available)s de %(demand)s '
-                'demandadas.') % {
-                'plan': plan,
-                'available': '%.2f' % sum(free_by_cand),
-                'demand': '%.2f' % (rec.total_demand or 0.0),
-            }
-
     # ══════════════════════════════════════════════════════════════════════
     # POBLADO BAJO DEMANDA
     # ══════════════════════════════════════════════════════════════════════
     @api.model
-    def _pf_populate(self, product, rows, omitted_count=0, mode='single'):
+    def _pf_populate(self, product, rows, omitted_count=0):
         """Crea el contenedor con sus destinos y sus candidatos.
 
         :param product: ``product.product`` de la selección.
@@ -239,10 +173,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
             ``scheduled_date``, ``own_lot_name`` y opcionalmente ``move_id``).
             Cada fila es UN MOVIMIENTO (una unidad / línea de pedido).
         :param int omitted_count: filas ya descartadas por el llamador (tray).
-        :param str mode: camino de decisión (``'single'`` por defecto ⇒ los
-            llamadores actuales NO cambian; ``'split'`` ⇒ reparto multi-lote).
-            El modo NO altera destinos ni candidatos, solo el camino de decisión
-            que el operador verá en el form.
         :rtype: models.Model
 
         Cada línea nace con el SNAPSHOT de su unidad (``move_id``, documento,
@@ -328,7 +258,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
 
         skipped = len([row for row in prepared if not row['assignable']])
         return self.create({
-            'mode': mode,
             'product_id': product.id,
             'source_label': self._pf_source_label(
                 product, len(prepared), omitted_count),
@@ -519,101 +448,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
     # ══════════════════════════════════════════════════════════════════════
     # ACCIÓN PRINCIPAL
     # ══════════════════════════════════════════════════════════════════════
-    def _pf_selected_lot(self):
-        """Lote elegido por el operador (fila marcada, o el desplegable).
-
-        Misma semántica del selector por documento: la tabla es la fuente
-        principal (fila con ``is_selected``); si no hay ninguna, cae al
-        ``lot_id``. Exige selección ÚNICA (defensa: un dato cargado por fuera
-        podría dejar dos marcas). :rtype: stock.lot
-        """
-        self.ensure_one()
-        selected = self.candidate_ids.filtered('is_selected')
-        if len(selected) > 1:
-            raise UserError(_(
-                'Hay más de un lote marcado en la tabla. Deja marcado SOLO el '
-                'lote que quieres asignar.'))
-        if selected:
-            return selected.lot_id
-        return self.lot_id
-
-    def _pf_check_coverage(self, chosen):
-        """Valida (SIN escribir) que el lote elegido sirva para la selección.
-
-        Con ubicación efectiva: libre REAL del lote en esa ubicación. Sin ella
-        (varias ubicaciones): el ``available`` AGREGADO del candidato. Bloquea
-        con mensaje guía si no hay existencia o si no alcanza la demanda sumada
-        (salvo que el operador confirme la parcial). D3.
-        """
-        self.ensure_one()
-        if not chosen:
-            return
-        if self.location_id:
-            free = self.env['stock.quant']._get_available_quantity(
-                self.product_id, self.location_id, lot_id=chosen)
-        else:
-            candidate = self.candidate_ids.filtered(
-                lambda cand: cand.lot_id == chosen)[:1]
-            free = candidate.available if candidate else 0.0
-        if free <= _EPS:
-            raise UserError(_(
-                'El lote "%s" no tiene existencia disponible para esta '
-                'selección. Elige otro lote.') % chosen.name)
-        demand = self.total_demand or 0.0
-        if demand > _EPS and free < demand - _EPS and not self.confirm_partial:
-            raise UserError(_(
-                'El lote "%s" solo tiene %.2f disponible y la demanda de la '
-                'selección es %.2f. Marca "Confirmo la asignación parcial" para '
-                'asignar lo disponible.') % (chosen.name, free, demand))
-
-    def _pf_split_lots(self):
-        """Lotes marcados con "Incluir", EN EL ORDEN DE LA TABLA (D1/D2).
-
-        ``candidate_ids.filtered('is_in_split')`` respeta el ``_order`` del
-        candidato (``available desc, lot_name asc``) ⇒ el orden de consumo es el
-        que el operador VE en la tabla. Se ignoran las filas sin ``lot_id``.
-
-        :rtype: list[stock.lot]
-        """
-        self.ensure_one()
-        return [
-            cand.lot_id for cand in self.candidate_ids.filtered('is_in_split')
-            if cand.lot_id]
-
-    def _pf_check_split_coverage(self, lots):
-        """Valida (SIN escribir) que los lotes marcados sirvan (D3).
-
-        Con ubicación efectiva: suma la libre REAL de los lotes marcados en esa
-        ubicación (una lectura por lote). Sin ella (varias ubicaciones): suma el
-        ``available`` AGREGADO de los candidatos marcados (mismo aviso visible ya
-        existente). Bloquea con mensaje guía si ninguno tiene existencia o si el
-        total no alcanza la demanda sumada (salvo ``confirm_partial``). NO
-        escribe nada: bloquea ANTES de tocar el inventario.
-        """
-        self.ensure_one()
-        if not lots:
-            raise UserError(_(
-                'Marca en la tabla los lotes que quieres repartir (columna '
-                '"Incluir").'))
-        if self.location_id:
-            free = sum(
-                self.env['stock.quant']._get_available_quantity(
-                    self.product_id, self.location_id, lot_id=lot)
-                for lot in lots)
-        else:
-            free = sum(
-                self.candidate_ids.filtered('is_in_split').mapped('available'))
-        if free <= _EPS:
-            raise UserError(_(
-                'Ninguno de los lotes marcados tiene existencia disponible para '
-                'esta selección. Marca lotes con Disponible.'))
-        demand = self.total_demand or 0.0
-        if demand > _EPS and free < demand - _EPS and not self.confirm_partial:
-            raise UserError(_(
-                'Los lotes marcados suman %.2f disponible y la demanda de la '
-                'selección es %.2f. Marca "Confirmo la asignación parcial" para '
-                'repartir lo disponible.') % (free, demand))
-
     def action_assign_lot_bulk(self):
         """Asigna a CADA unidad el lote que el operador eligió EN SU FILA.
 
@@ -689,74 +523,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
             'printflow.flow.lot.assign.bulk.result']._pf_build_from_bulk(self)
         return self._pf_result_notification(result)
 
-    def action_split_lot_bulk(self):
-        """REPARTA varios lotes entre los destinos asignables (H-037 · modo split).
-
-        Mismo esqueleto y mismas guardias que ``action_assign_lot_bulk`` (modo
-        ``single``), pero en vez de UN lote decide con la SELECCIÓN ORDENADA de
-        lotes marcados con "Incluir":
-
-        1. guardia de permisos ``_pf_assert_can_clean`` (jefe de taller/admin);
-        2. ``reason`` obligatorio y política de excepción (cero hardcodeo);
-        3. validación de cobertura del plan (``_pf_check_split_coverage``,
-           bloquea ANTES de escribir);
-        4. por cada destino asignable (FIFO), delegar la ESCRITURA en el
-           ORQUESTADOR ÚNICO del reparto ``_pf_assign_lots_to_document``
-           (protocolo NATIVO ADITIVO: 1 liberación + N reservas), capturando el
-           ``UserError`` POR DESTINO (nunca aborta el barrido) y marcando el
-           resultado con el DESGLOSE por lote (``_pf_line_breakdown``);
-        5. bitácora por documento (solo modelos con chatter) y notificación con
-           los MISMOS 4 conteos, ENCADENADA al DETALLE por destino (H-029).
-
-        Código sí, datos no: la ÚNICA escritura son las primitivas NATIVAS del
-        motor disparadas por este botón; no hay ``cr.execute``/``cr.commit``.
-        """
-        self.ensure_one()
-        self.env['printflow.stock.remedy']._pf_assert_can_clean()
-        if not (self.reason or '').strip():
-            raise UserError(_(
-                'Debes indicar el motivo del reparto en bloque.'))
-        policy = self.env['printflow.flow.lot.picker']._pf_exception_policy()
-        if policy != 'warn' and not self.confirm_exception:
-            raise UserError(_(
-                'La política vigente exige confirmar la excepción: marca '
-                '"Confirmo la excepción" para repartir los lotes.'))
-        lots = self._pf_split_lots()
-        if not lots:
-            raise UserError(_(
-                'Marca en la tabla los lotes que quieres repartir (columna '
-                '"Incluir").'))
-        self._pf_check_split_coverage(lots)
-        ProductFlow = self.env['printflow.product.flow']
-        for line in self.line_ids.filtered('assignable'):
-            try:
-                ProductFlow._pf_assign_lots_to_document(
-                    line.kind, line.res_model, line.res_id, lots,
-                    product=self.product_id)
-            except UserError as err:
-                line.result = 'error'
-                line.result_note = str(err) or _(
-                    'No se pudo repartir los lotes.')
-                continue
-            reserved, note = self._pf_line_breakdown(line, lots)
-            demand = line.demand_qty or 0.0
-            if reserved <= _EPS:
-                line.result = 'error'
-                line.result_note = note or _(
-                    'Ningún lote del reparto quedó reservado.')
-            elif demand > _EPS and reserved < demand - _EPS:
-                line.result = 'partial'
-                line.result_note = _('Solo se reservó lo disponible. ') + note
-            else:
-                line.result = 'assigned'
-                line.result_note = note or _('Lotes asignados.')
-            self._pf_log_split_document(line, lots, reserved)
-        # H-029: mismo cierre y mismos 4 conteos; se encadena el DETALLE por
-        # destino (una fila por entrega, con su desglose de reparto).
-        result = self.env[
-            'printflow.flow.lot.assign.bulk.result']._pf_build_from_bulk(self)
-        return self._pf_result_notification(result)
-
     # ══════════════════════════════════════════════════════════════════════
     # HELPERS DE ESCRITURA / BITÁCORA
     # ══════════════════════════════════════════════════════════════════════
@@ -769,47 +535,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
             ('lot_id', '=', lot.id),
         ])
         return sum(move_lines.mapped('quantity'))
-
-    def _pf_line_breakdown(self, line, lots):
-        """Total reservado y DESGLOSE por lote del reparto en un destino (D5).
-
-        Suma la cantidad de las ``stock.move.line`` del movimiento del destino
-        cuyo ``lot_id`` esté entre los lotes del plan (lectura ``sudo()``) y arma
-        la nota compacta: *"Reparto: 666634 → 2.00 · SN126353 → 1.00"*, con el
-        aviso *"(N lotes sin existencia)"* cuando alguno no aportó. Sin ningún
-        aporte ⇒ *"Ningún lote del reparto quedó reservado."*.
-
-        :rtype: tuple[float, str]
-        """
-        if not line.move_id:
-            return 0.0, _('Ningún lote del reparto quedó reservado.')
-        lot_ids = [lot.id for lot in lots if lot]
-        if not lot_ids:
-            return 0.0, _('Ningún lote del reparto quedó reservado.')
-        move_lines = self.env['stock.move.line'].sudo().search([
-            ('move_id', '=', line.move_id.id),
-            ('lot_id', 'in', lot_ids),
-        ])
-        per_lot = {}
-        for move_line in move_lines:
-            per_lot[move_line.lot_id.id] = (
-                per_lot.get(move_line.lot_id.id, 0.0)
-                + (move_line.quantity or 0.0))
-        total = sum(per_lot.values())
-        parts = []
-        missing = 0
-        for lot in lots:
-            qty = per_lot.get(lot.id, 0.0)
-            if qty > _EPS:
-                parts.append('%s → %.2f' % (lot.name, qty))
-            else:
-                missing += 1
-        if not parts:
-            return total, _('Ningún lote del reparto quedó reservado.')
-        note = _('Reparto: %s') % ' · '.join(parts)
-        if missing:
-            note += ' ' + _('(%s lotes sin existencia)') % missing
-        return total, note
 
     def _pf_log_document(self, line, lot):
         """Registra la asignación en el chatter del documento (D8).
@@ -827,32 +552,6 @@ class PrintflowFlowLotAssignBulk(models.TransientModel):
                    'Motivo: %(reason)s\nUsuario: %(user)s') % {
                 'lot': lot.name,
                 'doc': line.label or doc.display_name,
-                'reason': (self.reason or '').strip() or _('(sin motivo)'),
-                'user': self.env.user.display_name or '',
-            },
-            message_type='notification', subtype_xmlid='mail.mt_note')
-
-    def _pf_log_split_document(self, line, lots, reserved):
-        """Registra el REPARTO en el chatter del documento (D5).
-
-        Copia del patrón de ``_pf_log_document`` (que NO se toca): solo modelos
-        con chatter (``stock.picking``/``mrp.production``); si no hay chatter, se
-        omite el registro (no revienta el reparto). Lista los lotes del plan y el
-        reservado REAL, con el ``reason`` común.
-        """
-        if line.res_model not in _CHATTER_MODELS or not line.res_id:
-            return
-        doc = self.env[line.res_model].sudo().browse(line.res_id).exists()
-        if not doc:
-            return
-        doc.message_post(
-            body=_('PrintFlow · Reparto de %(n)s lote(s) en bloque a %(doc)s: '
-                   '%(lots)s.\nReservado: %(reserved)s\nMotivo: %(reason)s\n'
-                   'Usuario: %(user)s') % {
-                'n': len([lot for lot in lots if lot]),
-                'doc': line.label or doc.display_name,
-                'lots': ', '.join(lot.name for lot in lots if lot),
-                'reserved': '%.2f' % (reserved or 0.0),
                 'reason': (self.reason or '').strip() or _('(sin motivo)'),
                 'user': self.env.user.display_name or '',
             },

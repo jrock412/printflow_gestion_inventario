@@ -97,6 +97,16 @@
   **Lote 3 (T6–T8) `[motor]`**. Añadida **T10 `[pantalla]` (Lote 5)** por **regresión de T4** (se perdió el campo
   `confirm_exception`, que `action_assign_lot_bulk` exige con política ≠ `warn` ⇒ callejón sin salida; ver §3.7).
   Orden del ciclo: **ADD (Lote 1) → REPINTAR (Lote 2) → BORRAR (Lote 3) → adaptar (Lote 4) → T10 (Lote 5)**.
+- **⚠️ NOTA DE ESTADO (17/10-d · corte de red):** la **1.ª sesión del Lote 3 se cortó por red** (`getaddrinfo
+  ENOTFOUND opencode.ai`) y dejó **trabajo parcial SIN marcar y SIN verificar** en disco:
+  `wizard/printflow_flow_lot_assign_bulk.py` y `wizard/printflow_flow_lot_candidate.py` con **T6 aparentemente
+  aplicado** (`grep` de los símbolos retirados sobre `wizard/` + vistas + CSV ⇒ **0** resultados; `py_compile`
+  OK; `_compute_is_picked` ya no depende del campo borrado `bulk_id.lot_id`), y
+  `tests/test_product_flow_lot_assign_bulk_per_move.py` **creado pero NO registrado** en `tests/__init__.py`.
+  ⇒ El **Lote 3 se RELANZA en sesión NUEVA**, que debe **completar T7 (registrar el test en `tests/__init__.py` y
+  correrlo en verde), ejecutar T8** (retirar el test del `split` + adaptar `test_product_flow_lot_assign_bulk.py`)
+  y **hacer la verificación completa de T6–T8** antes de marcar `[x]`. El trabajo previo **NO se da por bueno por
+  estar en disco**: se valida.
 - **Autorización: SÍ (2026-10-17)** — el dueño: *"aplica las acciones recomendadas"* ⇒ compuerta §4.0 superada.
 - Responsable Activo (Turno): **Odoo Dev** (paso 4 · **Lote 3 `[motor]` T6–T8** = retiro del residuo + test nuevo
   `test_product_flow_lot_assign_bulk_per_move.py` + retiro del test del `split`). **Lotes 1 y 2 cerrados.** El

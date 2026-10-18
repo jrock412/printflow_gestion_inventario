@@ -18,13 +18,13 @@ Los valores los puebla el selector en UNA sola lectura de ``stock.quant``
 La MISMA fila se reutiliza en la asignación EN BLOQUE
 (``printflow.flow.lot.assign.bulk``): en vez de colgar del selector por
 documento (``picker_id``), cuelga del contenedor en bloque (``bulk_id``). El
-"padre" se generaliza con ``_pf_parent()`` para no duplicar la fila ni el
-cálculo de candidatos.
+"padre" por documento sigue siendo ``picker_id`` (el único que espeja y desmarca
+la selección ÚNICA).
 
-La fila sirve a TRES superficies: el selector por documento, el modo ``single``
-del contenedor en bloque (selección ÚNICA con ``is_selected``) y el modo
-``split`` del MISMO contenedor (reparto multi-lote con ``is_in_split``, que NO
-entra en ``_pf_enforce_single_selection`` ⇒ admite VARIAS filas marcadas).
+La fila sirve a DOS superficies: el selector por documento (decisión con
+``is_selected``, selección ÚNICA) y la tabla **INFORMATIVA** del contenedor en
+bloque (Lote · Existencia · Reservado · Disponible · Rol: allí NO se marca nada,
+la decisión se toma en cada unidad del contenedor).
 
 Contrato::
 
@@ -98,16 +98,10 @@ class PrintflowFlowLotCandidate(models.TransientModel):
         help='Marca el lote propio del documento (el exclusivo del pedido).')
     is_selected = fields.Boolean(
         string='Elegir',
-        help='Marca ESTA fila como el lote que el operador decide asignar. La '
-             'selección es ÚNICA: al marcar una fila se desmarcan las demás y '
-             'se espeja en el campo "Lote a asignar" del selector.')
-    is_in_split = fields.Boolean(
-        string='Incluir',
-        help='Marca ESTE lote para el REPARTO multi-lote (botón "Repartir '
-             'lotes"). A diferencia de "Elegir" (selección ÚNICA), "Incluir" '
-             'admite VARIAS filas: el reparto consume los lotes marcados en el '
-             'orden de la tabla. Solo se puede marcar si el lote tiene '
-             'Disponible.')
+        help='Marca ESTA fila como el lote que el operador decide asignar en el '
+             'selector POR DOCUMENTO. La selección es ÚNICA: al marcar una fila '
+             'se desmarcan las demás y se espeja en el campo "Lote a asignar" del '
+             'selector.')
     is_picked = fields.Boolean(
         string='Elegido', compute='_compute_is_picked',
         help='Resaltado SOLO en el candidato marcado (espejo de la selección).')
@@ -138,20 +132,9 @@ class PrintflowFlowLotCandidate(models.TransientModel):
              '"Lote que está usando". Vacío para el resto.')
 
     # ══════════════════════════════════════════════════════════════════════
-    # PADRE GENERALIZADO (selector por documento O asignación en bloque)
+    # PADRE POR DOCUMENTO (el único que espeja la selección; el bloque es
+    # informativo) + demanda del padre (para la sugerencia)
     # ══════════════════════════════════════════════════════════════════════
-    def _pf_parent(self):
-        """Padre del candidato: el selector por documento o el bloque.
-
-        La fila es la MISMA para ambas superficies (D2-bis): cuelga de
-        ``picker_id`` (selector por documento) o de ``bulk_id`` (asignación en
-        bloque). Devuelve el que esté presente (nunca los dos).
-
-        :rtype: models.Model
-        """
-        self.ensure_one()
-        return self.picker_id or self.bulk_id
-
     @api.model
     def _pf_parent_demand(self, parent):
         """Demanda del padre (para la sugerencia): ``picker.demand_qty`` o
@@ -167,12 +150,11 @@ class PrintflowFlowLotCandidate(models.TransientModel):
     # ══════════════════════════════════════════════════════════════════════
     # SELECCIÓN DESDE LA TABLA (check de fila, selección ÚNICA)
     # ══════════════════════════════════════════════════════════════════════
-    @api.depends('picker_id.lot_id', 'bulk_id.lot_id', 'lot_id')
+    @api.depends('picker_id.lot_id', 'lot_id')
     def _compute_is_picked(self):
-        """Marca el candidato cuyo lote es el ELEGIDO en el padre."""
+        """Marca el candidato cuyo lote es el ELEGIDO en el selector."""
         for rec in self:
-            parent = rec._pf_parent()
-            chosen = parent.lot_id if parent else False
+            chosen = rec.picker_id.lot_id
             rec.is_picked = bool(chosen and chosen == rec.lot_id)
 
     @api.depends('picker_id.lot_name_actual', 'lot_name')
@@ -285,15 +267,16 @@ class PrintflowFlowLotCandidate(models.TransientModel):
         return res
 
     def _pf_enforce_single_selection(self):
-        """Deja SOLO la última fila marcada y espeja el lote en el padre.
+        """Deja SOLO la última fila marcada y espeja el lote en el selector.
 
         Se ejecuta por cada fila tocada: si la fila queda marcada, desmarca sus
-        hermanas y copia su lote al ``lot_id`` del padre (selector por documento
-        o asignación en bloque); si queda desmarcada, limpia el espejo solo si
-        apuntaba a su lote.
+        hermanas del MISMO selector por documento y copia su lote a su
+        ``lot_id``; si queda desmarcada, limpia el espejo solo si apuntaba a su
+        lote. El contenedor en bloque NO espeja nada: su tabla de candidatos es
+        INFORMATIVA (la decisión se toma en cada unidad).
         """
         for rec in self:
-            parent = rec._pf_parent()
+            parent = rec.picker_id
             if not parent:
                 continue
             if rec.is_selected:
