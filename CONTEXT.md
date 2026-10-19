@@ -17,7 +17,7 @@
   → **Los agentes de lote la APRIETAN al cerrar su turno** (no piden nada al dueño) y dejan la evidencia
   (log del botón + PID + `write_date`). *Si algún día no existe, el lote cierra declarando "el módulo quedó sin
   recargar".*
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **13 abiertos** · **37** `resuelto` · **8** `descartado` · **0 en tarea** (**58** filas) (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **14 abiertos** · **37** `resuelto` · **8** `descartado` · **0 en tarea** (**59** filas) (compañero del CONTEXT.md; ver skill §2.2).
   **18/10 (MIRE EN VIVO del modal, navegador del Analista):** se ABREN **H-050** (los `<div>` de prosa dentro de
   `<group col="1">` se pintan en **columna vertical**, una palabra por línea ⇒ **ilegible**; **PREENSA** anciano)
   y **H-051** (la cabecera "Selección" se **apila en una columna**: rótulos partidos + **mitad derecha vacía**;
