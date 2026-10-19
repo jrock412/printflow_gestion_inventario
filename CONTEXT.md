@@ -397,15 +397,14 @@ flowchart TD
 | 🟢 Verde | RUEDAS | Piezas intercambiables (widgets, vistas, options) | Sí, es lo normal |
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
 
-## 3.R (TAREA ABIERTA) — El cambio de lote en una unidad TACHADA: el wizard en bloque deja de fallar y el tachón vuelve (H-055 · H-056 · H-057)
+## 3.R (ANEXO · TAREA CERRADA) — El cambio de lote en una unidad TACHADA: el wizard en bloque deja de fallar y el tachón vuelve (H-055 · H-056 · H-057)
 
 > **Turno:** Odoo Analista (apertura · paso 1 · **Fase A cerrada conversando con el dueño**) ✅ →
-> **Odoo Planificador** (paso 2: plan COMPLETO por lotes) ✅ **ESCRITO (19/10/2026)** → **Odoo Analista** (paso 3:
-> revisión del plan) ⏳ → lotes `[motor]` (`odoo-dev`) → **`odoo-verificador`** (1 pasada, al final).
-> **Estado:** ⏳ **TAREA ABIERTA (19/10/2026)** — contrato §3.3 **cerrado con el dueño**; el plan de §3.R.7 lo
-> **escribió el Odoo Planificador** (**T0 + 4 tareas · 2 lotes**, todas `[motor]`) y **sustituye** el borrador del
-> Analista (no queda duplicado). **Próximo paso:** el **Analista revisa el plan** (paso 3) y luego arranca el
-> **Lote 1 (T0–T2) `[motor]` → `odoo-dev`** en **sesión NUEVA**.
+> **Odoo Planificador** (paso 2: plan COMPLETO por lotes) ✅ → **Odoo Analista** (paso 3: revisión del plan) ✅ →
+> lote `[motor]` (`odoo-dev`) ✅ → **`odoo-verificador`** (1 pasada) ✅. **Turno: NINGUNO.**
+> **Estado:** ✅ **TAREA CERRADA (2026-10-19)** — `odoo-verificador` = **`cumple`** (1 turno); el wizard ya
+> cambia el lote de una unidad **TACHADA** y el tachón vuelve (**H-055 · H-056 · H-057**). Contrato §3.3 y
+> plan de §3.R.7 (**T0 + 4 tareas · 2 lotes**, todas `[motor]`) **ejecutados**. **Turno: NINGUNO.**
 > **Autorización del dueño: SÍ (2026-10-19)** — *"vamos a crear el plan de nuevo de las tareas con los
 > diagramas ya corregidos"* ⇒ compuerta §4.0 superada: autoriza el **paso 2 (plan)**. Los lotes arrancan con
 > el plan **revisado** (paso 3).
@@ -1135,20 +1134,24 @@ ni el **selector por documento**, ni los **datos**.
      **Eso es correcto, no un defecto**: ese caso lo resuelve el **flujo NATIVO** (el operador solo reserva; ver
      D-5). **NO** añadir un "botón mágico", **NO** abrir una excepción en el dominio y **NO** validar el candado
      en el servidor (el dueño eligió el candado **de dominio**).
+     · **Sello:** ⚠️ **VERIFICADA** · `Evidencia: wizard/printflow_flow_lot_assign_bulk_line.py L72-76` · `"('id', '!=', own_lot_id)]"` · `Verificada: 2026-10-19` · `Alcance: printflow_gestion_inventario 17.0.1.3.0`.
    - ⚠️ **Conejera (`include_lot_ids` es COMPARTIDO):** la misma primitiva la usa el **selector por documento**
      con `[own_lot.id, current_lot.id]` (`wizard/printflow_flow_lot_picker.py` L346) y tiene test propio
      (`tests/test_product_flow_lot_picker_candidates.py::test_include_lot_ids_lists_zero_lots`). Se retira
      **solo la llamada del contenedor**; el **parámetro** de `_pf_available_lots` y el **picker** NO se tocan.
+     · **Sello:** ⚠️ **VERIFICADA** · `Evidencia: wizard/printflow_flow_lot_picker.py L346` · `include_lot_ids=[own_lot.id, current_lot.id])` · `Verificada: 2026-10-19` · `Alcance: printflow_gestion_inventario 17.0.1.3.0`.
    - ⚠️ **Conejera (`own_lot_qty` no viene del mismo camino que el nombre):** `own_lot_name` llega del snapshot de
      la bandeja/motor, pero `own_lot_id` / `own_lot_qty` se resuelven por `lot_by_name` **sobre la lista de
      candidatos**. Al retirar `include_lot_ids`, un lote propio **sin stock** deja de ser candidato ⇒
      `own_lot_id = False` y `own_lot_qty = 0.00`, con el **nombre visible**. Es el resultado **deseado** (CA-2):
      **NO** "arreglarlo" recalculando el lote propio por otra vía (nada de N+1 ni de consultas extra).
+     · **Sello:** ⚠️ **VERIFICADA** · `Evidencia: wizard/printflow_flow_lot_assign_bulk.py L235-239` · `own_lot_id = lot_by_name.get(row['own_lot_name'] or '') or 0` · `Verificada: 2026-10-19` · `Alcance: printflow_gestion_inventario 17.0.1.3.0`.
    - ⚠️ **Conejera (`available_here` es AGREGADA con varias ubicaciones):** si los destinos no comparten una única
      ubicación, la primitiva devuelve `available_here == available` (suma de todas). El **aviso visible** ya
      existe (el `alert` con `multi_location`): **NO retirarlo**.
-   - **Registro de conejeras** (`C:\odoo_custom\CONEJERAS.md`): **consultado — vacío** (`n/a`): las de arriba
-     nacen del análisis de esta tarea.
+     · **Sello:** ⚠️ **VERIFICADA** · `Evidencia: models/printflow_flow_lots.py L399-400` · `entry['available_here'] += free` · `Verificada: 2026-10-19` · `Alcance: printflow_gestion_inventario 17.0.1.3.0`.
+   - **Registro de conejeras** (`C:\odoo_custom\CONEJERAS.md`): **consultado — sin entradas aplicables** (`n/a`): las de arriba
+     nacen del análisis de esta tarea y quedan **selladas** (`⚠️ VERIFICADA`, 19/10/2026).
 6. **Qué se RETIRA** (sustitución, no acumulación — se borra **en el mismo lote**, sin dejar residuo):
    - **El pre-llenado**: en `_pf_populate`, `'lot_id': own_lot_id if effective > _EPS else False` → `'lot_id': False`;
      y con él las piezas que **solo** existían para calcularlo (`effective_by_lot` y el `effective` por fila).
