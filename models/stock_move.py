@@ -56,6 +56,7 @@ N sumar en vez de 1 liberar + 1 sumar). Cero escrituras nuevas contra la base.
 """
 
 from odoo import models
+from odoo.tools import float_compare
 
 # Umbral de comparación de cantidades (mismo que el motor y el tablero).
 _EPS = 1e-6
@@ -123,26 +124,52 @@ class StockMove(models.Model):
     # ══════════════════════════════════════════════════════════════════════
     # REPARTO ADITIVO MULTI-LOTE (H-037 · UNA liberación + N reservas)
     # ══════════════════════════════════════════════════════════════════════
+    def _pf_unit_is_covered(self, reserved, demand=None):
+        """True si ``reserved`` cubre la demanda de la unidad (D-4 · CA-5).
+
+        La vara es la MISMA de Odoo: ``precision_rounding`` de la UdM del
+        movimiento (sin ``_EPS`` mágico). ``demand`` por defecto es la del move.
+        """
+        self.ensure_one()
+        expected = self.product_uom_qty if demand is None else demand
+        return float_compare(
+            reserved or 0.0, expected or 0.0,
+            precision_rounding=self.product_uom.rounding) >= 0
+
     def _pf_reassign_lots(self, lots):
         """Reparte la demanda del movimiento entre VARIOS lotes, de forma ADITIVA.
 
-        Patrón: **UNA** liberación + **N** reservas acumulativas.
+        Patrón: **UNA** liberación + **N** reservas acumulativas, con el **baile
+        del tachón** (D-3 · H-055/H-056):
 
-        1. **Guardián** (espeja el filtro de ``_pf_unreserve_reservation`` del
-           motor y el del core): si el movimiento está ``picked`` o en
-           ``('done', 'cancel')`` ⇒ devuelve ``0.0``. No se pueden liberar y, por
-           tanto, tampoco se apilan reservas sobre lo ya en curso.
-        2. Libera la reserva actual con la primitiva del MOTOR
+        1. **NO-GO** (D-2 · CA-3): ``done``/``cancel`` devuelven ``0.0`` sin tocar
+           nada.
+        2. **Lote VACÍO** (D-10 · CA-10): si el lote elegido no tiene libre en
+           la ubicación de la unidad, se descarta **ANTES** de tocar el tachón.
+           Si no queda ningún lote con libre, devuelve ``0.0`` sin destildar ni
+           liberar: la unidad conserva su reserva vieja y su tachón.
+        3. **Apartar el tachón** (R2): si el movimiento está ``picked`` se
+           destilda **el MOVIMIENTO** (el core lo propaga a sus líneas vía
+           ``_inverse_picked``) **ANTES** de liberar: con el tachón puesto la
+           liberación es un no-op en los dos candados (core y motor).
+        4. **Liberar** la reserva actual con la primitiva del MOTOR
            (``_pf_unreserve_reservation``) — UNA sola vez.
-        3. Recorre ``lots`` en el ORDEN recibido (el del plan declarado en la
-           tabla) reservando **ADITIVAMENTE** con ``_pf_reserve_lot`` (primitiva
-           del MOTOR, que usa ``_update_reserved_quantity``), acotando cada
-           reserva por la demanda que falta (``need - taken``) y cortando en
-           ``<= _EPS``.
+        5. **Reservar** en el ORDEN recibido, **ADITIVAMENTE**, con
+           ``_pf_reserve_lot`` (primitiva del MOTOR, que usa
+           ``_update_reserved_quantity``), acotando cada reserva por la demanda
+           que falta (``need - taken``) y cortando en ``<= _EPS``.
+        6. **Devolver el tachón** (R2 · restaurar, no inventar): solo si estaba
+           puesto y la unidad quedó **completa** (``_pf_unit_is_covered``). Una
+           unidad corta queda **destildada** (``partial`` · CA-4) y una unidad
+           que NO estaba tachada **no** se tacha (``picked`` lo pone el operador
+           o el POS, no esta cura).
 
         NO borra los lotes ya reservados entre llamadas: la reserva es acumulativa
         (una ``stock.move.line`` por lote). Un lote sin existencia disponible
         devuelve ``0.0`` y el bucle **continúa** con el siguiente lote del plan.
+
+        Este es el **mecanismo ÚNICO** del cambio de lote: lo consumen el
+        contenedor en bloque y el camino por documento (``_pf_reassign_move_lot``).
 
         Código sí, datos no: solo consume las primitivas NATIVAS del motor
         (``_pf_unreserve_reservation`` / ``_pf_reserve_lot``); no hay
@@ -155,12 +182,34 @@ class StockMove(models.Model):
         self.ensure_one()
         if not lots or self.product_id.tracking != 'lot':
             return 0.0
-        # Guardián: si no se puede liberar (picked/done/cancel), no se apila.
-        if self.picked or self.state in ('done', 'cancel'):
+        # NO-GO (D-2 · CA-3): las entregas cerradas no se tocan.
+        if self.state in ('done', 'cancel'):
             return 0.0
         need = self.product_uom_qty or 0.0
         if need <= _EPS:
             return 0.0
+        # D-10 · CA-10: un lote SIN libre en la ubicación de la unidad no se
+        # toma. Se mide ANTES de tocar el tachón (primitiva NATIVA, solo
+        # lectura): si no queda ninguno con existencia se corta sin destildar
+        # ni liberar y la unidad conserva su reserva vieja y su tachón. La
+        # reserva PARCIAL sigue permitida (R1): basta con que haya algo.
+        free_lots = [
+            lot for lot in lots
+            if float_compare(
+                self.env['stock.quant']._get_available_quantity(
+                    self.product_id, self.location_id, lot_id=lot,
+                    strict=True),
+                0.0,
+                precision_rounding=self.product_uom.rounding) > 0
+        ]
+        if not free_lots:
+            return 0.0
+        lots = free_lots
+        # 🔑 El tachón es ESCUDO (R2): se aparta ANTES de liberar y se devuelve
+        # al final si la unidad quedó completa. El movimiento manda (C-1).
+        was_picked = self.picked
+        if was_picked:
+            self.picked = False
         # UNA liberación (primitiva del MOTOR) + N reservas ADITIVAS.
         self._pf_unreserve_reservation()
         taken = 0.0
@@ -169,4 +218,7 @@ class StockMove(models.Model):
             if remaining <= _EPS:
                 break
             taken += self._pf_reserve_lot(lot, remaining) or 0.0
+        # 🔒 Devolver el tachón SOLO a una unidad completa que ya lo tenía.
+        if was_picked and self._pf_unit_is_covered(taken):
+            self.picked = True
         return taken

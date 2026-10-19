@@ -1,0 +1,69 @@
+# §3.R.7 · T0 — Sonda de la "Opción C" (evaluación de uso único)
+
+**Fecha:** 2026-10-19 · **Rama:** `main` (cambios sin commitear, como el resto del ciclo)
+**Fuente (solo lectura):** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (PRUEBA)
+**BD de test usada (nunca la de producción):** `pf_picker_tests`
+**Módulo:** `printflow_gestion_inventario` · **Motor:** `x_product_dimensional_pricing` (SOLO LECTURA)
+
+## Qué se midió
+
+Si servir `{'lot_id': <lote nuevo>}` con el **`write()` NATIVO** de `stock.move.line`
+(core `stock/models/stock_move_line.py` L421-533) sirve como cura de **H-055**:
+
+1. ¿mueve la reserva **con el tachón puesto**, sin destildar?;
+2. ¿**suma** o libera de verdad el lote viejo?;
+3. ¿deja el veredicto honesto en una unidad **corta**?
+
+Escenario: producto por lote, entrega abierta con **2 unidades** `picked=True` y sin lote
+nuevo; `lot_old` con físico **5.000** (reservado **2.000** entre las 2 unidades);
+`lot_new` con físico **1.500** (alcanza para 1.0 completa + 0.5 corta). Se escribe
+`move.move_line_ids.write({'lot_id': lot_new.id})` en cada unidad.
+
+## Comando (extracto)
+
+```text
+python.exe odoo-bin -c "C:\Program Files\Odoo 17.0.20250124\server\odoo.conf"
+  -d pf_picker_tests -u printflow_gestion_inventario
+  --data-dir <temp> --no-http --max-cron-threads=0
+  --test-enable --test-tags /printflow_gestion_inventario:Test3RProbeOptionC
+  --logfile <temp>/pf_3r_t0_run.log --stop-after-init
+EXIT=0 · 0 failed, 0 error(s) of 1 tests
+```
+
+## Salida del log (cruda; el handler del logfile sustituyó los acentos por `?`)
+
+```text
+[3R-T0] (i) reserva con tach?n puesto: lote nuevo reservado=2.000 libre=0.000 (se movi? la reserva vieja sin destildar)
+[3R-T0] (i-bis) lote nuevo: fisico=1.500 reservado=2.000 => libre real=-0.500
+[3R-T0] (ii) tach?n tras el write: move_full.picked=True line_full.picked=True | move_short.picked=True line_short.picked=True
+[3R-T0] (ii) lote VIEJO: libre 3.000 -> 5.000 ? reservado 2.000 -> 0.000 (?libera de verdad o suma?)
+[3R-T0] (iii) unidad CORTA: demanda=1.000000 ? line.quantity=1.000000 ? reservado del lote nuevo=2.000000 ? picked=True
+[3R-T0] (extra) state: move_full=assigned move_short=assigned
+[3R-T0] VEREDICTO: DESCARTADA como cura ? el write mueve la reserva vieja y NO apila, pero deja el tach?n PUESTO en la unidad corta (CA-4 exige partial SIN tach?n), no refresca el state y ser?a un TERCER camino de escritura fuera de las primitivas del motor.
+odoo.tests.result: 0 failed, 0 error(s) of 1 tests when loading database 'pf_picker_tests'
+```
+
+## Lectura de los tres datos
+
+| Dato | Medición | Lectura |
+|---|---|---|
+| (i) ¿mueve la reserva con el tachón puesto? | lote nuevo reservado **2.000**; líneas `picked=True` | **SÍ** mueve la reserva sin destildar |
+| (ii) ¿suma o libera el lote viejo? | libre **3.000 → 5.000**; reservado **2.000 → 0.000** | **NO apila**: libera de verdad el lote viejo |
+| (iii) unidad corta | físico lote nuevo **1.500** vs reservado **2.000** ⇒ libre real **−0.500**; `line.quantity=1.000` y `picked=True` | **Sobre-reserva el quant** (reservado > físico) y deja el **tachón puesto**: la fila diría `partial` **con** tachón ⇒ **contradice CA-4** |
+| (extra) `state` | `assigned` / `assigned` | El `state` **no** se refresca por servir solo `lot_id` (el core solo recomputa con `quantity`/`uom`): puede quedar una foto vieja |
+
+## VEREDICTO
+
+**DESCARTADA como cura.** La Opción C sí mueve la reserva con el tachón puesto y no
+apila el lote viejo, pero: (1) **no cumple CA-4** — deja el tachón puesto en la unidad
+corta, y CA-4 exige `partial` **sin** tachón; (2) **sobre-reserva** el quant del lote
+nuevo (reservado 2.000 sobre físico 1.500 ⇒ libre −0.500), justo el tipo de descuadre que
+las primitivas del motor evitan; (3) sería un **tercer** camino de escritura, por fuera
+de `_pf_unreserve_reservation` / `_pf_reserve_lot` (prohibido por §3.R.3 punto 5:
+*un solo mecanismo*); y (4) no ahorra la vara de la UdM (T1/T2). Se **ratifica D-8** y el
+rumbo decidido por el dueño (D-3: el baile del tachón).
+
+## Residuo
+
+La sonda `tests/test_3r_probe_opcion_c.py` y su import en `tests/__init__.py` se
+**borraron** al cerrar T0 (no se deja el intento anterior).

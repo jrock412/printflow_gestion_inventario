@@ -1036,10 +1036,13 @@ class PrintflowProductFlow(models.TransientModel):
         (``do_unreserve()``) ni toca los movimientos HERMANOS, así reasignar un
         lote solo afecta a esa entrega.
 
-        Usa el protocolo NATIVO del motor (``stock.move._pf_reassign_lot``):
-        libera el lote viejo con ``_do_unreserve()`` y reserva el nuevo con
-        ``_update_reserved_quantity`` (simétrico). PROHIBIDO ``unlink()`` +
-        ``create()`` a mano. Devuelve ``True`` si reservó algo.
+        Delega en el **mecanismo ÚNICO** de cambio de lote
+        (``stock.move._pf_reassign_lots``), el MISMO que consume el contenedor
+        en bloque: el baile del tachón (destildar → liberar → reservar →
+        devolver) vive allí, no se duplica aquí. Así este camino deja de
+        **sumar reserva en silencio** sobre una unidad tachada (H-056 · CA-6).
+        PROHIBIDO ``unlink()`` + ``create()`` a mano. Devuelve ``True`` si
+        reservó algo.
 
         :param stock.move move: movimiento a reasignar.
         :param stock.lot lot: lote elegido.
@@ -1049,14 +1052,13 @@ class PrintflowProductFlow(models.TransientModel):
         product = product or move.product_id
         if not move or not product or product.tracking != 'lot':
             return False
-        demand = move.product_uom_qty or 0.0
         own_lines = move.move_line_ids
         # Idempotencia: ya reserva el lote elegido (y ningún otro) -> nada que hacer.
         if own_lines and not own_lines.filtered(lambda ml: ml.lot_id != lot):
             move._recompute_state()
             return True
-        # Reasignación NATIVA: libera el lote viejo y reserva el nuevo.
-        taken = move._pf_reassign_lot(lot, demand)
+        # Mecanismo ÚNICO (baile del tachón incluido): 1 liberación + 1 reserva.
+        taken = move._pf_reassign_lots([lot])
         return taken > _EPS
 
     # ══════════════════════════════════════════════════════════════════════

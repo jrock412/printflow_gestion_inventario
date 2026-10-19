@@ -1,0 +1,103 @@
+# §3.R.7 — Lote 2 (T3–T5) — evidencia de tests y huella del motor
+
+**Fecha:** 2026-10-19 · **Módulo:** `printflow_gestion_inventario` (ruta `C:\odoo_custom\printflow_gestion_inventario`)
+**BD de test (NUNCA la de producción):** `pf_picker_tests` · `--data-dir` temporal · `--no-http`
+**Motor `x_product_dimensional_pricing`:** SOLO LECTURA (huella al abrir y al cerrar, al final).
+
+## 1) T3 · T4 · T5 — tests nuevos (3/3)
+
+```text
+odoo-bin -c "C:\Program Files\Odoo 17.0.20250124\server\odoo.conf"
+  -d pf_picker_tests -u printflow_gestion_inventario
+  --data-dir <temp> --no-http --max-cron-threads=0 --test-enable
+  --test-tags /printflow_gestion_inventario:TestProductFlowLotDocumentPath,
+               /printflow_gestion_inventario:TestProductFlowLotBulkAtomicity,
+               /printflow_gestion_inventario:TestProductFlowLotEmptyLotGuard
+  --logfile <temp>/pf_3r_lote2_nuevos2.log --stop-after-init
+EXIT=0 · 0 failed, 0 error(s) of 3 tests
+```
+
+| Clase | Test | Qué prueba |
+|---|---|---|
+| `TestProductFlowLotDocumentPath` | `test_ca6_document_path_does_not_stack` | CA-6 (H-056): el camino por documento deja la unidad reservada **solo** en el lote elegido; el lote viejo recupera su libre; el tachón vuelve al movimiento **y** a sus líneas |
+| `TestProductFlowLotBulkAtomicity` | `test_ca7_failure_leaves_unit_untouched` | CA-7: `patch.object` sobre `stock.move._pf_reserve_lot` revienta **después** del destildado y la liberación ⇒ el savepoint revierte todo: `picked=True`, lote viejo y reserva vieja intactos; la fila dice `error` |
+| `TestProductFlowLotEmptyLotGuard` | `test_ca10_empty_lot_does_not_touch_unit` | CA-10 (H-058 · D-10): elegir un lote **vacío** no destilda ni libera; la unidad queda intacta y la fila reporta el motivo real |
+
+## 2) Regresión REAL (obligatoria, se revierte y se restaura en el lote)
+
+**(a) T3** — se sustituyó temporalmente `move._pf_reassign_lots([lot])` por la llamada directa
+del motor `move._pf_reassign_lot(lot, qty)` y se corrió `test_ca6`:
+
+```text
+FAIL: TestProductFlowLotDocumentPath.test_ca6_document_path_does_not_stack
+AssertionError: stock.lot(3034, 3035) != stock.lot(3035,)
+EXIT=1 · 1 failed of 1 test
+```
+
+⇒ la unidad queda reservada en el lote **viejo Y en el nuevo**: exactamente **H-056**
+(la reserva que se sumaba en silencio). Restaurado el archivo (SHA-256 idéntico al que pasó 3/3).
+
+**(b) T4** — se retiró temporalmente el `with self.env.cr.savepoint():` del barrido (sin tocar
+los dos `except`) y se corrió `test_ca7`:
+
+```text
+FAIL: TestProductFlowLotBulkAtomicity.test_ca7_failure_leaves_unit_untouched
+AssertionError: False is not true : El savepoint debe restaurar el tachón.
+EXIT=1 · 1 failed of 1 test
+```
+
+⇒ sin savepoint la unidad se queda **destildada** a mitad del baile (el daño que evita CA-7).
+Restaurado el archivo (SHA-256 idéntico al que pasó 52/52).
+
+## 3) Corrida FINAL del lote (52/52)
+
+```text
+--test-tags TestProductFlowLotDocumentPath, ...BulkAtomicity, ...EmptyLotGuard,
+            TestProductFlowLotPickedReassign, TestProductFlowLotAssignBulkVerdict,
+            TestProductFlowLotReassignPerDocument, TestProductFlowLotPendingOrderAssign,
+            TestPfBulkValidatePreservesLot, TestProductFlowLotAssignBulkPerMove,
+            TestProductFlowLotAssignBulkResult, TestProductFlowLotAssignBulkRedesign,
+            TestProductFlowLotAssignBulk
+EXIT=0 · 0 failed, 0 error(s) of 52 tests
+```
+
+Candados incluidos y **verdes**: `ReassignPerDocument` (6) · `PendingOrderAssign` (2) ·
+`PfBulkValidatePreservesLot` (4) · `AssignBulkPerMove` (9) · `AssignBulkResult` (4) ·
+`AssignBulkRedesign` (6) · `AssignBulk` (10) + los 8 de T1/T2 + los 3 nuevos.
+
+## 4) Suite completa — delta 0 frente al baseline
+
+```text
+--test-tags /printflow_gestion_inventario
+EXIT=1 · 7 failed, 1 error(s) of 688 tests
+```
+
+Los **8 rojos** son **exactamente** los del baseline conocido (mismos tests, mismo orden):
+
+| # | Test | Baseline |
+|---|---|---|
+| 1 | `test_diagnostic_delivery_orders.test_bulk_validate_mixed_success_and_failure` | sí (H-035) |
+| 2 | `test_node_pending_enumeration.test_limit_is_per_node` | sí (B1) |
+| 3 | `test_phase7_board_permissions.test_bulk_validate_runs_without_sudo` | sí (H-035) |
+| 4 | `test_product_flow_failure_negative_reserved.test_negative_reserved_rises_to_support` | sí (H-035) |
+| 5 | `test_product_flow_lot_picker_ux.test_own_and_current_lots_are_listed_and_labeled` | sí (H-002 / B1) |
+| 6 | `test_product_flow_lot_tray_ux.test_tray_exposes_lot_quantities` | sí (B1) |
+| 7 | `test_product_flow_lot_tray_ux.test_tree_exposes_document_and_conditional_quantities` | sí (B1) |
+| 8 | `test_product_flow_solution_single.test_lot_row_args_include_origin_product_id` | sí (B1, error) |
+
+Comparado con `verif_3o.log` (baseline de 671 tests): **mismo conjunto de 8**, ni uno más
+⇒ **delta = 0**.
+
+## 5) Huella del motor (CA-8 · H-038)
+
+`git diff` NO sirve: `models/stock_move.py` del motor está **sin versionar** (`??`). La prueba es la huella.
+
+| Medición | Al abrir el lote | Al cerrar el lote | ¿Idéntica? |
+|---|---|---|---|
+| `SHA-256(x_product_dimensional_pricing/models/stock_move.py)` | `22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B` | `22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B` | **Sí** |
+| bytes del archivo | 12.690 | 12.690 | **Sí** |
+| `git status --porcelain \| wc -l` del motor | 143 | 143 | **Sí** |
+
+⇒ **motor sin tocar** (CA-8). Cero `cr.execute` / `cr.commit` en el código tocado;
+las únicas escrituras son las primitivas NATIVAS (`_pf_unreserve_reservation` /
+`_pf_reserve_lot`) y el ORM (`move.picked`). **Cero escrituras a mano a la BD de PRUEBA.**

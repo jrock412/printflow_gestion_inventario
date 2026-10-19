@@ -169,6 +169,16 @@ from . import test_product_flow_lot_assign_bulk_result
 # modos `single` ("un lote para todo") y `split` ("Repartir lotes") se retiraron.
 # CA-1..CA-10.
 from . import test_product_flow_lot_assign_bulk_per_move
+# §3.P (H-043/H-044/H-045/H-046/H-047): candados del REDISEÑO del contenedor —
+# ninguna fila pre-llenada (CA-1), tabla de lotes solo con existencia REAL
+# (CA-3), el dominio del selector excluye el lote propio (CA-4) y la cabecera
+# tiene su contador rotulado (CA-8). Se candadea el `domain`/`fields_get`, sin
+# navegador.
+from . import test_product_flow_lot_assign_bulk_redesign
+# §3.R (H-055/H-056/H-057): el cambio de lote en una unidad TACHADA — el baile
+# del tachón (destildar -> liberar -> reservar -> devolver) y el veredicto
+# honesto con la tolerancia de la UdM. CA-1..CA-5.
+from . import test_product_flow_lot_picked_reassign
 # H-030: el "validar entregas en lote" PRESERVA la reserva de lote EXCEPTUADA por
 # el operador (la rama EXCLUSIVA del motor ya no la des-reserva); el motor queda
 # SIN CAMBIOS (solo se hereda ``stock.move``). CA-1/CA-2/CA-5.

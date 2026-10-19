@@ -9,7 +9,36 @@
   acciona** botones con efecto (Confirmar/Guardar/Validar/Publicar). Receta: `VIEW-LIVE-CHECK.md`
   (skill `odoo-view-design`). *Si este campo se borra o queda sin confirmar, se lee como PRODUCCIÓN.*
 - Ruta del Módulo: C:\odoo_custom\printflow_gestion_inventario
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **11 abiertos** · 24 `resuelto` · 7 `descartado` (**42** filas; **0** en tarea) (compañero del CONTEXT.md; ver skill §2.2).
+- Tarea de reinicio: **`Odoo8071-printflow_gestion_inventario`** (verificada el **18/10/2026** con
+  `Get-ScheduledTask`; `State: Ready`, disparo **manual**, sin `StartBoundary` útil) — skill
+  `reiniciar-servidor-odoo`. Corre
+  `Odoo-Servicio.ps1 -Proyecto printflow_gestion_inventario -Servicio odoo-server-17.0 -Puerto 8071
+  -BaseDatos "Ciber Estudios 2015 RESTAURADA" -Modulos printflow_gestion_inventario` ⇒ **reinicia + `-u`**.
+  → **Los agentes de lote la APRIETAN al cerrar su turno** (no piden nada al dueño) y dejan la evidencia
+  (log del botón + PID + `write_date`). *Si algún día no existe, el lote cierra declarando "el módulo quedó sin
+  recargar".*
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **13 abiertos** · **37** `resuelto` · **8** `descartado` · **0 en tarea** (**58** filas) (compañero del CONTEXT.md; ver skill §2.2).
+  **18/10 (MIRE EN VIVO del modal, navegador del Analista):** se ABREN **H-050** (los `<div>` de prosa dentro de
+  `<group col="1">` se pintan en **columna vertical**, una palabra por línea ⇒ **ilegible**; **PREENSA** anciano)
+  y **H-051** (la cabecera "Selección" se **apila en una columna**: rótulos partidos + **mitad derecha vacía**;
+  **355 px** de **546** y **1813 px** de contenido) — **ambos `en tarea`** a la **corrección viva §3.P.8 · T12**,
+  porque son **exactamente** el *"texto estrecho y espacios vacíos"* que el dueño reportó. Se ABREN además
+  **H-052** (el modal está topado en `modal-lg`: su cura toca la **bandeja**, fuera de alcance ⇒ `abierto`) y
+  **H-053** (6 decimales: es `decimal.precision` **de la BD** ⇒ *datos no* ⇒ `abierto`). **H-049** pasa a
+  `en tarea` (se cierra con T12-c).
+  **18/10 (cierre Lote 4):** se ABRE **H-049** (el `<div>` de "Unidades de la entrega" **repite** la aclaración
+  de `selection_note` ⇒ microcopy duplicado; **cosmético**, **fuera** de la sección "Selección" que el dueño
+  señaló, **no** rompe ningún CA; queda `abierto` como **deuda declarada** con su cura de 1 línea).
+  **18/10 (cierre Lote 1):** se ABRE **H-048** (el contador nuevo `candidate_count` comparte rótulo con el o2m
+  `candidate_ids` ⇒ **1 WARNING** de higiene, **invisible al operador**; el módulo ya emite **≥10 idénticos** ⇒ es
+  **estilo de casa**; queda `abierto` como **deuda declarada** con su cura exacta de 1 línea, **fuera** del alcance
+  de §3.P).
+  **18/10:** se ABREN **H-043** (la tabla muestra la disponibilidad **GLOBAL**, no la del almacén que decide) ·
+  **H-044** (la tabla lista lotes en `0.00` que el desplegable no ofrece: `include_lot_ids` del contenedor) ·
+  **H-045** (el **pre-llenado** del lote propio contradice la regla del wizard) · **H-046** (la columna que decide
+  —"Lote a asignar"— queda **fuera de la vista**, la empuja `move_id` "Unidad") · **H-047** (la fila pinta 11
+  columnas y la cabecera **repite en prosa** los conteos ya rotulados). Los **cinco** entran `en tarea` al plan de
+  **§3.P**.
   **17/10-d:** se ABREN **H-039** (el modo `single` es un subconjunto **estricto** del `split` ⇒ duplicidad +
   premisa equivocada: "UN lote para TODA la selección") y **H-040** (el eje de decisión está centrado en el
   **LOTE**, no en la **ORDEN/UNIDAD**; la fila `pending_order` **suma** la demanda). **H-034 pasa a `en tarea`**
@@ -90,7 +119,65 @@
   **H-040** (eje centrado en el LOTE, no en la ORDEN/UNIDAD), y **CIERRA H-034** (una entrega con 2 unidades = 2
   filas). **Decidido por el dueño (D1/D2):** grano = **MOVIMIENTO** · se **retiran los DOS modos** y queda **UNA**
   acción **"Asignar lote"**. Ver **§3.O** (contrato §3.3 completo + CA-1…CA-11 + qué se retira).
-- Tarea Activa: **NINGUNA — §3.O CERRADA y ratificada (`cumple`)** (ver el CIERRE, abajo). Antes: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
+- ✅ **TAREA CERRADA (18/10 · GRANDE · compuerta §4.3 superada · `odoo-verificador` = `cumple` · turno: NINGUNO):** **REDISEÑO de la pantalla y limpieza de la lógica del wizard
+  "Asignar lote en bloque"** (`printflow.flow.lot.assign.bulk` + su `.line` + su vista). Ataca
+  **H-043 · H-044 · H-045 · H-046 · H-047**. **Decidido por el dueño (D-1…D-7):** (a) se **RETIRA el pre-llenado**
+  del lote propio —todas las filas llegan vacías— y se **RETIRA `include_lot_ids`** del contenedor (solo **lotes
+  REALES con existencia**); (b) se **AÑADE el candado por DOMINIO** del lote propio (no se ofrece en el
+  desplegable); (c) la tabla de lotes muestra la disponibilidad **del almacén de la entrega** (`available_here` ⇒
+  "Disponible aquí") y queda **siempre visible**; (d) se **poda** la fila (fuera de la vista por defecto "Unidad",
+  "Línea de pedido", "Demanda", "Resultado") y se **compacta** la cabecera; (e) **la lógica de asignación NO se
+  toca** (ni el motor, ni el orquestador de escritura, ni la bandeja, ni el selector por documento).
+  Ver **§3.P** (contrato §3.3 completo + CA-1…CA-10 + qué se retira · plan en §3.P.7, lo escribe el Planificador).
+- ✅ **CIERRE DEL CICLO §3.P (compuerta §4.3) — turno: NINGUNO (TAREA CERRADA).** `odoo-verificador` (pasada
+  **FINAL**, sobre el estado congelado con T12-a…d + T12-e…g) = **`cumple`** (CA-1…CA-14): candados del
+  contenedor **29/29** (incluido el del `arch`) · contratos *no tocados* **19/19** · **motor sin diff imputable**
+  · picker y bandeja **sin diff** · **ningún rojo nuevo**. La **mirada en vivo la hizo el Analista** (3 pasadas,
+  navegador propio) porque la sesión del Verificador **no tiene navegador**; medidas y **4 fotos** en
+  `docs/evidencia/3P-live-01..04-*.png`. **Hallazgos:** H-043 · H-044 · H-045 · H-046 · H-047 · H-049 · H-050
+  ⇒ `resuelto` · **H-051 ⇒ `descartado`** (diagnóstico del Analista que resultó **artefacto del viewport**;
+  corregido leyendo el core) · **H-048 · H-052 · H-053 · H-054 ⇒ `abierto`** (deudas declaradas, con cura
+  exacta, **fuera** del alcance acordado). **Cero escrituras de datos.** **Pendiente del dueño (3 decisiones, no
+  bloqueantes):** **(1) H-052** — ensanchar el modal (`context.dialog_size` en la **bandeja**, 1 línea) es lo
+  único que hace *"aprovechar todo el ancho"*; **(2) H-054** — el orden literal de la cabecera de CA-8 (2 líneas,
+  obliga a **repetir la mirada en vivo**); **(3) H-053** — los 6 decimales son `decimal.precision` **de la BD**,
+  no código. **Cambios sin commitear** (los commitea/aprueba el dueño).
+- ✅ **TAREA CERRADA (18/10 · TRIVIAL ×2 · §3.Q):** **ventana ancha del wizard (H-052) + orden de lectura de la
+  cabecera (H-054)**. Autorización del dueño: **SÍ (2026-10-18)** — *"ejecuta las primeras dos tareas"*.
+  **3 lotes:** Lote 1 `[motor]` (T1) → Lote 2 `[pantalla]` (T2) → **Lote 3 `[motor]` (T3 = corrección viva 1)**,
+  porque **la mirada en vivo destapó que la cura de H-052 traía la llave equivocada** (`'xl'` en vez de
+  `'extra-large'`) — ver **§3.Q.4**. **Camino rápido (§4.1):** 1 archivo por tarea, sin decisión de diseño ⇒
+  **no** se llamó al Planificador **ni** al Verificador: **la mirada en vivo la hizo el Analista** (evidencia
+  `[pantalla]` de §3.8 regla 8, **§3.Q.5**). **El dueño LEVANTÓ el "fuera de alcance" de la bandeja** (el que
+  fijó §3.P punto 7) **solo** para la línea de T1. Resultado: **CA-1…CA-6 cumplidos**, **29/29 candados**, motor
+  sin diff; fotos nuevas `docs/evidencia/3Q-live-04-ANGOSTA-modal-xl.png` y
+  `docs/evidencia/3Q-live-05-ANCHA-simulada-2-columnas.png`. **Vistazo del dueño (18/10 · 2.ª vuelta): ✅** —
+  *"está bien como quedó"* ⇒ **la última milla de CA-3 queda confirmada en su monitor**; **ciclo §3.Q cerrado y
+  ratificado**. **Deudas que quedan abiertas:** **H-053** (decimales) — el dueño **la omite por ahora** (sigue
+  `abierto`, **no** `descartado`) — y **H-048** (rótulo repetido, cosmético).
+- **Autorización: SÍ (2026-10-18)** — el dueño: *"ok ejecuta la tarea hasta el final, te dejaré trabajando, me voy
+  a dormir"* ⇒ compuerta §4.0 superada **y** autorización para correr el ciclo **completo** sin más consultas.
+  El dueño **aprobó el borrador de pantalla** presentado en la Fase A (maqueta + flujo de UX + antes/después).
+- **✅ TAREA CERRADA (19/10 · GRANDE · §3.R · **`cumple`** del Verificador · 1 turno):** **el wizard "Asignación en bloque" no puede cambiar el
+  lote de una unidad ya TACHADA** (`picked`): las entregas que nacen del POS quedan abiertas con el tachón
+  puesto y **sin lote** cuando el POS no logra autovalidar (el 88 % sí autovalida) ⇒ el botón responde
+  *"El lote no quedó reservado en la unidad."* y **no cambia nada**. Ataca **H-055** (el **candado del
+  tachón**, `models/stock_move.py::_pf_reassign_lots` L159), **H-056** (el camino **por documento** *suma*
+  reserva en silencio sobre la unidad tachada) y **H-057** (el veredicto compara con **`1e-6` fijo** y llama
+  "parcial" a una unidad **completa**). **Decidido por el dueño:** el cambio de lote es **SIEMPRE** (cualquier
+  entrega **abierta**, venga del POS o no) con el **baile del tachón** (guardar 🔒 → destildar 🔑 → liberar →
+  reservar → devolver 🔒) en **un solo aliento** por unidad; el tachón vuelve **solo si la unidad quedó
+  completa** (vara = la demanda de la unidad + **tolerancia del redondeo de la UdM**); la **reserva parcial
+  NO se tranca**; **entregas `done`/`cancel`: NO se tocan**. Ver **§3.R** (contrato §3.3 completo · CA-1…CA-9 ·
+  diagramas · **plan T0–T5 EJECUTADO** en **2 lotes** `[motor]` (§3.R.7, los dos `[x]`) · **veredicto `cumple`** con
+  CA-1…CA-10 verdes y **delta 0** de suite).
+- **Autorización: SÍ (2026-10-19)** — el dueño: *"vamos a crear el plan de nuevo de las tareas con los
+  diagramas ya corregidos"* ⇒ compuerta §4.0 superada para el **paso 2 (plan)**; los lotes arrancan con el
+  plan **revisado** (paso 3).
+- **Autorización: SÍ (2026-10-19 · EJECUCIÓN)** — el dueño: *"sí comienza con el plan"* ⇒ **Lote 1 (T0–T2)** y
+  **Lote 2 (T3–T5)** corridos por `odoo-dev` en **sesiones nuevas**, reinicio+`-u` en el 8071 hecho, y una
+  pasada del `odoo-verificador` al final: **`cumple`**.
+- (Historial · turno previo) Tarea Activa: **NINGUNA — §3.O CERRADA y ratificada (`cumple`)** (ver el CIERRE, abajo). Antes: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
   **Lote 1 (T1–T3) `[motor]` ✅ CERRADO** (dev: T1–T3 `[x]`; 41/41 candados de bandeja/pending/**picker** verdes).
   **Lote 2 (T4–T5) `[pantalla]` ✅ CERRADO** (vistas: 1 solo form por unidad, form del reparto borrado, botón
   re-rotulado; **verificación en vivo HECHA (§3.8)**).
@@ -309,6 +396,1401 @@ flowchart TD
 | 🟠 Naranja | TRANSMISIÓN | Adaptadores/hooks (`_inherit` + `super()`) que propagan | Sí, con cuidado |
 | 🟢 Verde | RUEDAS | Piezas intercambiables (widgets, vistas, options) | Sí, es lo normal |
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
+
+## 3.R (TAREA ABIERTA) — El cambio de lote en una unidad TACHADA: el wizard en bloque deja de fallar y el tachón vuelve (H-055 · H-056 · H-057)
+
+> **Turno:** Odoo Analista (apertura · paso 1 · **Fase A cerrada conversando con el dueño**) ✅ →
+> **Odoo Planificador** (paso 2: plan COMPLETO por lotes) ✅ **ESCRITO (19/10/2026)** → **Odoo Analista** (paso 3:
+> revisión del plan) ⏳ → lotes `[motor]` (`odoo-dev`) → **`odoo-verificador`** (1 pasada, al final).
+> **Estado:** ⏳ **TAREA ABIERTA (19/10/2026)** — contrato §3.3 **cerrado con el dueño**; el plan de §3.R.7 lo
+> **escribió el Odoo Planificador** (**T0 + 4 tareas · 2 lotes**, todas `[motor]`) y **sustituye** el borrador del
+> Analista (no queda duplicado). **Próximo paso:** el **Analista revisa el plan** (paso 3) y luego arranca el
+> **Lote 1 (T0–T2) `[motor]` → `odoo-dev`** en **sesión NUEVA**.
+> **Autorización del dueño: SÍ (2026-10-19)** — *"vamos a crear el plan de nuevo de las tareas con los
+> diagramas ya corregidos"* ⇒ compuerta §4.0 superada: autoriza el **paso 2 (plan)**. Los lotes arrancan con
+> el plan **revisado** (paso 3).
+> **Tamaño: GRANDE** — toca el **flujo NATIVO de reserva** de entregas (`_do_unreserve`,
+> `_update_reserved_quantity`) y el **tachón** (`picked`), que es la frontera del core *planificado → en
+> marcha* ⇒ Analista → Planificador → Analista → lotes `[motor]` → Verificador.
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**).
+> **Dónde:** `C:\odoo_custom\printflow_gestion_inventario` (aquí SÍ se escribe) · motor
+> `C:\odoo_custom\x_product_dimensional_pricing` (**SOLO LECTURA — NO se edita**, H-038).
+> **No hay pantallas en el alcance:** el cambio es de **motor + orquestación**; **ninguna** vista XML se toca
+> ⇒ **no** hay lote `[pantalla]` ni mirada en vivo (en la BD de PRUEBA el Verificador **no** puede accionar
+> botones con efecto): la evidencia es la **suite** + las mediciones de quants.
+
+### 3.R.1 Problema (evidencia)
+
+| Qué se midió | Cómo se midió | Resultado |
+|---|---|---|
+| Entregas POS que quedan **abiertas con el tachón y sin lote** | `search_count` / `search_read` sobre `stock.move` y `stock.picking` | **25.173** entregas POS **cerradas por el POS** vs **3.413 abiertas** (el POS autovalida el **88 %**); las abiertas quedaron **con el tachón puesto y sin lote** |
+| El caso concreto | `read` de los movimientos de los dos bulk del 18/10 | **61470 · 76526 · 78077 · 79328 · 80708 · 84805** ⇒ `state=assigned`, `picked=true`, `lot_id` **vacío** |
+| ¿Falta existencia? | `stock.quant` del producto y del lote | **No**: `LOTE-000001` tiene **4,844 libre** (físico 28,494 − reservado 23,65); el cajón "(SIN LOTE)" quedó con físico 0,04 y reservado 4,88 ⇒ **libre −4,84** |
+| ¿Por qué el wizard no reserva? | lectura del módulo + del core | el **candado del tachón** (`_pf_reassign_lots` L159) devuelve `0.0` **antes** de liberar ⇒ **H-055** |
+| ¿Y el otro camino? | lectura del motor | el camino **por documento** no tiene candado y **suma sin liberar** ⇒ **H-056** |
+| ¿Y el veredicto de la fila? | medición de dos movimientos del DTF | `_EPS = 1e-6` llama **"parcial"** a una unidad **completa** ⇒ **H-057** |
+
+**El tachón (`picked`) NO significa "entregado".** Es la frontera del core *planificado → en marcha*: mientras
+está puesto, `stock.move._do_unreserve` (L804 y L816) y `_pf_unreserve_reservation` del motor (L69-74)
+**se saltan** la unidad. Y el **POS lo pone al crear la entrega** (intenta autovalidar en un savepoint;
+si no hay lote, falla y deja la entrega **abierta** con el tachón puesto). ⇒ Para poder liberar hay que
+**destildar primero**; y como el tachón es también **escudo** de la reserva, hay que **devolverlo**.
+
+### 3.R.2 Objetivo (acotado)
+
+- **(a)** El wizard "Asignación en bloque" **cambia el lote de una unidad tachada** (entrega **abierta**,
+  venga del POS o no): la fila reporta `assigned`, la unidad queda **reservada en el lote elegido** y **con
+  el tachón devuelto**.
+- **(b)** El **otro camino** (selector / botón **por documento**) hace el **mismo** baile ⇒ deja de
+  **sumar reserva en silencio**.
+- **(c)** El **veredicto no miente**: la fila dice `partial` **solo** si falta mercancía **de verdad**
+  (vara: el **redondeo de la UdM**, la misma que usa Odoo).
+- **Nada más:** no se toca el motor, ni las pantallas, ni la regla de qué entregas son asignables, ni la
+  lista de lotes que ofrece el desplegable.
+
+### 3.R.3 Contrato (§3.3 del método — los 7 puntos)
+
+1. **Dónde** — `Fuente: odoo-impreven / Ciber Estudios 2015 RESTAURADA` (**PRUEBA**) · ruta
+   `C:\odoo_custom\printflow_gestion_inventario` · motor
+   `C:\odoo_custom\x_product_dimensional_pricing` (**SOLO LECTURA, NO se edita**).
+2. **Qué** — **T1** `models/stock_move.py` (`_pf_reassign_lots`) · **T2** `wizard/printflow_flow_lot_assign_bulk.py`
+   (veredicto + mensaje) · **T3** `wizard/printflow_product_flow.py` (`_pf_reassign_move_lot`) · **T4**
+   `wizard/printflow_flow_lot_assign_bulk.py` (barrido por fila, savepoint) · **tests** nuevos/adaptados.
+   **No** se crean archivos nuevos.
+3. **Objetivo acotado** — el de §3.R.2 (a/b/c), literal: cambiar el lote de la unidad tachada **devolviendo
+   el tachón**, alinear el camino por documento y no mentir en el veredicto.
+4. **Definición de terminado** — (a) una unidad **tachada** cambia de lote: reservada en el lote elegido **y**
+   con `picked=True` de vuelta (test + quants medidos: el lote viejo recupera su libre); (b) la unidad
+   **corta** queda `partial` **sin tachón** y **sin trancar** la reserva (se reserva lo disponible);
+   (c) el camino por documento **no** deja reserva doble (el lote viejo queda con su libre original);
+   (d) si algo falla a mitad del baile, la unidad queda **como estaba** (tachón + lote viejo) y la fila dice
+   `error`; (e) motor **sin diff** · **cero** escrituras a mano · candados del contenedor **verdes** ·
+   suite con **delta 0** frente al baseline conocido (B1/H-002 · H-035 · H-038).
+5. **Restricciones duras** —
+   - **MOTOR INTOCABLE:** `x_product_dimensional_pricing` **sin diff**. **Código sí, datos no.**
+   - **Prohibido** `cr.execute`, `cr.commit`, `unlink()` + `create()` a mano y `quant.write` de
+     `reserved_quantity`; **prohibido** cualquier ajuste de inventario. Las 6 entregas del caso y el cajón
+     "(SIN LOTE)" **no se sanean aquí** (eso es **DATO** → operación aparte del dueño).
+   - **No forzar flujos nativos:** el tachón se mueve con el **ORM nativo** (`move.picked`, cuyo
+     `_inverse_picked` propaga a las líneas), la liberación con `_do_unreserve` /
+     `_pf_unreserve_reservation` y la reserva con `_update_reserved_quantity` / `_pf_reserve_lot`.
+   - **El orden es obligatorio y no negociable: destildar → liberar → reservar → devolver.** Con el tachón
+     puesto la liberación es un **no-op** en **los dos** candados (core L804/L816 y motor L69-74) ⇒ invertir
+     el orden produce **doble reserva** (el defecto de **H-056**).
+   - **(R1) Prohibido trancar la reserva parcial.** La reserva parcial es **lógica viva** del wizard
+     (§3.K y §3.O): si el lote no alcanza se reserva **lo disponible** y la fila dice `partial`. **No** se
+     revierte, **no** se bloquea y **no** se exige el 100 %.
+   - **(R2) El tachón es escudo.** Mientras esté puesto, los procesos posteriores **no** pueden soltar la
+     reserva ⇒ cuando la unidad queda **completa**, devolver el tachón es **restaurar**, no un extra.
+   - **Un solo mecanismo.** El baile vive en **un** sitio y lo consumen **los dos** caminos (reparto y por
+     documento). **Prohibido** duplicar la secuencia.
+   - **Atomicidad ("un solo aliento").** Cada unidad se procesa dentro de **un savepoint**: si algo falla, la
+     unidad queda **exactamente como estaba** y la fila dice `error`.
+     ⚠️ **Patrón de casa (cítalo, no lo inventes):** `x_product_dimensional_pricing/models/printflow_stock_picking_bulk.py`
+     — `_PfBulkSkip` (L23-24) · `with self.env.cr.savepoint():` (L73) · `except _PfBulkSkip / except Exception`
+     (L97-103) · **`invalidate_recordset(['state'])` (L115)**: la **caché del ORM NO hace rollback** con el
+     savepoint.
+   - ⚠️ **Conejeras** (aviso, no prohibición):
+     - **(C-1) `move.picked = False` toca TODAS las líneas del movimiento** (core `_inverse_picked` L214-216)
+       ⇒ es justo lo que se quiere, pero **no** hay que destildar la línea "a mano": el **movimiento manda**.
+     - **(C-2) `_compute_picked` solo pone `True`, nunca `False`** (core L208-212): si el destildado no llega
+       a las líneas, el tachón **se vuelve a poner solo** y el baile queda a medias. La prueba tiene que mirar
+       **el movimiento Y sus líneas**.
+     - **(C-3) La caché del ORM no revierte** con el savepoint ⇒ sin `invalidate_recordset` el veredicto se
+       calcula con la **foto vieja** (patrón de casa, arriba).
+     - **(C-4) El tachón se consulta en DOS sitios** (el candado de PrintFlow y los filtros del core y del
+       motor): el destildado tiene que estar **hecho y propagado** antes de llamar a la liberación.
+     - **(C-5) Dos usuarios en la misma entrega a la vez = riesgo residual declarado.** **No** se resuelve en
+       esta tarea (no se añade locking).
+6. **Qué se RETIRA** — (a) el **cortocircuito del tachón** en `_pf_reassign_lots` (L159): queda **solo**
+   para `done`/`cancel` (es **sustitución**, no acumulación: **no** se dejan los dos caminos);
+   (b) la comparación por **`_EPS`** del veredicto de la fila (L513) y el **mensaje** que culpaba al lote sin
+   motivo (L509-512). **Nada más** se retira: el orden aditivo del plan, `_SPLIT_KINDS`,
+   `_BULK_ASSIGNABLE_KINDS`, el desplegable (que excluye el lote propio) y la bandeja quedan **como están**.
+7. **Fuera de alcance** —
+   - **Acumular lotes en una fila y limpiar el remanente** (el cajón "(SIN LOTE)" y las reservas repartidas
+     en 2+ lotes): la **pantalla** tiene **un** lote por fila; el motor **ya** soporta N
+     (`_pf_reassign_lots(lots)`), pero **no** se toca la pantalla ni se inventa una fila multi-lote.
+     **Decisión del dueño:** se registra y se retoma en **tarea aparte**.
+   - **Sanear las entregas de hoy** (las 6 del caso, el cajón sin lote) → **DATO**: operación aparte del dueño.
+   - **Entregas `done` y `cancel`**: **no** se tocan (**no-go**).
+   - **La concurrencia**: riesgo declarado, **no** se resuelve aquí.
+   - **Añadir ventanas o confirmaciones nuevas**: la fricción **ya existe** (motivo obligatorio + política de
+     excepción en el bloque; `confirm_correction` + motivo en el selector) ⇒ no se añade nada.
+   - **NO** tocar el guardián `_pf_check_correction_window` del selector (`printflow_flow_lot_picker.py`
+     L494-513): **se conserva** — su fricción es la que autoriza el cambio de lote a mano.
+   - **H-053** (decimales), **H-048** (rótulo repetido), el **tamaño/orden del modal** (§3.Q, ya cerrado) y el
+     backlog (**H-021 · H-016 · H-018 · H-015**): **no** entran.
+
+### 3.R.4 Decisiones cerradas por el dueño (19/10/2026)
+
+| # | Decisión del dueño | Qué obliga en el contrato |
+|---|---|---|
+| **D-1** | El cambio de lote es **SIEMPRE**: cualquier entrega **abierta**, venga del POS o no | El candado del tachón deja de bloquear el cambio; se le añade el **baile** (punto 5) |
+| **D-2** | **Entregas `done` y `cancel`: NO se tocan** | El cortocircuito se conserva **solo** para esos dos estados |
+| **D-3** | La cura es la **Opción B**: destildar 🔑 → liberar → reservar → devolver 🔒, **en un solo aliento** (savepoint por unidad) | Orden obligatorio (punto 5) + **T4** |
+| **D-4** | **Unidad completa** ⇒ vuelve el tachón y la fila dice `assigned`. **Unidad corta** ⇒ **no** vuelve el tachón y la fila dice `partial` | La vara es la **demanda de la unidad** + **tolerancia del redondeo de la UdM**: `float_compare(reservado, demanda, precision_rounding=move.product_uom.rounding)` |
+| **D-5** | La **reserva parcial NO se tranca** | Restricción **R1**; se **retira** la idea de "revertir si no cubre" (contradecía la lógica viva) |
+| **D-6** | El **otro camino** (por documento) se **alinea** al mismo baile | **T3** (hoy suma en silencio: H-056) |
+| **D-7** | **Acumular lotes / limpiar remanente = FUERA de alcance** | Se registra (punto 7); la pantalla no se toca |
+| **D-8** | La **Opción C** (escribir `lot_id` con el `write()` nativo de la línea, `stock_move_line.py` L421-533) **no** se adopta como cura | Se le pide al **Planificador** evaluarla **con un test** (§3.R.7 · T0): el `write` nativo "reserva lo máximo posible" y sería un **tercer** camino de escritura |
+| **D-9** | La conejar **"idempotencia"** se **retira** | La comprobación existente (`_pf_reassign_move_lot` L1054-1057) solo salta si la unidad tiene **exactamente** el lote elegido ⇒ **no** choca con el propósito; **no** se añade otra |
+| **D-10** | Un lote **VACÍO** en esa ubicación **no se toma**: el wizard **lo dice** y **no toca la unidad** | **T5**: guardián **antes** del baile (libre del lote = 0 ⇒ `return 0.0` **sin** destildar ni liberar) + el mensaje real de **T2**. La reserva **parcial** sigue permitida (**R1** intacta) |
+
+### 3.R.5 Diagramas (corregidos)
+
+**① El candado: antes / después**
+
+```text
+ANTES  (H-055: la unidad tachada no se puede tocar)      DESPUÉS  (cura: el baile del tachón)
+┌────────────────────────────────────────────┐          ┌────────────────────────────────────────────┐
+│ _pf_reassign_lots(move)                    │          │ _pf_reassign_lots(move)                    │
+│                                            │          │                                            │
+│  ¿state en (done, cancel)?                 │          │  ¿state en (done, cancel)? ──► 0.0         │  ← NO-GO intacto
+│      │ no                                  │          │      │ no                                  │
+│  ¿picked?  ──► SÍ ──► return 0.0    🔒     │          │  ¿picked? ──► SÍ: 🔑 destildar el MOVIMIENTO│  ← el tachón se APARTA
+│      │ no                                  │          │      │        (el core lo propaga a las líneas)│
+│  liberar  (nativo, ya no es no-op)         │          │  liberar  (nativo)                          │
+│  reservar el lote elegido (nativo)         │          │  reservar el lote elegido (nativo)          │
+│                                            │          │  ¿la unidad quedó completa?                 │
+│  return taken                              │          │      ├─ sí ──► 🔒 DEVOLVER el tachón        │
+└────────────────────────────────────────────┘          │      └─ no ──► se queda destildada (PARCIAL)│
+  ⇒ líneas de la entrega: `error`                       │  return taken                              │
+    "El lote no quedó reservado en la unidad."           └────────────────────────────────────────────┘
+```
+
+**② El camino por documento (H-056): la reserva que se sumaba**
+
+```text
+ANTES:  liberar ────► NO-OP (el tachón la bloquea)  ──►  reservar el lote nuevo (ADITIVO)
+                                                          ⇒  🔴 reservado en el lote VIEJO **y** en el NUEVO (en silencio)
+
+DESPUÉS: 🔑 destildar ──► liberar (sí libera) ──► reservar el nuevo ──► 🔒 devolver
+                                                          ⇒  ✅ reservado SOLO en el lote elegido
+```
+
+**③ Las partes del plan: qué archivo se toca**
+
+```text
+printflow_gestion_inventario/
+├── models/
+│   └── stock_move.py                       ✏️ MODIFICAR  ← T1 · el baile del tachón + la vara de la UdM
+├── wizard/
+│   ├── printflow_flow_lot_assign_bulk.py   ✏️ MODIFICAR  ← T2 · veredicto honesto · T4 · savepoint por fila
+│   ├── printflow_product_flow.py           ✏️ MODIFICAR  ← T3 · el camino por documento (deja de sumar)
+│   ├── printflow_flow_lot_assign_bulk_line.py   (sin cambios: el desplegable sigue excluyendo el lote propio)
+│   ├── printflow_flow_lot_tray.py               (sin cambios: hereda la cura por el orquestador)
+│   └── printflow_flow_lot_picker.py             (sin cambios: su guardián de corrección se conserva)
+└── tests/                                  ＋ NUEVO / MODIFICAR  ← el test del tachón (aparte);
+                                                los existentes de §3.O/§3.P/§3.Q siguen VERDES
+
+x_product_dimensional_pricing/              🔵 NO SE TOCA (motor · SOLO LECTURA)
+```
+
+**④ El flujo de la fila (lo que vive el operador) — sin cambios de pantalla**
+
+```text
+1. El operador abre la bandeja "Asignar lote" y elige las entregas  (como hoy)
+2. Toca "Asignar lote"  ──►  se abre el wizard en bloque            (como hoy)
+3. La fila de la unidad TACHADA trae el desplegable con los lotes con existencia
+4. Elige la caja (lote) y escribe el MOTIVO                          (como hoy, obligatorio)
+5. Confirma  ──►  por dentro, UN SOLO ALIENTO (savepoint) por unidad:
+                     guardar 🔒 ─► destildar 🔑 ─► liberar ─► reservar ─► ¿completa?
+                        ├─ sí  ⇒ devolver 🔒   ⇒ fila = ASIGNADA ✅
+                        └─ no  ⇒ sin tachón    ⇒ fila = PARCIAL  ⚠️ (reserva parcial permitida)
+                     si algo falla ⇒ se revierte TODO ⇒ fila = ERROR (la unidad queda intacta)
+6. Cierra y ve el detalle por destino + el registro en el chatter del documento
+```
+
+### 3.R.6 Criterios de aceptación
+
+- **CA-1** — Una unidad **tachada** de una entrega abierta acepta el cambio de lote: la fila dice
+  `assigned`, la unidad queda reservada **en el lote elegido** y con **`picked=True` de vuelta**.
+  *(Hoy: `error` + "El lote no quedó reservado en la unidad.")*
+- **CA-2** — **No hay reserva apilada**: tras el cambio, la unidad tiene reservado **solo** el lote elegido y
+  el lote viejo recupera su **libre** (medido en `stock.quant`: sin reservas fantasma ni negativos).
+- **CA-3** — Entregas `done` y `cancel`: **mismo comportamiento que hoy** (no se tocan, sin excepción).
+- **CA-4** — Unidad **corta**: la reserva parcial **no se tranca**; la fila dice `partial` y el tachón
+  **no** vuelve.
+- **CA-5** — El veredicto usa la **tolerancia del redondeo de la UdM**: DTF (UdM `m`, `rounding` **0,001**)
+  con demanda **0,018182** y reservado **0,018** ⇒ **`assigned`** (no `partial`); y una falta real
+  (demanda 1 / reservado 0) ⇒ **`partial`**.
+- **CA-6** — El camino **por documento** (`_pf_assign_lot_to_document` → `_pf_reassign_move_lot`) hace el
+  **mismo** baile: en una unidad tachada **no** suma (hoy suma: H-056).
+- **CA-7** — **Atomicidad**: si el baile falla a mitad, la unidad queda con **su tachón y su lote de antes**
+  y la fila dice `error` (nunca a medio camino, nunca destildada por accidente).
+- **CA-8** — Motor `x_product_dimensional_pricing` **sin diff** · **cero** `cr.execute` / `cr.commit` ·
+  **cero** escrituras de datos fuera de las primitivas nativas.
+- **CA-9** — Candados del contenedor **verdes** (los mismos 29 de §3.P/§3.Q) y suite con **delta 0** frente
+  al baseline conocido (**B1/H-002 · H-035 · H-038**: pre-existentes y ajenos).
+- **CA-10** — Elegir un lote **VACÍO** (libre **0** en la ubicación de la unidad) **no le quita nada** a la
+  unidad: queda **intacta** (tachón + reserva vieja) y la fila lo reporta con el motivo real.
+  *(Hoy: la liberación ya ocurrió ⇒ la unidad se queda **sin reserva**: **H-058**.)*
+
+### 3.R.7 Plan de ejecución por LOTES — ✅ **ESCRITO por el Odoo Planificador (19/10/2026)** (ratifica y **sustituye** el borrador del Analista)
+
+> **Plan COMPLETO · T0 (evaluación) + 5 tareas · 2 lotes** (máx. 3 por lote, **sin mezclar dueños**: las seis son
+> `[motor]`). Cada lote es **UNA sesión NUEVA** de `odoo-dev` (nunca se retoma la anterior): marca `- [x]` **solo lo
+> hecho**, deja su **bitácora** para el lote siguiente y al cerrar **aprieta el botón del proyecto**
+> (`Odoo8071-printflow_gestion_inventario`, skill `reiniciar-servidor-odoo` ⇒ **reinicia + `-u`**) y deja la evidencia
+> (log del botón + PID + `write_date`). El **Verificador** hace **una sola** pasada, al final (§4.3).
+> ➡️ **PRIMER LOTE A EJECUTAR: Lote 1 (T0–T2) · `[motor]` → `odoo-dev`.**
+> **No hay lote `[pantalla]` ni mirada en vivo** (§3.R cabecera: el alcance no toca ninguna vista XML).
+> **Fuente (solo lectura):** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**).
+> **Ruta donde SÍ se escribe:** `C:\odoo_custom\printflow_gestion_inventario`.
+> **Motor `C:\odoo_custom\x_product_dimensional_pricing`: SOLO LECTURA — sin diff (CA-8 · H-038).**
+> ⚠️ **CORREGIDO POR EL ANALISTA (paso 3 · 19/10) — cómo se prueba DE VERDAD ese "sin diff":** el motor **YA trae
+> 143 entradas sin commitear** (22 modificadas + ~120 sin versionar, **H-038**) y su `models/stock_move.py` —el de
+> las primitivas— está **sin versionar** (`??`) ⇒ **`git diff` NO lo vería aunque se tocara**. La prueba de CA-8 es
+> una **HUELLA**: `SHA-256(models/stock_move.py)` = `22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B`
+> (12.690 bytes) + `git status --porcelain` = **143** líneas, medidos **al abrir** y **al cerrar cada lote** ⇒
+> tienen que ser **idénticos**. **"Diff vacío" queda PROHIBIDO como evidencia**: es un **falso verde**.
+> **Restricciones duras (§3.R.3 punto 5) — vigentes en las CINCO tareas:** *no forzar ni reemplazar flujos nativos;
+> código sí, datos no*; `_inherit` + `super()`; **prohibido** `cr.execute`, `cr.commit`, `unlink()`+`create()` a mano
+> y `quant.write` de `reserved_quantity`; prohibido cualquier ajuste de inventario. El tachón se mueve con el **ORM
+> nativo** (`move.picked` ⇒ `_inverse_picked` lo propaga a las líneas), la liberación con `_pf_unreserve_reservation`
+> (`_do_unreserve`) y la reserva con `_pf_reserve_lot` (`_update_reserved_quantity`). **Orden obligatorio y no
+> negociable: destildar → liberar → reservar → devolver.** **R1:** la reserva parcial **no** se tranca. **R2:** el
+> tachón es escudo ⇒ devolverlo es **restaurar**, no un extra. **Un solo mecanismo:** el baile vive en **un** sitio
+> (`stock.move._pf_reassign_lots`) y lo consumen **los dos** caminos; **prohibido** duplicar la secuencia.
+> **Convenciones OCA** (skill `odoo-17-clean-architecture` §2.5): métodos `_pf_<algo>`, un archivo por objeto,
+> docstrings que **no prometan** lo retirado, imports en 6 bloques. **No se crean archivos de CÓDIGO nuevos**
+> (§3.R.3 punto 2): el test NUEVO vive en `tests/` (autorizado por §3.R.5 ③) y la evidencia en `docs/evidencia/`.
+> **Rojos YA EXISTENTES (ajenos — NO perseguir):** B1/**H-002**, **H-035**, **H-038**. Suite con
+> `--test-tags /printflow_gestion_inventario`, **salida a archivo** por lote (skill §3.7).
+
+**Orden por dependencia (por qué así):** **T0** solo **mide** (no decide el rumbo; la cura ya la eligió el dueño:
+D-3) → **T1** pone el **baile** y la **vara de la UdM** (`_pf_unit_is_covered`): la **semántica** que el veredicto
+necesita → **T2** consume esa vara en el veredicto de la fila (**no puede usar un helper que no existe**) → **T3**
+alinea el **otro camino** al **MISMO** mecanismo de T1 (hoy libera en no-op y suma) → **T4** envuelve el barrido en
+**savepoint**, y va **después de T2** porque envuelve el **cuerpo de la fila que T2 reescribe** (una sola pasada
+sobre el mismo bloque, sin pisarse) → **T5** añade el **guardián del lote vacío** en el MISMO método de T1
+(**antes** del baile) y reutiliza el mensaje de T2 ⇒ va **después** de los dos (**H-058** · D-10 · CA-10).
+Ninguna tarea depende de una posterior.
+
+**Qué se RETIRA (sustitución, no acumulación — se borra en el lote que lo cambia, sin residuo):**
+(a) el **cortocircuito del tachón** de `_pf_reassign_lots` (L159) → **T1** (queda **solo** para `done`/`cancel`);
+(b) la comparación por **`_EPS`** del veredicto (L513) **y** el mensaje que culpaba al lote (L509-512) → **T2**;
+(c) la llamada **directa** al motor `move._pf_reassign_lot(...)` desde `_pf_reassign_move_lot` (L1059) → **T3**;
+(d) el `except UserError` **a secas** del barrido (sin savepoint) → **T4**;
+(e) el **test-sonda** de T0 → **T0** (se borra al cerrar la evaluación; la evidencia queda en el log).
+**SE CONSERVA (no es residuo):** el patrón **aditivo** (1 liberación + N reservas), `_SPLIT_KINDS`,
+`_BULK_ASSIGNABLE_KINDS`, el desplegable por fila (que excluye el lote propio), la bandeja, el picker y su guardián
+`_pf_check_correction_window`, `confirm_exception` con su política y su **motivo obligatorio**, la conejar
+"idempotencia" de `_pf_reassign_move_lot` (L1054-1057 · **D-9**), `_pf_log_document`, la ventana
+`printflow.flow.lot.assign.bulk.result` + los **4 conteos** (H-029) y el motor.
+
+**Orden de creación de archivos:** (1) `tests/test_3r_probe_opcion_c.py` → **creado y borrado dentro de T0**;
+(2) `tests/test_product_flow_lot_picked_reassign.py` → **creado en T1** y **ampliado** en T2, T3 y T4 (cada tarea
+añade SU clase/método); (3) `models/stock_move.py` (T1) → `wizard/printflow_flow_lot_assign_bulk.py` (T2, T4) →
+`wizard/printflow_product_flow.py` (T3). Los logs de evidencia: `docs/evidencia/3R-t0-opcion-c.txt`,
+`docs/evidencia/3R-lote1-tests.txt`, `docs/evidencia/3R-lote2-tests.txt`.
+
+---
+
+#### Lote 1 (T0–T2) — `[motor]` → `odoo-dev` · La evaluación de la Opción C, el baile del tachón, la vara de la UdM y el veredicto honesto (PRIMERO A EJECUTAR)
+
+> **El Lote 1 abre con la EVALUACIÓN T0** (§3.R.4 · **D-8**: la Opción C **no** entra al plan salvo que el test la
+> defienda) y sigue con la cura ya decidida por el dueño (D-3): el baile (T1) y el veredicto (T2).
+
+- [x] **T0 — Sonda de la Opción C + veredicto por escrito** · `[motor]` → `odoo-dev`
+  (`tests/test_3r_probe_opcion_c.py`, **de uso único**).
+  - **Qué se mide:** si servir `{'lot_id': <lote nuevo>}` con el **`write()` NATIVO** de `stock.move.line` (core
+    `stock/models/stock_move_line.py` L421-533 — libera la reserva vieja en L477-478 y reserva "lo máximo posible"
+    del lote nuevo en L480-485) sirve como cura: **(i)** ¿mueve la reserva **con el tachón puesto**, sin destildar?;
+    **(ii)** ¿**suma** o libera de verdad el lote viejo?; **(iii)** ¿deja el veredicto honesto en una unidad **corta**?
+  - **Cómo:** `TransactionCase` (`@tagged('post_install', '-at_install')`) con las utilidades de
+    `tests/test_product_flow_lot_assign_bulk_per_move.py` (`_product`, `_lot`, `_stock`, `_outgoing`): producto por
+    lote, entrega **abierta** con **dos** unidades `picked=True` y **sin lote**: la primera con stock **1.0** del
+    lote nuevo (caso completo) y la segunda con stock **0.5** (caso **corto**, el que decide CA-4). Escribir
+    `move.move_line_ids.write({'lot_id': lote_nuevo.id})` y **medir con `assert`**: (a) reservado del lote nuevo
+    (`stock.quant`), (b) `move.picked` **y** `line.picked`, (c) el libre del lote viejo. Volcar la salida a
+    `docs/evidencia/3R-t0-opcion-c.txt`.
+  - **Definición de terminado:** el log contiene los **tres datos medidos** y **una línea de veredicto**
+    (`DESCARTADA` / `NO DESCARTADA` + por qué, en una frase). La **sonda se BORRA** en el mismo lote (es el intento
+    anterior: no se deja residuo — checklist §3 de `odoo-17-clean-architecture`); lo que permanece es la evidencia.
+  - **VEREDICTO DEL PLANIFICADOR (leído en el core; T0 lo mide): DESCARTADA como cura** — se **ratifica D-8**:
+    1. **No cumple CA-4 (el caso corto).** El `write` **no destilda**: el tachón **nunca se va** ⇒ en una unidad
+       corta la fila diría `partial` con el tachón **puesto**, y **CA-4 exige lo contrario** ("`partial` **sin**
+       tachón"). Para cumplirlo habría que destildar ⇒ **volver al baile**.
+    2. **Sería un TERCER camino de escritura** (viola §3.R.3 punto 5, *un solo mecanismo*): escribe
+       `stock.move.line` desde un wizard, por **fuera** de las primitivas del motor
+       (`_pf_unreserve_reservation` / `_pf_reserve_lot`), que son las que **respaldan cada línea contra su quant
+       antes de liberar** (protección anti `reserved_quantity` negativa · H-035).
+    3. **Deja el `state` del documento desincronizado:** el core solo llama `_recompute_state()` si llega
+       `quantity` o `product_uom_id` (L487-488); servir **solo** `lot_id` no lo hace ⇒ la reserva cambia y el
+       movimiento puede quedarse con un `state` viejo, justo lo que la fila reporta en pantalla.
+    4. **No ahorra la vara:** seguiría haciendo falta la tolerancia de la UdM (T1/T2) para no mentir en el veredicto.
+  - **T0 NO es compuerta del plan:** el rumbo (el baile de T1) ya está decidido por el dueño (**D-3**). Si la sonda
+    **contradijera** este veredicto, el dev lo deja **escrito** en la evidencia + su bitácora y **sigue con T1/T2**;
+    **no** improvisa otra cura (replantear es del **Planificador**).
+
+- [x] **T1 — El baile del tachón + la vara de la UdM** · `[motor]` → `odoo-dev`
+  (`models/stock_move.py::_pf_reassign_lots`, L126-172).
+  - **El baile (D-3 · orden obligatorio):** partir el guardián de **L159** en dos:
+    `if self.state in ('done', 'cancel'): return 0.0` (**D-2** · NO-GO intacto · **CA-3**) y, aparte,
+    `was_picked = self.picked`; **si `was_picked`: `self.picked = False`** (🔑 se destilda **el MOVIMIENTO**; el core
+    lo propaga a las líneas por `_inverse_picked`) **ANTES** de liberar. Con el tachón puesto la liberación es
+    **no-op** en **los dos** candados (core `_do_unreserve` L804/L816 y motor `_pf_unreserve_reservation` L69-74) ⇒
+    invertir el orden produce **doble reserva** (el defecto de **H-056**). Después: **liberar** (`self._pf_unreserve_reservation()`)
+    y **reservar** como hoy (el bucle aditivo **tal cual**: `self._pf_reserve_lot(lot, remaining)`).
+  - **Devolver el tachón (R2 · restaurar, no inventar):** al final,
+    `if was_picked and self._pf_unit_is_covered(taken): self.picked = True` (🔒). Si la unidad **no** quedó completa,
+    el tachón **NO vuelve** (queda destildada ⇒ `partial`, **CA-4**). Una unidad que **no** estaba tachada **no** se
+    tacha: `picked` marca *"en marcha"* y lo pone el operador o el POS, no la cura ⇒ **prohibido**
+    `self.picked = True` cuando `was_picked` es `False` (sería **forzar** un estado que nadie pidió y cambiaría la
+    semántica de todo el bloque).
+  - **La vara (D-4 · CA-5):** helper NUEVO del movimiento para que el wizard la **consuma** en vez de repetirla:
+    `_pf_unit_is_covered(self, reserved, demand=None) -> bool` ⇒
+    `float_compare(reserved, demand if demand is not None else self.product_uom_qty, precision_rounding=self.product_uom.rounding) >= 0`
+    — la **misma** tolerancia que usa Odoo (el redondeo de la UdM del movimiento), sin `_EPS` mágico. Docstring de 2
+    líneas citando **D-4/CA-5**.
+  - **Qué se RETIRA:** el `if self.picked or self.state in ('done', 'cancel'): return 0.0` de **L159** en su forma
+    actual (queda **solo** la mitad de `done`/`cancel`). El `_EPS` del `need`/`remaining` **se conserva** (es otro
+    corte: el del bucle del plan).
+  - **NO tocar:** `_pf_keep_current_lot_reservation`, `_assign_exclusive_lot`, el orden aditivo, `_SPLIT_KINDS` ni el
+    motor (**SOLO LECTURA**). Se **actualizan** los docstrings/comentarios que hoy explican el cortocircuito (el
+    docstring del método, **L131-134**, que hoy declara *"si el movimiento está `picked` … no se pueden liberar"*) para
+    que **no quede residuo** que prometa lo retirado.
+  - **Definición de terminado (CA-1 · CA-2 · CA-3 · CA-4a):** una unidad **tachada** cambia de lote ⇒ reservada
+    **solo** en el lote elegido, con `picked=True` **de vuelta en el movimiento Y en sus líneas** (conejera **C-2**),
+    y el quant del lote viejo recupera su **libre** (medido); una unidad **corta** **no** recupera el tachón; las
+    `done`/`cancel` devuelven `0.0` sin tocar nada.
+  - **Evidencia (test + salida a archivo):** `tests/test_product_flow_lot_picked_reassign.py` **NUEVO** (clase del
+    **contenedor**, con las utilidades del test de `per_move`): `test_ca1_picked_unit_changes_lot` (unidad tachada
+    con lote viejo → reserva el nuevo, el viejo recupera su libre, **tachón devuelto**) ·
+    `test_ca2_no_stacked_reservation` (solo el lote elegido reservado; sin reservas fantasma ni negativos en
+    `stock.quant`) · `test_ca3_done_or_cancel_untouched` (`0.0`, sin destildar) · `test_ca4_short_unit_loses_pick`
+    (`partial` **sin** tachón). **Regresión real obligatoria:** revertir el baile (dejar el cortocircuito de L159) ⇒
+    `test_ca1` **falla**; se deja escrito en la bitácora del lote. Salida:
+    `docs/evidencia/3R-lote1-tests.txt` (tests + **huella del motor** idéntica al baseline: SHA-256 de
+    `models/stock_move.py` + `git status --porcelain` = **143**).
+
+- [x] **T2 — El veredicto honesto de la fila** · `[motor]` → `odoo-dev`
+  (`wizard/printflow_flow_lot_assign_bulk.py::action_assign_lot_bulk`, bloque **L507-518**).
+  - **Sustituir la clasificación por la vara del movimiento (T1)** — cuatro ramas, con `result_note` **honesto** y
+    microcopy de **un renglón**:
+    ```
+    demand  = line.demand_qty or 0.0
+    demand <= _EPS                                  ⇒ 'skipped'  · 'La unidad no tiene demanda: nada que asignar.'
+    reserved <= _EPS                                ⇒ 'error'    · 'El lote "X" no tiene existencia disponible aquí.'
+    not line.move_id._pf_unit_is_covered(reserved, demand)  ⇒ 'partial'  · 'Solo se reservó lo disponible.'  (se conserva)
+    (resto)                                         ⇒ 'assigned' · 'Lote asignado.'                        (se conserva)
+    ```
+    El mensaje de `error` **deja de mentir**: nombra el **lote** y dice **por qué** (sin existencia en la ubicación
+    de la unidad); hoy culpaba al lote sin motivo (`'El lote no quedó reservado en la unidad.'`) incluso cuando la
+    causa era el **candado del tachón** (**H-055**). **Sin hardcodeo** (nada de ids ni de textos por producto).
+  - **Qué se RETIRA:** la comparación `elif demand > _EPS and reserved < demand - _EPS:` (**L513**) y el mensaje
+    `'El lote no quedó reservado en la unidad.'` (**L509-512**). El `_EPS` del módulo **se conserva** (sigue
+    cortando el `reserved <= _EPS` y la demanda nula).
+  - **NO tocar:** el guardián de permisos, el `reason` obligatorio + la política de excepción (cabecera de
+    `action_assign_lot_bulk`), el `continue` de las filas sin lote (`skipped`), `_pf_line_reserved`,
+    `_pf_log_document`, `_pf_result_notification` (los **4 conteos** · H-029) ni la ventana de detalle.
+  - **Definición de terminado (CA-4b · CA-5):** DTF (UdM `m`, `rounding` **0,001**) con demanda **0,018182** y
+    reservado **0,018** ⇒ fila **`assigned`** (no `partial`/`error`); corte real (demanda 2 / reservado 1) ⇒
+    `partial`; sin reserva (demanda 1 / reservado 0) ⇒ `error` con el motivo real; demanda 0 ⇒ `skipped`.
+  - **Evidencia (test + salida a archivo):** en el **mismo** `tests/test_product_flow_lot_picked_reassign.py`,
+    **clase del veredicto** (unidades **sin** `picked`, para aislar la vara del baile):
+    `test_ca5_uom_rounding_is_covered` (el caso literal del DTF ⇒ `assigned`, y el helper con `(0.0, 1.0)` ⇒
+    `False`) · `test_ca4_short_unit_is_partial` · `test_ca5_zero_demand_is_skipped`. Salida:
+    `docs/evidencia/3R-lote1-tests.txt` (mismo log del lote). **Candados verdes:** los tests de
+    `test_product_flow_lot_assign_bulk_per_move.py`, `..._assign_bulk_result.py` y `..._pending_order_assign.py`
+    siguen **verdes** (CA-9); cualquiera que quede rojo se **adapta** en este lote (nunca se deja en rojo).
+
+**Bitácora del Lote 1 — 2026-10-19 · `odoo-dev` (sesión NUEVA) · T0 · T1 · T2 = `[x]`**
+
+- **T0 (sonda de uso único).** Archivo creado, corrido y **BORRADO** en el lote:
+  `tests/test_3r_probe_opcion_c.py` (+ su import temporal en `tests/__init__.py`, también retirado).
+  Mide el `write()` NATIVO de `stock.move.line` sobre una entrega abierta con 2 unidades `picked=True`
+  y sin lote. Datos medidos (log en `docs/evidencia/3R-t0-opcion-c.txt`):
+  (i) **sí** mueve la reserva **sin destildar** (lote nuevo reservado 2.000 y líneas `picked=True`);
+  (ii) el lote viejo **libera de verdad** (libre 3.000 → 5.000 · reservado 2.000 → 0.000), **no apila**;
+  (iii) la unidad corta queda **sobre-reservada** (físico 1.500 vs reservado 2.000 ⇒ libre −0.500) y con
+  **el tachón puesto**, y el `state` **no** se refresca. **VEREDICTO: DESCARTADA como cura** ⇒
+  **D-8 ratificada**; el rumbo (baile de T1, D-3) no cambia.
+- **T1 (`models/stock_move.py`).** `_pf_reassign_lots`: el cortocircuito `if self.picked or state in
+  ('done','cancel')` quedó **partido** en dos: **NO-GO** solo `done`/`cancel` (D-2) y el **baile**
+  `was_picked → self.picked = False` (🔑 el MOVIMIENTO; el core lo propaga a las líneas) **antes** de
+  `_pf_unreserve_reservation()`, y `self.picked = True` (🔒) **solo** si `was_picked` y la unidad quedó
+  completa. Helper NUEVO `_pf_unit_is_covered(reserved, demand=None)` con
+  `float_compare(..., precision_rounding=self.product_uom.rounding)` (D-4 · CA-5). Import
+  `from odoo.tools import float_compare`. **Sustituí** el cortocircuito viejo por el baile (no quedan los
+  dos caminos); el `_EPS` del `need`/`remaining` **se conserva** (es otro corte).
+- **T2 (`wizard/printflow_flow_lot_assign_bulk.py::action_assign_lot_bulk`).** El veredicto ahora son
+  **4 ramas**: `demand <= _EPS ⇒ skipped` · `reserved <= _EPS ⇒ error` con el motivo REAL
+  (`'El lote "X" no tiene existencia disponible aquí.'`) · `not move._pf_unit_is_covered(reserved, demand)
+  ⇒ partial` · resto `⇒ assigned`. **Retiré** la comparación `reserved < demand - _EPS` (L513) y el
+  mensaje `'El lote no quedó reservado en la unidad.'` (L509-512). El `_EPS` del módulo se conserva.
+  **No** se tocó: permisos, `reason` + política, `continue` de filas sin lote, `_pf_line_reserved`,
+  `_pf_log_document`, `_pf_result_notification` ni la ventana de detalle.
+- **Archivos:** `models/stock_move.py` (MOD) · `wizard/printflow_flow_lot_assign_bulk.py` (MOD, solo el
+  bloque del veredicto) · `tests/test_product_flow_lot_picked_reassign.py` (**NUEVO**: 2 clases, 8 tests) ·
+  `tests/__init__.py` (+1 import) · `docs/evidencia/3R-t0-opcion-c.txt` y `3R-lote1-tests.txt` (**NUEVOS**).
+  Sin archivos de código nuevos.
+- **Evidencia (BD de test `pf_picker_tests`, proceso propio, `--no-http`, salida a `--logfile`):**
+  nuevos **8/8** (`TestProductFlowLotPickedReassign` 4 + `TestProductFlowLotAssignBulkVerdict` 4) ·
+  candados del contenedor + `pending_order_assign` **31/31** · corrida FINAL **39/39**, `0 failed, 0
+  error(s)`. Detalle en `docs/evidencia/3R-lote1-tests.txt`.
+- **Regresión REAL obligatoria:** revertido el baile (dejar el cortocircuito de L159) ⇒ `test_ca1` **falla**
+  (`'error' != 'assigned'` + el mensaje del lote) = el defecto de **H-055**; restaurado el archivo
+  (`SHA-256` idéntico al que pasó 8/8) y verde otra vez.
+- **Huella del motor (CA-8 · H-038):** `SHA-256(models/stock_move.py)` = `22293F95…106B` · **12.690** bytes ·
+  `git status --porcelain` = **143**, medida **al abrir** y **al cerrar** ⇒ **idénticas**. Motor **sin tocar**.
+- **Desviaciones declaradas:** (1) la UdM del CA-5 se crea en el test con `rounding=0.001` (categoría propia)
+  para que el test **no dependa de los datos** de la BD. **Dato CORREGIDO por el Analista (2026-10-19, lectura
+  MCP `odoo-impreven`):** la UdM `m` **id 5** (`Length / Distance`) trae `rounding = 0.001` — lo que vale **2**
+  es `decimal.precision` *Product Unit of Measure* (H-053), que es **otra cosa** y es lo que hace que el core
+  guarde **0,02**. La tolerancia real del CA-5 es **0,001 m** ⇒ el caso del contrato (0,018182 vs 0,018, dif
+  0,000182) sigue dando **COMPLETA**, igual que con la UdM del test. El código usa `product_uom.rounding`
+  (verificado: `models/stock_move.py` L135-137) ⇒ correcto. (2) el reservado exacto
+  del DTF no se afirma literal: `decimal.precision` *Product Unit of Measure* = **2** en la BD (H-053) hace que
+  el core guarde **0,02**; el test afirma el **veredicto** y el helper, no el quant; (3) se añadió
+  `test_ca5_zero_reservation_is_error_with_reason` (4.º test de la clase del veredicto) para cubrir la rama
+  `error` que pide la definición de terminado de T2. Nada más.
+- **Reinicio+módulo:** botón **`Odoo8071-printflow_gestion_inventario`** ⇒ `20261019-182124-printflow_gestion_inventario.log`
+  · **tarea=0** · `-u` código de salida **0** · **PID 2532 → 6484** · puerto **8071 OK** ·
+  `write_date` del módulo **2026-10-19 22:21:36 UTC** (dentro de la ventana del `-u`, 18:21:26→18:21:39 local) ⇒ **OK**.
+- **Queda para el Lote 2 (T3–T5), en sesión NUEVA:** T3 alinear `_pf_reassign_move_lot` al mecanismo ÚNICO
+  (`move._pf_reassign_lots([lot])`, borrar `demand` y la llamada directa a `_pf_reassign_lot`) · T4 savepoint
+  por fila + los dos `except` + `invalidate_recordset(['picked'])` (con el veredicto escrito **fuera** del `with`) ·
+  T5 guardián del lote VACÍO **antes** del baile (`_get_available_quantity(..., strict=True) <= 0 ⇒ return 0.0`).
+  La vara de T2 (`_pf_unit_is_covered`) ya está disponible para T5.
+
+#### Lote 2 (T3–T5) — `[motor]` → `odoo-dev` · El camino por documento, el "un solo aliento" y el lote vacío
+
+- [x] **T3 — El camino por documento deja de sumar en silencio (H-056 · CA-6)** · `[motor]` → `odoo-dev`
+  (`wizard/printflow_product_flow.py::_pf_reassign_move_lot`, L1032-1060).
+  - **Delegar en el MISMO mecanismo de T1:** sustituir `taken = move._pf_reassign_lot(lot, demand)` (**L1059**) por
+    `taken = move._pf_reassign_lots([lot])` (UNA liberación + UNA reserva, **con el baile dentro**) ⇒ el camino
+    "por documento" (selector `printflow.flow.lot.picker` y el handler `pending_order`) deja de **liberar en no-op y
+    sumar**. Se **conservan**: la idempotencia de L1054-1057 (**D-9**) y el `return taken > _EPS`.
+  - **Docstring:** actualizar el de `_pf_reassign_move_lot` (hoy promete el protocolo del motor de UN lote y dice
+    *"libera el lote viejo y reserva el nuevo"*) para que declare el **mecanismo ÚNICO compartido** con el
+    contenedor (T1), sin duplicar la secuencia.
+  - **Qué se RETIRA:** la llamada **directa** a `move._pf_reassign_lot(...)` **desde este método** **y** la variable
+    `demand` (**L1052**), que existía **solo** para pasársela ⇒ queda **sin uso** y se borra (nada de residuo). El
+    **motor NO se toca**: su primitiva sigue siendo la que libera/reserva por dentro; simplemente deja de llamarse
+    **por fuera** del baile.
+  - **NO tocar:** el guardián `_pf_check_correction_window` del selector (su fricción es la que **autoriza** el
+    cambio de lote a mano), el mapa `handlers` de `_pf_assign_lot_to_document` ni su `UserError` de "sin existencia
+    disponible" (sigue siendo el que reporta el fallo por fila del contenedor).
+  - **Definición de terminado (CA-6):** en una unidad **tachada** con reserva en el lote **A**, elegir el lote **B**
+    ⇒ la unidad queda reservada **solo** en **B**, el quant de **A** recupera su libre y el tachón **vuelve** si
+    quedó completa. **Hoy:** queda en **A y B** (reserva sumada en silencio).
+  - **Evidencia (test + salida a archivo):** `tests/test_product_flow_lot_picked_reassign.py`, **clase del camino
+    por documento**: `test_ca6_document_path_does_not_stack` (usa
+    `Flow._pf_assign_lot_to_document(kind, 'stock.move', move.id, lot_b)` como
+    `tests/test_product_flow_lot_reassign_per_document.py`) + los candados
+    `test_product_flow_lot_reassign_per_document.py`, `test_product_flow_lot_pending_order_assign.py` y
+    `test_pf_bulk_validate_preserves_lot.py` **verdes**. Salida: `docs/evidencia/3R-lote2-tests.txt`.
+
+- [x] **T4 — Un solo aliento por fila (atomicidad · CA-7)** · `[motor]` → `odoo-dev`
+  (`wizard/printflow_flow_lot_assign_bulk.py::action_assign_lot_bulk`, barrido **L492-519**).
+  - **Envolver el cuerpo por fila en `with self.env.cr.savepoint():`**, con el **patrón de casa** citado en §3.R.3
+    punto 5 (`x_product_dimensional_pricing/models/printflow_stock_picking_bulk.py`: `except` + **`invalidate_recordset`**):
+    ```
+    try:
+        with self.env.cr.savepoint():
+            ProductFlow._pf_assign_lots_to_document(...)     # ← el baile de T1
+    except UserError as err:                                  # motivo de negocio, tal cual
+        <la fila queda 'error'>
+    except Exception as exc:                                  # noqa: BLE001  (patrón de casa L99-103)
+        _logger.warning(...)                                  # se registra y NO tumba el lote
+        <la fila queda 'error'>
+    ```
+    ⇒ si algo falla **a mitad del baile**, el savepoint **revierte TODO** y la unidad queda **como estaba**
+    (tachón **y** lote viejos), nunca destildada por accidente (**CA-7**).
+  - ⚠️ **Trampa obligatoria (es la razón del orden T2 → T4):** la clasificación de la fila
+    (`line.result` / `line.result_note`, la de T2) se escribe **FUERA** del `with` — después del `try/except`. Si se
+    escribiera dentro, el savepoint la **revertiría** y la fila quedaría **muda**. Es el patrón de casa: `line_vals`
+    se arma **después** del `try/except` (allí L104).
+  - **Caché (conejera C-3):** tras el `with` (o su `except`), invalidar el tachón **antes** de leer/afirmar el estado
+    real: `line.move_id.invalidate_recordset(['picked'])` — el savepoint **no** revierte la caché del ORM.
+  - **Qué se RETIRA:** el `except UserError` **a secas** del barrido (queda sustituido por el savepoint + los dos
+    `except`). El `continue` de las filas sin lote **se conserva** (no abre savepoint: no escribe nada).
+  - **NO tocar:** el guardián de permisos de **cabecera** (L477: sigue siendo él quien detiene la corrida entera),
+    `_pf_log_document` (se sigue llamando por fila, como hoy), la notificación con los **4 conteos** ni la ventana de
+    detalle.
+  - **Definición de terminado (CA-7):** forzado un fallo a mitad del baile, la unidad queda **`picked=True` con su
+    lote original** y la fila dice **`error`**: nunca a medio camino, nunca destildada.
+  - **Evidencia (test + salida a archivo):** `tests/test_product_flow_lot_picked_reassign.py`, **clase de la
+    atomicidad**: `test_ca7_failure_leaves_unit_untouched` (con `unittest.mock.patch` sobre la primitiva de reserva
+    `_pf_reserve_lot` para que **lance después** del destildado y la liberación; se miden `move.picked`, sus
+    **líneas** y el lote) + **la suite completa** `--test-tags /printflow_gestion_inventario` con **delta 0** frente
+    al baseline conocido (B1/H-002 · H-035 · H-038) y los **candados de bandeja/picker con delta = NINGUNO**.
+    Salida: `docs/evidencia/3R-lote2-tests.txt`.
+
+- [x] **T5 — El lote VACÍO no se toma (H-058 · D-10 · CA-10)** · `[motor]` → `odoo-dev`
+  (`models/stock_move.py::_pf_reassign_lots` → **guardián ANTES del baile**; el texto de la fila lo pone el
+  veredicto de T2 — aquí **no** se escribe microcopy).
+  - **Qué:** antes de tocar el tachón, medir el **libre REAL del lote elegido en la ubicación de la unidad**
+    (`move.location_id`, la misma que usa el motor para reservar) y, si es **cero**, **cortar sin tocar nada**:
+    ```
+    free = self.env['stock.quant']._get_available_quantity(   # primitiva NATIVA, solo lectura
+        self.product_id, self.location_id, lot_id=lot, strict=True)
+    if float_compare(free, 0.0, precision_rounding=self.product_uom.rounding) <= 0:
+        return 0.0                     # ← ANTES de was_picked / self.picked = False
+    ```
+    ⇒ **no** se destilda, **no** se libera: la unidad **conserva** su reserva vieja y su tachón, y la fila
+    reporta el motivo real (el mensaje de T2: *"El lote … no tiene existencia disponible aquí"*).
+  - **Por qué:** hoy el protocolo **libera primero y reserva después** ⇒ con un lote vacío la unidad **pierde la
+    reserva** y no recibe nada (**H-058**). El guardián convierte un **daño** en un **aviso**.
+  - **Qué se RETIRA:** nada (es un guardián nuevo). **No** se toca el orden liberar→reservar ni la reserva
+    **parcial** (**R1**: si hay algo, se reserva lo disponible).
+  - **NO tocar:** el `_EPS` del bucle, el orden aditivo, la vara de T1 ni el veredicto de T2.
+  - **Definición de terminado (CA-10):** unidad **tachada** con reserva en el lote **A**, a la que se le elige
+    un lote **vacío** ⇒ la unidad queda **intacta** (`picked=True`, reserva de **A** intacta, libre de **A**
+    igual que antes) y la fila dice `error` con el motivo real. **Hoy:** A queda liberado y la unidad sin reserva.
+  - **Evidencia:** `tests/test_product_flow_lot_picked_reassign.py`, **clase del lote vacío**:
+    `test_ca10_empty_lot_does_not_touch_unit` (mide `move.picked`, sus **líneas**, el reservado y el **libre del
+    lote A** antes y después) + columna vertebral verde + **huella del motor** idéntica al baseline.
+    Salida: `docs/evidencia/3R-lote2-tests.txt`.
+
+**Bitácora del Lote 2 — 2026-10-19 · `odoo-dev` (sesión NUEVA) · T3 · T4 · T5 = `[x]`**
+
+- **T3 (`wizard/printflow_product_flow.py::_pf_reassign_move_lot`).** La llamada **directa** al
+  motor (`move._pf_reassign_lot(lot, demand)`) se **sustituyó** por el **mecanismo ÚNICO**
+  `move._pf_reassign_lots([lot])` (1 liberación + 1 reserva, **con el baile del tachón dentro**).
+  **Retiré** la variable `demand` (existía solo para pasársela) y la llamada directa: **no quedan
+  los dos caminos**. Docstring actualizado: declara el mecanismo compartido con el contenedor y
+  deja de prometer el protocolo de un lote. **Se conservan** la idempotencia (L1054-1057 · D-9) y
+  el `return taken > _EPS`. Test: `test_ca6_document_path_does_not_stack`.
+- **T4 (`wizard/printflow_flow_lot_assign_bulk.py::action_assign_lot_bulk`).** El cuerpo por fila
+  quedó dentro de `with self.env.cr.savepoint():` con los **dos** `except` (`UserError` con su
+  motivo tal cual · `Exception` con `_logger.warning`, patrón de casa). **Retiré** el
+  `except UserError` **a secas** (sin savepoint). La **clasificación** (`line.result` /
+  `line.result_note`) se escribe **FUERA** del `with` (si no, el rollback la borraría) y se añadió
+  `line.move_id.invalidate_recordset(['picked'])` **antes** de leer el estado real (C-3). Se añadió
+  `import logging` + `_logger` (lo exige el `except Exception`). **No** se tocó el guardián de
+  cabecera, `_pf_log_document`, la notificación ni la ventana de detalle. Test:
+  `test_ca7_failure_leaves_unit_untouched`.
+- **T5 (`models/stock_move.py::_pf_reassign_lots`).** Guardián **ANTES** del baile: se mide el
+  **libre REAL** del lote en la ubicación de la unidad
+  (`stock.quant._get_available_quantity(..., lot_id=lot, strict=True)`, primitiva NATIVA de solo
+  lectura) y se descartan los lotes con libre `<= 0` según el `rounding` de la UdM. Si **no queda
+  ninguno**, `return 0.0` **sin destildar ni liberar** ⇒ la unidad conserva tachón y reserva vieja
+  (**CA-10**). Es un guardián nuevo: **no se retiró nada**. Test:
+  `test_ca10_empty_lot_does_not_touch_unit`. Docstring renumerado (paso 2 = lote vacío).
+- **Desviaciones declaradas:** (1) el snippet del plan es singular (`lot`), pero `_pf_reassign_lots`
+  recibe **N** lotes: el guardián se aplica como **filtro** de la lista ⇒ con UN lote se comporta
+  **literalmente** como el contrato (`return 0.0` sin tocar), y con varios descarta solo los vacíos
+  y **mantiene la reserva parcial** de los demás (**R1** intacta); no cambia nada de la semántica
+  del reparto. (2) `_logger` + `import logging` en el wizard: obligatorio para el `except Exception`
+  del patrón de casa (§3.R.3 punto 5). Nada más.
+- **Archivos:** `wizard/printflow_product_flow.py` (MOD, solo `_pf_reassign_move_lot`) ·
+  `wizard/printflow_flow_lot_assign_bulk.py` (MOD, barrido + logger) · `models/stock_move.py` (MOD,
+  guardián D-10) · `tests/test_product_flow_lot_picked_reassign.py` (MOD: 3 clases nuevas) ·
+  `docs/evidencia/3R-lote2-tests.txt` (**NUEVO**). Sin archivos de código nuevos.
+- **Evidencia (BD de test `pf_picker_tests`, proceso propio, `--no-http`, salida a `--logfile`):**
+  nuevos **3/3** · corrida FINAL del lote con los candados **52/52**, `0 failed, 0 error(s)` ·
+  suite completa **688** tests ⇒ **8 rojos**, **el mismo conjunto exacto** del baseline
+  (`verif_3o.log`: 671 tests, 7 failed + 1 error) ⇒ **delta 0**. Detalle en
+  `docs/evidencia/3R-lote2-tests.txt`.
+- **Regresión REAL obligatoria (hecha y restaurada):** (a) T3 revertido a la llamada directa del
+  motor ⇒ `test_ca6` **falla** con `stock.lot(3034, 3035) != stock.lot(3035,)` = **H-056**
+  (reserva en el lote viejo **y** el nuevo); (b) T4 sin el `savepoint` ⇒ `test_ca7` **falla** con
+  *"El savepoint debe restaurar el tachón"* (unidad destildada a mitad del baile). Ambos archivos
+  **restaurados** y verificados por SHA-256 (idénticos a los que pasaron 52/52).
+- **Huella del motor (CA-8 · H-038):** `SHA-256(models/stock_move.py)` = `22293F95…106B` ·
+  **12.690** bytes · `git status --porcelain` = **143**, medida **al abrir** y **al cerrar** ⇒
+  **idénticas**. Motor **sin tocar**.
+- **Reinicio+módulo:** botón **`Odoo8071-printflow_gestion_inventario`** ⇒
+  `20261019-183444-printflow_gestion_inventario.log` · **tarea=0** · `-u` código de salida **0** ·
+  **PID 6484 → 3452** · puerto **8071 OK** · `write_date` del módulo **2026-10-19 22:34:55 UTC**
+  (dentro de la ventana del `-u`, 18:34:46→18:34:59 local) ⇒ **OK**.
+- **Queda pendiente:** **nada funcional** — el Lote 2 cierra el checklist §3.R.7 (T0–T5 `[x]`).
+  **Próximo paso:** `odoo-verificador` (una sola pasada final, CA-1…CA-10) y el Analista anota en
+  `HALLAZGOS.md` (H-055 · H-056 · H-057 · H-058). Riesgo residual declarado: **C-5** (dos usuarios
+  en la misma entrega) y el stock que desaparezca **entre** la medición de T5 y la reserva.
+
+> **Cierre de cada lote (§3.8 · gobernanza):** marcar `- [x]`, dejar la **bitácora** (qué archivo/método, qué
+> evidencia, qué se retiró, qué quedó pendiente) y **apretar el botón** `Odoo8071-printflow_gestion_inventario`
+> (skill `reiniciar-servidor-odoo`) para dejar el cambio **VIVO** en 8071; evidencia del botón (log + PID +
+> `write_date`). **Ningún lote toca datos**: los `stock.quant` / los `stock.move` se crean y se miden **dentro** del
+> test (rollback del `TransactionCase`); la BD de PRUEBA se lee, no se sanea.
+> **Al cerrar el Lote 2 ⇒ turno del `odoo-verificador`** (una sola pasada, al final, con CA-1…CA-9).
+
+**Riesgos y mitigaciones** (declarados; ninguno se resuelve fuera del alcance de §3.R.3 punto 7):
+
+| Riesgo | Mitigación (dónde) |
+|---|---|
+| El baile deja la unidad **destildada** si algo falla a mitad | **T4**: savepoint por unidad + los dos `except` ⇒ la unidad vuelve a su estado previo (**CA-7**) |
+| El tachón "**se vuelve a poner solo**" (el core `_compute_picked` solo pone `True`, nunca `False`) | El test mira **el movimiento Y sus líneas** (**C-2** · T1) |
+| La **caché del ORM no revierte** con el savepoint ⇒ veredicto con foto vieja | `invalidate_recordset(['picked'])` tras el `with` (patrón de casa · **C-3** · T4) |
+| Tocar el **orden** (liberar con el tachón puesto) ⇒ **doble reserva** (el defecto de H-056) | Orden obligatorio + **CA-2** medido en `stock.quant` (T1) + el otro camino alineado (T3) |
+| Cambiar el **veredicto** rompe candados de §3.O/§3.P | Las 4 ramas con test nuevo (T2) + suite con **delta 0** (T2/T4) |
+| **Tachar unidades que no lo estaban** (cambio de semántica silencioso) | Condición `was_picked` explícita (T1) + **CA-3** (`done`/`cancel`) + los candados del contenedor |
+| La **vara** se duplica (helper + wizard) | La vara vive **solo** en `_pf_unit_is_covered` (T1) y el wizard la **consume** (T2) |
+| El **motor** se toca "sin querer" | **Huella** SHA-256 de `models/stock_move.py` + `git status --porcelain` (**143**) **idénticos** al baseline en **cada** lote: `git diff` **no** lo vería — ese archivo está **sin versionar** (**H-038** · **CA-8**) |
+| Dos usuarios en la **misma entrega** a la vez | **Riesgo residual declarado** (**C-5**): **no** se resuelve aquí (no se añade locking) |
+| Elegir un lote **sin existencia** libera y no reserva (la unidad queda sin reserva) | **CUBIERTO por T5** (**H-058** · D-10 · CA-10): el guardián mide el libre del lote **antes** del baile y, si es **0**, **no toca la unidad** (conserva tachón y reserva vieja) y la fila lo dice. Riesgo **residual** (solo si el stock desaparece **entre** la medición y la reserva): la fila lo reporta honesto (`error`), **sin** revertir (**R1/D-5**) |
+
+> **Observación de alcance (para el Analista, no es tarea):** (1) **`H-034`** (una entrega con 2 movimientos) ya
+> quedó cerrado en §3.O; (2) **acumular lotes en una fila** y **sanear** las 6 entregas del caso siguen **fuera**
+> de alcance (§3.R.3 punto 7 · **D-7**); (3) la **Ficha (§1)** todavía dice *"plan BORRADOR que ratifica el
+> Planificador"* en la fila de la TAREA ABIERTA: es una línea de estado que **mantiene el Analista** (paso 3) —
+> este paso solo escribió **§3.R**.
+
+### 3.R.8 Contratos que NO deben romperse
+
+- El **patrón aditivo** del reparto (**1 liberación + N reservas**): `_pf_reserve_lot` **no** borra los lotes
+  ya reservados (una `stock.move.line` por lote) — el baile **no** lo cambia.
+- El **desplegable de la fila** sigue **excluyendo el lote propio** (candado por dominio, D-4 de §3.P).
+- `_BULK_ASSIGNABLE_KINDS` y `_SPLIT_KINDS` = `('missing_move', 'pending_order')`: la **lista blanca** no se
+  ensancha.
+- El guardián de permisos `_pf_assert_can_clean`, el **motivo obligatorio** y la **política de excepción**:
+  **intactos**.
+- La **bitácora por documento** (`_pf_log_document`) y la ventana de detalle
+  (`printflow.flow.lot.assign.bulk.result`): **intactas**.
+- El **motor** `x_product_dimensional_pricing` **sin diff** y la **bandeja** sin cambios.
+- Los **29 candados** del contenedor (§3.P/§3.Q) siguen **verdes**; **delta 0** en la suite.
+
+---
+
+## 3.P (ANEXO · TAREA CERRADA) — Rediseño de la pantalla y limpieza del wizard "Asignar lote en bloque" (H-043 · H-044 · H-045 · H-046 · H-047 · cierra H-049 y H-050)
+
+> **Turno:** Odoo Analista (apertura · paso 1) ✅ → **Odoo Planificador** (paso 2: plan COMPLETO por lotes) ✅ →
+> **Odoo Analista** (paso 3: revisión del plan) ✅ → **`odoo-dev` · Lote 1 (T1–T3) `[motor]`** ✅ →
+> **`odoo-dev` · Lote 2 (T4–T6) `[motor]`** ✅ → **`odoo-dev` · Lote 3 (T7) `[motor]`** ✅ →
+> **`odoo-vistas` · Lote 4 (T8–T10) `[pantalla]`** ✅ → **`odoo-dev` · Lote 5 (T11) `[motor]`** ✅ →
+> **`odoo-verificador`** (1 pasada) ✅ **`no cumple`** (**única** causa: sin navegador ⇒ sin informe de mirada) →
+> **Odoo Analista** (mirada en vivo **con su navegador**: H-050 · H-051 · H-052 · H-053) → **corrección viva
+> `[pantalla]` · T12 (§3.P.8) → `odoo-vistas`** ✅ → **Odoo Analista** (2.ª mirada en vivo, **con recarga REAL**:
+> H-051 pasa a `descartado` + se destapa la **regresión** de la tabla de unidades) → **corrección viva 2 ·
+> T12-e/f/g (§3.P.9) → `odoo-vistas`** ✅ → **Odoo Analista** (3.ª mirada en vivo: **CA-11 · CA-13 · CA-14
+> medidos** + fotos) ✅ → **`odoo-verificador`** (pasada FINAL sobre el estado congelado) ✅ **`cumple`**.
+> **Estado:** ✅ **TAREA CERRADA (2026-10-18)** — el dueño autorizó **correr el ciclo completo hasta el final** y
+> así se hizo. **Compuerta §4.3 superada**: checklist `[x]` (T1–T11 + T12-a…d + T12-e…g), candados **29/29
+> verdes**, verificación **`cumple`**, **cero** escrituras de datos y **motor intacto**. **Deudas declaradas
+> (`abierto`), fuera de alcance y con cura exacta:** H-048 · H-052 · H-053 · H-054.
+> **Tarea GRANDE** (toca la asignación de lote de **entregas** ⇒ flujo de inventario ⇒ SIEMPRE Grande:
+> Analista → Planificador → Analista → Agente del lote → Verificador → Analista).
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (producto **IMPRESION BANNER**, id 13571).
+> **Dónde:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: **aquí se escribe**) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor; **SOLO LECTURA — NO se edita**).
+> **Qué (objeto concreto):** el contenedor `printflow.flow.lot.assign.bulk` (+ su `.line`) y su vista
+> `wizard/printflow_flow_lot_assign_bulk_views.xml`.
+> **Regla vigente:** código sí, datos no (`regla-trabajo-odoo-17-ce`).
+> **Hallazgos que ataca:** **H-043 · H-044 · H-045 · H-046 · H-047** (los cinco pasan a `en tarea`).
+> **Por qué NO es "solo cosmético":** retirar el pre-llenado y el `include_lot_ids` **cambia el contrato** del
+> wizard (D3/CA-4 de §3.O quedan **sustituidos** por D-1/D-2 de aquí); la vista es la mitad visible de ese cambio.
+
+### 3.P.1 Problema (evidencia)
+
+El dueño pide que el wizard **se entienda y sea usable**: hoy el modal decide mal el espacio, ofrece información
+que **engaña** y arranca "medio decidido". El análisis (**solo lectura**, con sus propios datos) confirma 5 hechos:
+
+| # | Hecho | Evidencia |
+|---|---|---|
+| **P1** | La tabla de lotes muestra la disponibilidad **GLOBAL** (`available`), pero la elegibilidad se decide con la del **almacén del documento** (`available_here`) ⇒ la cifra que el operador lee **no es** la que decide. | `wizard/printflow_flow_lot_assign_bulk_views.xml` L109 (`<field name="available" string="Disponible"/>`) vs. `wizard/printflow_flow_lot_candidate.py` L70-73 (docstring de `available_here`: *"Es la cifra que decide si el lote sirve para ESTA entrega"*) y L177-181 (`is_elective = available_here > _EPS`) |
+| **P2** | La tabla y el desplegable **se contradicen**: la tabla lista lotes en `0.00` ("forzados") que el desplegable **no ofrece**. | `wizard/printflow_flow_lot_assign_bulk.py` L197-201 (`include_lot_ids=list(own_lot_ids)`) → `_pf_available_lots` los lista con ceros (`models/printflow_flow_lots.py` L404-415) pero `is_elective` es `False` ⇒ `candidate_lot_ids` los excluye (`...bulk.py` L131-136) |
+| **P3** | Cada fila llega **PRE-LLENADA** con el lote propio cuando tiene existencia ⇒ el wizard arranca "confirmando" lo que Odoo ya hace solo y contradice su regla de negocio. | `wizard/printflow_flow_lot_assign_bulk.py` L216-235 y **L254-256** (`'lot_id': own_lot_id if effective > _EPS else False`) · `tests/test_product_flow_lot_assign_bulk_per_move.py` L260-264 |
+| **P4** | La columna que **decide** ("Lote a asignar") queda **fuera de la vista**: la empuja a la derecha la columna técnica "Unidad" (`move_id`). | `...bulk_views.xml` L75-85 — orden real: `seq`, `label`, `sale_order_name`(**oculto**), `sale_line_id`, `move_id`, `own_lot_name`, `own_lot_qty`, `lot_id`, `demand_qty`, `result`, `result_note` |
+| **P5** | La fila pinta **11 columnas** (4 sin valor para la decisión) y la cabecera **repite en prosa** los conteos ya rotulados ⇒ texto apretado y huecos vacíos en un modal ancho. | `...bulk_views.xml` L33-50 (7 campos en 2 columnas + `selection_note` en prosa) y L75-89 · `...bulk.py` L145-161 (`_compute_selection_note`) |
+
+**Datos reales del caso** (producto **IMPRESION BANNER** id 13571; almacén `WH/Existencia/Mercancia` id 8):
+
+| Entrega (movimiento) | Pedido | Línea | Lote propio | Existencia del lote propio |
+|---|---|---|---|---|
+| WH/OUT/06483 (mov 120603) | S07244 | 12141 | `S07244-L12141` | **0.00** |
+| WH/OUT/06483 (mov 120604) | S07244 | 12142 | `S07244-L12142` | **0.00** |
+| WH/OUT/07271 (mov 122295) | S09337 | 14496 | `S09337-L14496` | **0.00** |
+| WH/OUT/10859 (mov 127869) | S06847 | 11419 | `S06847-L11419` | **0.00** |
+
+Lotes **con** existencia del producto (los **únicos** que deben ofrecerse): `12569` (id 2887), `54234327` (2890),
+`8635836` (2892), `876786` (2893) — **1 u** cada uno, reservado **0** ⇒ disponible **1.00**.
+
+### 3.P.2 Objetivo (acotado)
+
+Que el wizard **se entienda de un vistazo y no engañe**: una fila por unidad con su selector **a la vista**, y una
+tabla de lotes que muestre **solo lotes reales** con la disponibilidad **del almacén de la entrega**.
+**Qué SÍ:** retirar el pre-llenado y el `include_lot_ids` del contenedor; candado del lote propio por dominio;
+podar/reordenar las columnas; pintar `available_here`; compactar la cabecera; adaptar los tests que fijan lo viejo.
+**Qué NO:** no se toca la **lógica de asignación** (ni el motor ni el orquestador de escritura), ni la **bandeja**,
+ni el **selector por documento**, ni los **datos**.
+
+### 3.P.3 Contrato (§3.3 del método — los 7 puntos)
+
+1. **Dónde.** `Fuente: odoo-impreven / Ciber Estudios 2015 RESTAURADA`. Ruta de escritura:
+   `C:\odoo_custom\printflow_gestion_inventario`. El motor `C:\odoo_custom\x_product_dimensional_pricing`
+   es **SOLO LECTURA**.
+2. **Qué.** (a) `wizard/printflow_flow_lot_assign_bulk.py` → `_pf_populate` (quitar el pre-llenado y el
+   `include_lot_ids`) + la nota de selección; (b) `wizard/printflow_flow_lot_assign_bulk_line.py` → el **dominio**
+   del campo `lot_id` (candado del lote propio) y su `help`; (c) `wizard/printflow_flow_lot_assign_bulk_views.xml`
+   → cabecera, tabla de unidades y tabla de lotes; (d) los tests que fijan el contrato viejo.
+3. **Objetivo acotado.** Ver §3.P.2. Nada más: **ni una pieza de la asignación se reescribe**.
+4. **Definición de terminado.** Ver §3.P.5 (CA-1…CA-10), todos verificables en pantalla y en la BD (solo lectura).
+5. **Restricciones duras** (+ **conejeras**, dentro del alcance, se usan con cuidado):
+   - **No forzar ni reemplazar flujos NATIVOS**: `_inherit` + `super()`; prohibido escribir `stock.quant` /
+     `stock.move` / `stock.move.line` a mano, tocar estados (`state`, `quantity`, `qty_done`), `cr.execute` de
+     escritura o `cr.commit()`.
+   - **Código sí, datos no** (`regla-trabajo-odoo-17-ce`).
+   - **Convenciones OCA** (skill `odoo-17-clean-architecture` §2.5).
+   - **La lógica de asignación NO se toca** (restricción dura del dueño): `_pf_prepare_rows`, el orquestador
+     `printflow.product.flow._pf_assign_lots_to_document`, `_pf_reassign_move_lot` / `_pf_reassign_lots`, las
+     guardias de cobertura y la bitácora quedan **exactamente como están**. Los cambios del `.py` son **dos
+     borrados** (pre-llenado y `include_lot_ids`) y **un dominio**.
+   - ⚠️ **Conejera (el candado es solo de DOMINIO):** si el **único** lote con existencia de una unidad es **su
+     propio** lote, el desplegable de esa fila queda **vacío** y esa fila **no se puede cerrar desde el wizard**.
+     **Eso es correcto, no un defecto**: ese caso lo resuelve el **flujo NATIVO** (el operador solo reserva; ver
+     D-5). **NO** añadir un "botón mágico", **NO** abrir una excepción en el dominio y **NO** validar el candado
+     en el servidor (el dueño eligió el candado **de dominio**).
+   - ⚠️ **Conejera (`include_lot_ids` es COMPARTIDO):** la misma primitiva la usa el **selector por documento**
+     con `[own_lot.id, current_lot.id]` (`wizard/printflow_flow_lot_picker.py` L346) y tiene test propio
+     (`tests/test_product_flow_lot_picker_candidates.py::test_include_lot_ids_lists_zero_lots`). Se retira
+     **solo la llamada del contenedor**; el **parámetro** de `_pf_available_lots` y el **picker** NO se tocan.
+   - ⚠️ **Conejera (`own_lot_qty` no viene del mismo camino que el nombre):** `own_lot_name` llega del snapshot de
+     la bandeja/motor, pero `own_lot_id` / `own_lot_qty` se resuelven por `lot_by_name` **sobre la lista de
+     candidatos**. Al retirar `include_lot_ids`, un lote propio **sin stock** deja de ser candidato ⇒
+     `own_lot_id = False` y `own_lot_qty = 0.00`, con el **nombre visible**. Es el resultado **deseado** (CA-2):
+     **NO** "arreglarlo" recalculando el lote propio por otra vía (nada de N+1 ni de consultas extra).
+   - ⚠️ **Conejera (`available_here` es AGREGADA con varias ubicaciones):** si los destinos no comparten una única
+     ubicación, la primitiva devuelve `available_here == available` (suma de todas). El **aviso visible** ya
+     existe (el `alert` con `multi_location`): **NO retirarlo**.
+   - **Registro de conejeras** (`C:\odoo_custom\CONEJERAS.md`): **consultado — vacío** (`n/a`): las de arriba
+     nacen del análisis de esta tarea.
+6. **Qué se RETIRA** (sustitución, no acumulación — se borra **en el mismo lote**, sin dejar residuo):
+   - **El pre-llenado**: en `_pf_populate`, `'lot_id': own_lot_id if effective > _EPS else False` → `'lot_id': False`;
+     y con él las piezas que **solo** existían para calcularlo (`effective_by_lot` y el `effective` por fila).
+     Actualizar los docstrings/comentarios que lo describen (`...bulk.py` L40-41, L178-181, L218-220, L254-255).
+   - **El `include_lot_ids=list(own_lot_ids)`** de la llamada del contenedor (L201). Se **conserva** el set
+     `own_lot_ids`, que todavía alimenta `is_own_lot` (L214).
+   - **La columna `available` ("Disponible" global)** de la tabla de lotes → `column_invisible="True"` (se pinta
+     `available_here`). **La columna `reserved` ("Reservado")** → fuera de la vista por defecto (`optional="hide"`).
+   - **De la fila de unidades**, fuera de la vista por defecto (`optional="hide"`): `move_id` ("Unidad"),
+     `sale_line_id` ("Línea de pedido"), `demand_qty` ("Demanda"), `result` ("Resultado") y `result_note` ("Nota").
+     **Los campos NO se borran del modelo** (son snapshot/trazabilidad y la decoración de la fila sigue usándolos).
+   - **El `source_label` de la cabecera** → `invisible="1"` (queda en el registro, deja de pintarse).
+   - **La prosa larga de `selection_note`** que repite los conteos ya rotulados → se **sustituye** por la frase
+     corta de D-7 (texto **exacto** abajo).
+   - **Los tests que fijan el contrato viejo** (pre-llenado y texto largo de `selection_note`): se **adaptan**
+     (nunca se dejan en rojo).
+   - **SE CONSERVA** (no es residuo): `confirm_exception` (T10 de §3.O: quitarlo es un **callejón sin salida** con
+     política estricta), el `lot_id` por fila, `_pf_prepare_rows`, `_pf_own_lot_ids`, `candidate_lot_ids`, el
+     orquestador de escritura, la bitácora por documento y el wizard de resultado.
+7. **Fuera de alcance** (lo que el dueño dijo que **NO** y lo que **no** se decide por cuenta propia):
+   - ❌ **La lógica de asignación NO se toca**: motor `x_product_dimensional_pricing`, `_pf_reassign_lot` /
+     `_pf_reassign_lots`, `_pf_assign_lots_to_document`, `_pf_check_*`, la reserva nativa. Solo se retiran el
+     **pre-llenado** y el **`include_lot_ids`**, y se cambia el **dominio**.
+   - ❌ **Nada de "botones mágicos" de liberar/reservar**: al elegir otro lote, el propio se libera y el nuevo se
+     toma **automáticamente** (es el comportamiento actual: `_pf_unreserve_reservation` + `_pf_reserve_lot`). **No**
+     se añade ningún botón ni ningún paso previo.
+   - ❌ La **bandeja** (`printflow.flow.lot.tray`) **no se toca**: el operador marca las OC con check y el filtro es
+     **humano**; no se añade filtro automático ni se cambia la clasificación de `kind`s.
+   - ❌ El **selector por documento** (`printflow.flow.lot.picker`) y su botón de fila **"Elegir lote"** se quedan
+     **igual**: es de **otro wizard** (asignar lote a **UNA** sola OC).
+   - ❌ **Ningún DATO**: no se re-etiquetan lotes, no se crean lotes, no se tocan reservas colgadas (**H-035**).
+   - ❌ **Desecho** (`stock.scrap`): **fuera de alcance por ahora**.
+   - ❌ **Reusar el lote de un pedido en otra OC**: **fuera de alcance por ahora**.
+   - ❌ **No** se cambia el **cierre** del bloque (los 4 conteos + la ventana de detalle): es contrato de **H-029**.
+   - ❌ **No** se revisa por qué el botón de cabecera se ofrece con selecciones no asignables (**H-041**, `abierto`,
+     baja): ajeno a esta tarea.
+   - ❌ **No** se añade un campo/columna nueva **salvo** el contador `candidate_count` de D-8 (ver §3.P.4).
+
+### 3.P.4 Decisiones de diseño CERRADAS por el dueño (18/10/2026)
+
+| # | Decisión | Razón |
+|---|---|---|
+| **D-1** | **Se RETIRA el pre-llenado**: **todas** las filas llegan con `lot_id` **vacío**, aunque el lote propio tenga existencia. | Literal del dueño: *"quitar el pre-llenado, no queremos código basura"*. La regla de negocio es elegir **OTRO** lote; pre-llenar el propio invita a "confirmar" sin decidir. |
+| **D-2** | **Solo lotes REALES con existencia**: se retira `include_lot_ids` de la llamada del contenedor; el lote propio **sin mercancía** deja de listarse. | Los lotes propios sin mercancía eran ruido en una tabla que existe para mostrar **dónde hay mercancía**. |
+| **D-3** | **Candado del lote propio por DOMINIO**: el lote propio **no se ofrece** en el desplegable de su propia fila. | Es la **prevención**: el uso normal del wizard es elegir **otro**, y tras depurar las OC legacy lo más probable es que la OC **sí** tenga su lote propio con existencia. |
+| **D-4** | La disponibilidad que se muestra es la del **almacén de la entrega** (`available_here`), rotulada **"Disponible aquí"**. | Es la cifra que **decide** (`is_elective`); mostrar la global (`available`) es engañoso. |
+| **D-5** | El caso "el pedido tiene existencia **en su propio lote** y sin reserva" **NO** es trabajo del wizard: lo resuelve el **flujo NATIVO** (`_action_assign` → `_assign_exclusive_lot` → `_pf_ensure_exclusive_lot`). | **Ya existe** y está custodiado por `tests/test_pf_bulk_validate_preserves_lot.py` (CA-5). El operador **no abre el wizard**: solo reserva. |
+| **D-6** | La tabla **"Lotes con existencia" queda SIEMPRE VISIBLE** (a la vista, sin plegar ni esconder). | Es la "memoria" de la decisión: sin ella el operador elige a ciegas. |
+| **D-7** | La **cabecera se compacta**: producto · ubicación · "Unidades por asignar" · "Unidades a entregar" · "Lotes con existencia", y **una sola línea** que aclara que cada fila es una unidad. `source_label` sale de la vista; `omitted_count` se pinta **solo si hay omitidas**. | Quitar el ruido: los **rótulos** ya declaran la unidad (eso era la cura de H-031); la frase en prosa que repetía los conteos sobra. |
+| **D-8** | El texto de `selection_note` pasa a ser **exactamente**: `Cada fila es una unidad: un movimiento de la entrega = una línea de pedido.` | Conserva la aclaración de **H-031** (qué ES cada fila) y **elimina** la repetición de los conteos (que ya están rotulados al lado). |
+| **D-9** | Se añade **un** campo contador `candidate_count` (Integer, `string='Lotes con existencia'`, computado, `readonly`) = nº de `candidate_ids`, **solo** para la cabecera. | Es la señal de *"¿alcanza la mercancía?"* que el dueño aprobó en el borrador de pantalla. **Un** campo, ni uno más. |
+
+### 3.P.5 Criterios de aceptación (verificables)
+
+- **CA-1** — **Ninguna fila llega pre-llenada**: para cualquier conjunto de filas, `line.lot_id` queda **vacío** al
+  abrir el contenedor, **aun cuando el lote propio tenga existencia** (`own_lot_qty > 0`).
+- **CA-2** — `line.own_lot_name` y `line.own_lot_qty` **siguen informando** (nombre visible; `1.00` si el lote
+  propio tiene existencia, `0.00` si no).
+- **CA-3** — La tabla de lotes (`candidate_ids`) lista **solo lotes con existencia real**: **no** aparece ningún
+  lote con `qty_on_hand = 0` forzado por `include_lot_ids`. Para el caso del banner ⇒ **4** filas
+  (`12569`, `54234327`, `8635836`, `876786`), **ninguna** de los lotes propios.
+- **CA-4** — El desplegable de cada fila **no ofrece su lote propio**: el `domain` del campo `lot_id` de la línea
+  **excluye** `own_lot_id`.
+- **CA-5** — La tabla de lotes muestra **"Disponible aquí"** = `available_here` (del almacén del documento) y
+  **no** pinta la disponibilidad global (`available`).
+- **CA-6** — La tabla de lotes está **siempre visible** (no plegada) y **sin scroll horizontal**: con **4**
+  columnas (Lote · Existencia · Disponible aquí · Rol) entra completa en el modal del dueño.
+- **CA-7** — La fila de unidades muestra, **a la vista y en este orden**: **# · Entrega · Pedido · Lote propio ·
+  Existencia · Lote a asignar**. `Unidad`, `Línea de pedido`, `Demanda`, `Resultado` y `Nota` quedan **fuera de la
+  vista por defecto** y son **recuperables** por el operador (no se borran del modelo).
+- **CA-8** — La cabecera declara **producto · ubicación · "Unidades por asignar" · "Unidades a entregar" ·
+  "Lotes con existencia"** y **una sola línea** de aclaración con el texto **exacto** de D-8; no repite los conteos
+  en prosa. `source_label` **no** se pinta; `omitted_count` se pinta **solo cuando es > 0**. El aviso de
+  disponibilidad **agregada** (`multi_location`) **sigue** apareciendo cuando corresponde.
+- **CA-9** — **Sin escrituras** al abrir/cerrar el contenedor (**código sí, datos no**); al aplicar, el
+  comportamiento es **idéntico** al actual: 1 liberación + N reservas **NATIVAS**, bitácora por documento,
+  notificación con los **4 conteos** y ventana de detalle (**H-029**).
+- **CA-10** — El **motor** `x_product_dimensional_pricing` **sin diff**; el **picker** y la **bandeja** **sin
+  cambios**; tests adaptados **N/N verdes** (`--test-tags /printflow_gestion_inventario`), **sin rojos nuevos**
+  (los pre-existentes de B1/**H-002** siguen rojos y son ajenos).
+
+### 3.P.6 Contratos que NO deben romperse
+
+| Contrato | Pieza |
+|---|---|
+| Selector **por documento** | `printflow.flow.lot.picker` + su botón de fila "Elegir lote" + `include_lot_ids` (lo usa con `[own_lot, current]`) + su test de candidatos |
+| **Bandeja** | `printflow.flow.lot.tray` (filtro de selección, `kind`s, botón de cabecera "Asignar lote") |
+| **Escritura** | `printflow.product.flow._pf_assign_lots_to_document` → `stock.move._pf_reassign_lots` (NATIVO, **aditivo**) — **sin cambios** |
+| **Resultado** | `printflow.flow.lot.assign.bulk.result` + los **4 conteos** de la notificación (**H-029**) |
+| **Política de excepción** | `confirm_exception` visible en la vista (T10 de §3.O) |
+| **Contadores** | `assignable_count` ("Unidades por asignar") / `total_demand` ("Unidades a entregar") / `omitted_count` ("Filas omitidas") — **rótulos sin cambios** (**H-031**) |
+| **Candados de test** | `test_product_flow_lot_assign_bulk_per_move.py` · `test_product_flow_lot_assign_bulk_result.py` · `test_product_flow_lot_assign_bulk_pending_order_assign.py` · `test_pf_bulk_validate_preserves_lot.py` · `test_product_flow_lot_picker_candidates.py` |
+
+### 3.P.7 Plan de ejecución (checklist por LOTES de máximo 3) — ✅ ESCRITO por el Odoo Planificador (18/10/2026)
+
+> **Plan COMPLETO · 11 tareas · 5 lotes** (máx. 3 por lote; **sin mezclar dueños**). Cada lote es **UNA sesión
+> NUEVA** del agente que diga su etiqueta (`[motor]` → `odoo-dev`, `[pantalla]` → `odoo-vistas`), nunca se retoma
+> la anterior. El agente marca `- [x]` **solo lo hecho** y deja su **bitácora** para el lote siguiente; al cerrar
+> **aprieta el botón del proyecto** (`Odoo8071-printflow_gestion_inventario`, skill `reiniciar-servidor-odoo`).
+> ➡️ **PRIMER LOTE A EJECUTAR: Lote 1 (T1–T3) · `[motor]` → `odoo-dev`.**
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**solo lectura; código sí, datos no**).
+> **Rutas:** `C:\odoo_custom\printflow_gestion_inventario` (PrintFlow: **aquí se escribe**) ·
+> `C:\odoo_custom\x_product_dimensional_pricing` (motor; **SOLO LECTURA — NO se edita**).
+> **Restricciones duras vigentes** (§3.P.3): **no forzar ni reemplazar flujos NATIVOS** (`_inherit` + `super()`);
+> prohibido escribir `stock.quant` / `stock.move` / `stock.move.line` a mano, tocar estados (`state`, `quantity`,
+> `qty_done`), `cr.execute` de escritura o `cr.commit()`; **la lógica de asignación NO se toca**; **código sí,
+> datos no** (`regla-trabajo-odoo-17-ce`). **Convenciones OCA §2.5**. **Cero modelos nuevos ⇒ sin ACL ni `data`
+> nueva en el manifest.**
+> **Orden por dependencia (por qué así):** **T1** define la semántica que la fila muestra (filas vacías) → **T2**
+> crea el dato que la cabecera pinta (`candidate_count`: la vista **no puede pintar un campo que no existe**) →
+> **T4** pone el candado en el **campo** (`domain`) → **y solo después** la **pantalla** (`T8`–`T10`) pinta; el
+> **test del `arch`** (`T11`) va **después** de la vista porque **depende de ella**. Los tests que **rompe** cada
+> cambio de motor van **en su mismo lote** (T3 con T1; T6 con T5).
+> **Qué se RETIRA (sustitución, no acumulación — se borra en el lote que lo cambia, sin residuo):** el
+> **pre-llenado** + el **`include_lot_ids`** → **T1** · la **prosa larga** de `selection_note` → **T5** · la
+> columna **`available`** ("Disponible" global) y **`reserved`** de la tabla de lotes → **T9** · de la fila de
+> unidades **`move_id`/`sale_line_id`/`demand_qty`/`result`/`result_note`** y el **`source_label`** de la cabecera
+> → **T8/T10** · los **tests que fijan el contrato viejo** → **T3** y **T6**. Sustituye (no acumula) el
+> **pre-llenado de D3/CA-4 de §3.O**.
+> **SE CONSERVA (no es residuo):** `confirm_exception` (**T10 de §3.O**; **T8 NO toca** su bloque "Motivo"), el
+> `lot_id` **por fila**, `_pf_prepare_rows`, `_pf_own_lot_ids`, `candidate_lot_ids`, el orquestador de escritura
+> `_pf_assign_lots_to_document`, `_pf_reassign_move_lot`/`_pf_reassign_lots`, la bitácora por documento, los **4
+> conteos** del cierre (**H-029**) y el wizard de resultado. El **picker** y la **bandeja** quedan **intactos**
+> (el `include_lot_ids` es **parámetro compartido**).
+> **Rojos YA EXISTENTES (ajenos — NO perseguir):** **B1/H-002** (`test_product_flow_lot_picker_ux.py:143`) y los
+> de **H-035/H-038**. Suite con `--test-tags /printflow_gestion_inventario`.
+
+#### Lote 1 (T1–T3) — `[motor]` → `odoo-dev` · El contenedor deja de decidir por el operador (PRIMERO A EJECUTAR)
+
+- [x] **T1 — `wizard/printflow_flow_lot_assign_bulk.py::_pf_populate`: fuera el pre-llenado y el `include_lot_ids`.**
+  - Retirar el pre-llenado: `'lot_id': own_lot_id if effective > _EPS else False` ⇒ **`'lot_id': False`** (todas
+    las filas nacen **vacías**, aunque el lote propio tenga existencia — D-1).
+  - Retirar del MISMO método las piezas que **solo** existían para calcularlo: el dict `effective_by_lot` y la
+    variable `effective` por fila. **Conservar** `qty_by_lot` (alimenta `own_lot_qty`) y `lot_by_name` (alimenta
+    `own_lot_id`).
+  - Retirar el argumento **`include_lot_ids=list(own_lot_ids)`** de la llamada
+    `self.env['printflow.flow.lots']._pf_available_lots(...)` (D-2). **Conservar** el set `own_lot_ids` y el
+    `'is_own_lot': cand['lot_id'] in own_lot_ids`. ⚠️ **Conejera (§3.P.3 punto 5):** el **parámetro** de
+    `_pf_available_lots` y el **picker** (`[own_lot.id, current_lot.id]` + su test
+    `test_include_lot_ids_lists_zero_lots`) **NO se tocan**.
+  - Actualizar **docstrings/comentarios** que describen lo retirado (cabecera del módulo ~L39-43, docstring de
+    `_pf_populate` ~L178-181, comentario ~L216-220 y ~L254-255): **sin residuo** de texto que prometa pre-llenado.
+  - **NO tocar** `_pf_prepare_rows`, `_pf_own_lot_ids`, `_pf_source_label`,
+    `candidate_lot_ids`/`_compute_candidate_lot_ids`, `_compute_assignable_count`, `action_assign_lot_bulk`,
+    `_pf_line_reserved`, `_pf_log_document`, `_pf_result_notification` (**la lógica de asignación es restricción
+    dura**).
+  - **Verifica:** **CA-1** (ninguna fila pre-llenada) · **CA-2** (`own_lot_name`/`own_lot_qty` siguen informando) ·
+    **CA-3** (candidatos = solo lotes con existencia real; fuera los propios en `0`).
+
+- [x] **T2 — `wizard/printflow_flow_lot_assign_bulk.py`: campo `candidate_count` (el dato que pinta la cabecera).**
+  - Agregar (orden OCA: atributos → campos) `candidate_count = fields.Integer(string='Lotes con existencia',
+    compute='_compute_candidate_count', readonly=True, help=...)` + su `@api.depends('candidate_ids')` ⇒
+    `len(rec.candidate_ids)`. **Un** campo, ni uno más (D-9).
+  - **NO tocar** `assignable_count` ("Unidades por asignar"), `total_demand` ("Unidades a entregar") ni
+    `omitted_count` ("Filas omitidas"): son contrato de rótulos (**H-031**).
+  - **Verifica:** **CA-8** (deja el dato disponible para la cabecera).
+
+- [x] **T3 — `tests/test_product_flow_lot_assign_bulk_per_move.py`: adaptar el candado del pre-llenado (nace con T1).**
+  - En `test_ca3_each_row_shows_own_lot_and_selector`, reescribir el bloque "(b)" al contrato **nuevo**:
+    `line_a.own_lot_qty == 1.0` **pero** `line_a.lot_id` **vacío** (CA-1); `line_b.lot_id` vacío con
+    `own_lot_qty == 0.0` y `own_lot_name` **visible** (CA-2). Conservar "(a)" (trazabilidad pedido/línea/nombre) y
+    "(c)" (`lot_a in bulk.candidate_lot_ids`).
+  - Actualizar el **docstring del módulo** (L14-16) que hoy declara *"el lote propio **con** existencia llega
+    **pre-llenado**"*.
+  - **NO tocar** `test_ca1_only_one_bulk_action_exists`, `test_ca2_...`, `test_ca5_...`, `test_ca6_...`,
+    `test_ca7_...`, **`test_ca10_opening_writes_nothing`** ni `test_touched_files_have_no_raw_sql`: son el candado
+    de **CA-9/CA-10** y deben quedar **verdes**.
+  - **Verifica:** **CA-1** · **CA-2** · **CA-3** (y **CA-9** por los tests que NO se tocan).
+
+#### Lote 2 (T4–T6) — `[motor]` → `odoo-dev` · El candado de dominio y el texto corto
+
+- [x] **T4 — `wizard/printflow_flow_lot_assign_bulk_line.py::lot_id`: candado del lote propio por DOMINIO.**
+  - Al `domain` actual (`parent.product_id` + `parent.candidate_lot_ids`) añadir **`('id', '!=', own_lot_id)`**
+    (el campo es **de la propia línea**: se referencia directo, sin ruta al padre). **NO** cambiar la semántica
+    del desplegable (siguen siendo **solo lotes con existencia**).
+  - Actualizar el `help` del campo y el comentario del bloque (~L58-64): declara que **su propio lote NO se
+    ofrece** (D-3, prevención).
+  - ⚠️ **Conejera declarada (§3.P.3 punto 5) — respetar, NO "resolver":** si el **único** lote con existencia de
+    una unidad es **su propio** lote, el desplegable de esa fila queda **vacío** y esa fila **no se puede cerrar
+    desde el wizard**. Es **correcto**: lo resuelve el **flujo NATIVO** (D-5). **NO** botón mágico, **NO** abrir
+    excepción en el dominio, **NO** validar el candado en el servidor.
+  - **NO tocar** el resto de campos de la línea (`own_lot_*`, `move_id`, `sale_*`, `result*`) ni el `write()` del
+    candidato.
+  - **Verifica:** **CA-4**.
+
+- [x] **T5 — `wizard/printflow_flow_lot_assign_bulk.py::_compute_selection_note`: el texto corto de D-8.**
+  - Sustituir la frase larga por **exactamente** (una sola línea, **sin** los conteos):
+    `Cada fila es una unidad: un movimiento de la entrega = una línea de pedido.` y simplificar el cómputo (sin
+    los parámetros `n`/`m`), ajustando `@api.depends` y el docstring a lo mínimo que quede.
+  - **NO** retirar el campo `selection_note` (sigue **visible** en la cabecera) ni tocar los otros conteos.
+  - **Verifica:** **CA-8** (una sola línea de aclaración; no repite los conteos ya rotulados).
+
+- [x] **T6 — `tests/test_product_flow_lot_assign_bulk_result.py::test_ca4_selection_labels_and_note`: adaptar el texto (nace con T5).**
+  - Cambiar la aserción de `selection_note` (~L283-286) al texto **exacto** de D-8; **conservar** las aserciones
+    de rótulos (`total_demand` / `assignable_count` / `omitted_count`) y la de `digits`.
+  - Actualizar el **docstring del módulo** (~L22) que cita el texto viejo.
+  - **NO tocar** el resto de la clase (el detalle por unidad queda **4/4**).
+  - **Verifica:** **CA-8**.
+
+#### Lote 3 (T7) — `[motor]` → `odoo-dev` · Los candados NUEVOS del modelo
+
+- [x] **T7 — `tests/test_product_flow_lot_assign_bulk_redesign.py` (NUEVO) + alta en `tests/__init__.py`: candados CA-1/CA-3/CA-4/CA-8.**
+  - Archivo nuevo con el estilo de la casa (`# -*- coding: utf-8 -*-`, docstring del módulo, `TransactionCase`,
+    `@tagged('post_install', '-at_install')`) + la línea `from . import test_product_flow_lot_assign_bulk_redesign`
+    en `tests/__init__.py` (orden alfabético del archivo).
+  - Casos (solo lectura + la escritura NATIVA del propio flujo; `TransactionCase` hace rollback):
+    (a) **CA-1** — con lote propio **con** existencia, `line.lot_id` **vacío**;
+    (b) **CA-3** — con lote propio **sin** existencia + un lote real con existencia, `candidate_ids` **no**
+    contiene el lote propio en `0` y **sí** el real;
+    (c) **CA-4** — `self.env['printflow.flow.lot.assign.bulk.line']._fields['lot_id'].domain` **excluye**
+    `own_lot_id` (candado literal sobre el `domain`, sin navegador);
+    (d) **CA-8** — `bulk.candidate_count == len(bulk.candidate_ids)` y
+    `fields_get('candidate_count')['string'] == 'Lotes con existencia'`.
+  - Añadir el candado de **SQL crudo** de los archivos tocados (`assertNotIn('cr.execute(')` / `'cr.commit(')`),
+    como los otros dos candados.
+  - **Verifica:** **CA-1** · **CA-3** · **CA-4** · **CA-8**. *(T11 amplía este MISMO archivo.)*
+
+#### Lote 4 (T8–T10) — `[pantalla]` → `odoo-vistas` · La pantalla del modal (archivo: `wizard/printflow_flow_lot_assign_bulk_views.xml`)
+
+- [x] **T8 — Cabecera compacta (bloque "Selección").**
+  - Pintar **producto · ubicación · "Unidades por asignar" · "Unidades a entregar" · "Lotes con existencia"
+    (`candidate_count`)** y **una sola línea** de aclaración (`selection_note`, `nolabel="1" colspan="2"`).
+  - `source_label` ⇒ **`invisible="1"`**; `omitted_count` ⇒ **`invisible="omitted_count == 0"`** (se pinta
+    **solo** si hay omitidas). Conservar `invisible="1"` en `candidate_lot_ids` y `multi_location` (alimentan el
+    dominio por fila y el aviso).
+  - ⚠️ **NO tocar** el `alert` de disponibilidad **agregada** (`multi_location`) ni el bloque "Motivo de la
+    asignación" con **`confirm_exception`** (T10 de §3.O: quitarlo es **callejón sin salida** con política
+    estricta).
+  - Pasar el criterio de la skill `odoo-view-design` (una pantalla = una decisión, microcopy mínimo, presupuesto
+    de tamaño).
+  - **Verifica:** **CA-8**.
+
+- [x] **T9 — Tabla "Lotes con existencia" (4 columnas, siempre visible).**
+  - `available` ("Disponible" **global**) ⇒ **`column_invisible="True"`**; **pintar** `available_here` con
+    **`string="Disponible aquí"`** (D-4); `reserved` ⇒ **`optional="hide"`**. Quedan visibles **Lote · Existencia
+    · Disponible aquí · Rol** (entran sin scroll horizontal en el modal del dueño).
+  - El bloque queda **SIEMPRE VISIBLE** (D-6): **no** se pliega ni se esconde.
+  - **NO** tocar el modelo del candidato (`printflow_flow_lot_candidate.py` **sin cambios**).
+  - **Verifica:** **CA-5** · **CA-6**.
+
+- [x] **T10 — Fila de unidades (tree de `line_ids`).**
+  - Orden visible **`#` · Entrega · Pedido · Lote propio · Existencia · Lote a asignar**: quitar el
+    `optional="hide"` de `sale_order_name` ("Pedido") y colocarlo **antes** de `own_lot_name`; **`move_id`
+    ("Unidad") sale de la vista por defecto ⇒ `optional="hide"`** (hoy **empuja fuera** la columna que **decide**:
+    **H-046/P4**).
+  - Fuera de la vista por defecto (`optional="hide"`): `sale_line_id`, `demand_qty`, `result`, `result_note`.
+    **Los campos NO se borran del modelo** (snapshot/trazabilidad; la decoración de la fila sigue usándolos).
+  - Conservar `column_invisible="True"` en `kind` / `res_model` / `res_id` / `assignable` / `location_id`, el
+    `readonly="not assignable"`, las `options` de `lot_id` (`no_create`/`no_open`) y las cuatro `decoration-*`
+    (asignado/parcial/omitido/error).
+  - ⚠️ **CONSERVAR el nodo oculto `own_lot_id`** — `<field name="own_lot_id" column_invisible="True"/>` — que
+    **añadió el Lote 2** junto a los campos técnicos del tree. **Sin él el módulo NO carga**: el validador de
+    dominios de Odoo 17 (`base/models/ir_ui_view.py::_validate_domain_identifiers` → `NameManager`) exige que
+    **todo** campo citado en un dominio esté **presente en la vista** (solo `parent.` se resuelve contra la vista
+    padre), y el candado de T4 cita `own_lot_id`. **No es un descuido: es la desviación declarada del Lote 2.**
+  - **NO** tocar el botón del pie (`action_assign_lot_bulk`, `class="btn-primary"`) ni la firma del método.
+  - **Verifica:** **CA-7**.
+
+#### Lote 5 (T11) — `[motor]` → `odoo-dev` · El candado de la VISTA (sin navegador)
+
+- [x] **T11 — `tests/test_product_flow_lot_assign_bulk_redesign.py`: candado del `arch` del modal.**
+  - Ampliar el archivo de T7 con un test que lea el `arch` de
+    `printflow_gestion_inventario.printflow_flow_lot_assign_bulk_view_form`
+    (`self.env.ref(...).arch` / `get_views`) y asegure, con el estilo del candado de la bandeja
+    (`assertIn('name="…"', arch)`): **CA-5** (`available_here` presente y `available` **no** visible) ·
+    **CA-6** (la tabla de candidatos sigue en el `arch`) · **CA-7** (las **6** columnas visibles y
+    `move_id`/`sale_line_id`/`demand_qty`/`result`/`result_note` con `optional="hide"`) · **CA-8**
+    (`candidate_count` en la cabecera, `source_label` `invisible="1"`, **`confirm_exception` presente**).
+  - **Por qué es un lote aparte y va DESPUÉS de la vista:** es un candado de `[motor]` que **depende del `arch`**
+    que produce el Lote 4; y su valor es que **no necesita navegador** — en §3.O la sesión del Verificador **no
+    tenía navegador** y ese fue el **único** motivo de su `no cumple` (§3.8).
+  - Aserciones **mínimas** (nombres de campo + `optional`/`column_invisible`), sin cadenas largas de formato, para
+    que no se rompa por cosmética.
+  - **Verifica:** **CA-5** · **CA-6** · **CA-7** · **CA-8**.
+
+#### Cobertura de Criterios de Aceptación (§3.P.5)
+
+| CA | Tarea que lo implanta | Tarea que lo **candadea** |
+|---|---|---|
+| **CA-1** (nada pre-llenado) | **T1** | **T3** (per_move) · **T7** (a) |
+| **CA-2** (el lote propio sigue informando) | **T1** | **T3** (per_move) |
+| **CA-3** (solo lotes REALES con existencia) | **T1** | **T7** (b) |
+| **CA-4** (el desplegable excluye su lote propio) | **T4** | **T7** (c) |
+| **CA-5** ("Disponible aquí") | **T9** | **T11** |
+| **CA-6** (tabla siempre visible, sin scroll) | **T9** | **T11** + verificación en vivo (§3.8) |
+| **CA-7** (columnas de la fila y su orden) | **T10** | **T11** |
+| **CA-8** (cabecera + una sola línea de aclaración) | **T2** + **T5** + **T8** | **T6** (texto) · **T7** (d) · **T11** |
+| **CA-9** (sin escrituras; comportamiento idéntico al aplicar) | *no hay cambio:* la lógica de asignación **no se toca** | **T3** deja **verdes** `test_ca5`, `test_ca7`, `test_ca10_opening_writes_nothing`; **Verificador**: diff del orquestador `_pf_assign_lots_to_document` / `_pf_reassign_*` = **vacío** |
+| **CA-10** (motor sin diff; picker y bandeja sin cambios; suite sin rojos nuevos) | *no hay cambio:* nada fuera del contenedor/línea/vista | **Verificador**: `git diff` de `x_product_dimensional_pricing` **vacío**, picker/bandeja **sin diff**, suite `--test-tags /printflow_gestion_inventario` **sin rojos nuevos** (B1/H-002 y H-035/H-038 son **pre-existentes y ajenos**) |
+
+#### Orden de creación / edición de archivos
+
+1. `wizard/printflow_flow_lot_assign_bulk.py` → **T1**, **T2**, **T5** (corte limpio: se retira pre-llenado y
+   `include_lot_ids`; luego el contador; luego el texto).
+2. `wizard/printflow_flow_lot_assign_bulk_line.py` → **T4** (solo el `domain` y el `help` del `lot_id`).
+3. `tests/test_product_flow_lot_assign_bulk_per_move.py` → **T3** · `tests/test_product_flow_lot_assign_bulk_result.py`
+   → **T6** · `tests/test_product_flow_lot_assign_bulk_redesign.py` (+ `tests/__init__.py`) → **T7**, **T11**.
+4. `wizard/printflow_flow_lot_assign_bulk_views.xml` → **T8**, **T9**, **T10** (**solo después** de T2 y T4).
+5. **Sin cambios:** `wizard/printflow_flow_lot_candidate.py`, `wizard/printflow_flow_lot_assign_bulk_result*`,
+   `wizard/printflow_flow_lot_picker.py` (+ su test), `wizard/printflow_flow_lot_tray.py`, `models/*`,
+   `security/*`, `__manifest__.py`, y **todo** `x_product_dimensional_pricing`.
+
+#### Riesgos y mitigaciones
+
+| Riesgo | Mitigación |
+|---|---|
+| La vista pinta `candidate_count` **antes** de que exista ⇒ el módulo **no carga** | **Orden duro**: T2 (campo) **antes** de T8 (vista). Entre el Lote 2/3 y el Lote 4 el campo existe pero **no se pinta**: estado intermedio **inocuo** (no rompe nada). |
+| El test del `arch` (T11) se vuelve frágil y "persigue cosmética" | Aserciones **mínimas** (nombre de campo + `optional`/`column_invisible`), nunca cadenas largas de maquetación. |
+| La conejera del dominio (fila que **no cierra** cuando su único lote con existencia es el propio) se lee como defecto | Está **declarada** en §3.P.3 punto 5 y en **T4**: es **correcta** (D-5, flujo NATIVO). **No** se añade botón ni excepción. |
+| `own_lot_qty` pasa a `0.00` y `own_lot_id` a `False` cuando el lote propio **no** tiene stock | Es el resultado **deseado** (CA-2 + conejera `own_lot_qty`): **NO** recalcular el lote propio por otra vía (nada de N+1 ni consultas extra). |
+| Tocarlo "de paso" (bandeja/picker/orquestador) por parecer el mismo tema | **Fuera de alcance explícito** (§3.P.3 punto 7 y §3.P.6) y **candadeado** por **T3** (tests que no se tocan) y por el **Verificador** (diff vacío). |
+| Se confunde un rojo **pre-existente** con una regresión del cambio | Baseline declarado arriba (**B1/H-002**, **H-035**, **H-038**) y comparación de **delta** en el Verificador. |
+| Los tests se quedan en rojo entre lotes | Cada test que **rompe** un cambio va **en el mismo lote** del cambio (T3 con T1; T6 con T5). |
+
+> **Cierre:** al terminar los 5 lotes, **una sola pasada** de `odoo-verificador` (CA-1…CA-10, delta de suite) +
+> **verificación en vivo** del modal en la BD de **PRUEBA** según **§3.8** (`VIEW-LIVE-CHECK.md`: se **abre** la
+> pantalla, **nunca** se acciona *Asignar lote*). **Cero escrituras** en la verificación.
+> ⚠️ **ESE CIERRE NO SE PUDO CUMPLIR TAL CUAL:** el `odoo-verificador` **no tiene navegador** en su sesión
+> (`browser.tabs.list` ⇒ `[browser.disconnected]`) ⇒ devolvió **`no cumple`** con **todo lo demás verde**
+> (CA-1…CA-5, CA-7…CA-10, motor sin diff, evidencia de lotes) y el **único** bloqueo = *"falta el informe de
+> mirada"*. **El Analista SÍ tiene navegador y la hizo** ⇒ resultado en **§3.P.8**.
+
+### 3.P.8 Corrección viva (post-verificación · Analista con navegador) — T12 `[pantalla]`
+
+> **Cómo se descubrió.** El Verificador cerró en **`no cumple`** por **una sola** causa: la **mirada en vivo**.
+> El Analista la ejecutó en la BD de **PRUEBA** (`odoo-impreven` / `Ciber Estudios 2015 RESTAURADA`) **abriendo
+> el modal por la vía real** — el botón de la bandeja `printflow.flow.lot.tray.action_assign_lot_bulk()`, que
+> **solo abre** (no escribe datos) — y **sin** accionar *Asignar lote*. Verificado de paso: **CA-1 EN VIVO**
+> (`Lote a asignar` **vacío en las 7 filas**), **CA-2** (`Lote propio` = `S02504-L3955`, `S02504-L3956`,
+> `S02627-L4174` con existencia `0,000000`), **CA-3** (la tabla de lotes lista **1** lote real, `SN000001`),
+> **CA-5** ("Disponible aquí"), **CA-6** (4 columnas, **sin** scroll horizontal a 650 px: `629 = 629` en
+> unidades y `357 = 357` en lotes) y **CA-7/CA-8** (6 columnas en el orden pedido; cabecera con los 5 datos).
+>
+> **Lo que la foto destapó** (2 hallazgos **altos**, ambos de **maquetación anciana**, no de este plan):
+> **H-050** los `<div>` de prosa dentro de `<group … col="1">` se comprimen a una **columna vertical** de
+> ~40 px (**una palabra por línea**) y **H-051** la cabecera **"Selección" se apila en UNA columna** (rótulos
+> partidos en 2 líneas + **mitad derecha vacía**), ocupando **355 px de 546** de cuerpo visible y con el
+> contenido total en **1813 px** (3,3 pantallas). **Eso ES** el *"texto estrecho y espacios vacíos"* del dueño.
+> **Fotos:** `docs/evidencia/3P-live-01-cabecera-una-columna.png` · `3P-live-02-divs-columna-vertical.png`.
+>
+> **Por qué no lo vio nadie antes:** el Lote 4 (`odoo-vistas`) **conservó** la estructura heredada de §3.O
+> (los grupos anidados y los `<div>` son **pre-existentes**: el Lote 4 no añadió ningún `<div>`) y **no pudo
+> mirar**: el plan le asignó la mirada al Verificador, y el Verificador **no tiene navegador**. El hueco del
+> proceso queda cubierto por este apartado.
+
+**T12 — `wizard/printflow_flow_lot_assign_bulk_views.xml` · `[pantalla]` → `odoo-vistas`** (1 tarea, 4 ajustes):
+
+- [x] **T12-a (H-051 · CA-12) — Cabecera "Selección" en DOS columnas.** Sustituir los **dos `<group>` anidados**
+  por **los campos directos** dentro de un único `<group string="Selección">`, para que Odoo los reparta en 2
+  columnas de etiqueta+valor (el idioma del core). `selection_note` pasa a **ancho completo** (línea propia).
+  **Se conservan** los 5 datos y sus rótulos (**H-031**), `source_label` `invisible="1"` y
+  `omitted_count` `invisible="omitted_count == 0"`.
+- [x] **T12-b (H-050 · CA-11) — La prosa explicativa, a ANCHO COMPLETO.** Los `<div class="text-muted">` **no**
+  pueden vivir dentro de un `<group>` (Odoo 17 los mete como **celda de la rejilla** ⇒ tira vertical
+  ilegible). Sacarlos **fuera del grupo** (hijos de `<form>`, como el `alert`) o darles el ancho completo.
+  Aplica a los **tres**: "Unidades de la entrega", "Lotes con existencia" y "Motivo de la asignación".
+- [x] **T12-c (H-049) — Quitar la microcopy duplicada.** El `<div>` de "Unidades de la entrega" se recorta a su
+  parte **no** duplicada — *"Elige el lote de CADA unidad."* — porque la aclaración de **qué es una fila** vive
+  ya en `selection_note` (D-8). **Cierra H-049.**
+- [x] **T12-d — Verificación.** **No** tocar el `alert` de `multi_location`, **ni** el bloque "Motivo" con
+  `confirm_exception`, **ni** el nodo oculto `own_lot_id`, **ni** las columnas de las dos tablas (**CA-5 ·
+  CA-6 · CA-7** intactos). Re-correr los **4 candados** del contenedor (**29** tests, incluido el del `arch`
+  **T11**, que sigue verde porque asertó **campos y atributos**, no maquetación) y **dejar la vista cargada**
+  (botón `Odoo8071-printflow_gestion_inventario`).
+
+**Criterios de aceptación nuevos (medidos en vivo, no leídos del código):**
+
+- **CA-11** — **Ninguna prosa se pinta en vertical**: el ancho del `<div>` explicativo ≈ **ancho del modal**
+  (hoy ≈ **40 px**). *(H-050.)*
+- **CA-12** — La cabecera usa **2 columnas**: **ningún rótulo parte en dos líneas** y la mitad derecha de cada
+  fila **no queda vacía**; la altura de la cabecera **baja** de los **355 px** medidos. *(H-051.)*
+
+**Fuera de la corrección (reportado, no tocado):** **H-052** (el modal está topado en `modal-lg`; la cura toca
+`printflow_flow_lot_tray.py`, que §3.P.3 punto 7 declara fuera de alcance) y **H-053** (6 decimales: es
+`decimal.precision` **de la BD**, no código ⇒ *"datos no"*).
+
+### 3.P.9 Corrección 2 (2ª mirada en vivo, con **recarga REAL** del cliente)
+
+> **Trampa de método que costó una vuelta:** la 1ª mirada se hizo con la **vista VIEJA** en el navegador
+> (mi "recarga" cambió solo el *hash* de la URL ⇒ **no** recargó) y con una **ventana de 736 px**. **Medir
+> cerca no es medir.** La 2ª mirada, ya con la vista nueva en pantalla, cambia el diagnóstico: **H-051 pasa a
+> `descartado`** (la "una columna" era el comportamiento responsivo del core a <992 px + el tope de 800 px del
+> modal, **no** un defecto de la vista; ver la fila corregida en `HALLAZGOS.md`).
+
+**Lo que la 2ª mirada confirma (bien):**
+
+- ✅ **H-050 ARREGLADO (T12-b):** los tres `<div>` de prosa pasaron de columna vertical (`w = 0 / 150 px`) a
+  **ancho completo medido: 601 px**, texto horizontal y legible.
+- ✅ **H-049 CERRADO (T12-c):** el `<div>` de "Unidades de la entrega" mide 21 px de alto con el texto corto.
+- ✅ **Contenido total: 1813 px → 1156 px** (−36 %): menos scroll para llegar a las tablas.
+- ✅ La tabla de lotes **sin** barra horizontal (`439 = 439`).
+
+**Lo que la 2ª mirada DESTAPA (mal):**
+
+- ❌ **REGRESIÓN MEDIDA — la tabla de unidades quedó con barra horizontal.** En su `o_list_renderer`:
+  **`scrollWidth 539 > clientWidth 435`**. La columna que **decide** (*Lote a asignar*) exige arrastrar la
+  barra ⇒ **CA-6 roto**. **Causa exacta** (leída en el core, no adivinada): el `<field name="line_ids">` vive
+  dentro de un **`InnerGroup`**, y `form_controller.scss` L431-433 fija esa rejilla en
+  `fit-content(150px) minmax(0,1fr)` ⇒ el campo queda **confinado a la pista de valor (435 px)** mientras la
+  tabla necesita **539 px**. El `<div>` que antes ocupaba la pista de rótulo "tapaba" el problema: por eso la
+  medición previa decía `653 = 653`.
+- ❌ **T12-a fue un cambio SIN BENEFICIO y CON PÉRDIDA.** Según `form_compiler.js` L264 un `<group>` **solo**
+  es `OuterGroup` si lleva un `<group>` dentro; el plano es `InnerGroup` ⇒ **1 campo por fila, igual que antes**
+  (de hecho la cabecera **creció**: 355 → **396 px**). Y `OuterGroup` usa `col-lg-*` (`form_group.xml` L9),
+  que **solo** actúa a ≥992 px: al aplanar el grupo se **perdió** la posibilidad de 2 columnas para cuando el
+  modal sea más ancho (**H-052**). ⇒ **se revierte** (T12-e).
+
+**T12-e · T12-f · T12-g — `wizard/printflow_flow_lot_assign_bulk_views.xml` · `[pantalla]` → `odoo-vistas`:**
+
+- [x] **T12-e (revierte T12-a) — Restaurar los DOS `<group>` anidados** dentro de `<group string="Selección">`
+  (el idioma del core: la cabecera vuelve a su forma original de §3.O). **Se conserva** el contenido del Lote 4
+  (los 5 datos rotulados, `source_label` `invisible="1"`, `omitted_count` `invisible="omitted_count == 0"`) y
+  `selection_note` a ancho completo. **Motivo:** el grupo plano no compró nada medible (1 campo/fila igual) y
+  quitó la 2ª columna para modales anchos. **No** es "volver atrás por gusto": es quitar un cambio cuya
+  hipótesis (**H-051**) quedó **descartada** con evidencia.
+- [x] **T12-f (CA-13) — Las dos tablas deben usar el ANCHO COMPLETO del modal (sin barra horizontal).** Hoy la
+  de unidades pide 539 y recibe 435. **Pista leída en el core** (`form_group.xml` L29): un `o_cell` con
+  `itemSpan > 1` recibe `grid-column: span N`, y ese `itemSpan` sale del **`colspan` del nodo**; pruébalo con
+  `<field … colspan="2" nolabel="1">` en `line_ids` y `candidate_ids` (y en `reason` del "Motivo"). **Si no
+  alcanza, elige tú la vía** (p. ej. sacar las tablas del `<group>` y rotular la sección con un `<div>`), pero
+  **mide**: el criterio es el número, no la forma.
+- [x] **T12-g — Verificación.** Re-correr los **4 candados** del contenedor (**29** tests, incluido el `arch`
+  de **T11**) con la salida a archivo y **dejar la vista cargada** (botón
+  `Odoo8071-printflow_gestion_inventario`). **No tocar:** el `alert` de `multi_location`, el bloque "Motivo"
+  con `confirm_exception`, el nodo oculto `own_lot_id`, ni las columnas de las dos tablas (CA-5/CA-6/CA-7).
+
+**Criterios de aceptación (medidos en vivo, no leídos del código):**
+
+- **CA-13 (nuevo)** — **Las DOS tablas entran completas en el modal**: en su `o_list_renderer`,
+  `scrollWidth <= clientWidth + 1` (**hoy 539 > 435 en unidades**). La columna *Lote a asignar* se ve **sin**
+  arrastrar ninguna barra.
+- **CA-11** (se mantiene) — La prosa se lee **en horizontal** y su `<div>` ocupa ≈ el ancho del modal
+  (**hoy 601 px**).
+- **CA-14 (regla de no-empeorar)** — El contenido del modal **no** vuelve a los **1813 px** de partida
+  (hoy **1156 px**) y la cabecera **no** crece por encima de los **396 px** medidos.
+- ⚠️ **No es un defecto** (y **no** se "arregla"): a <992 px el core pone **1 campo por fila** con el rótulo
+  topado en 150 px (`InnerGroup`). Eso es **responsivo**, no maquetación rota.
+
+**Decisión que queda para el dueño (no la tomo yo):** **H-052**. Lo que el dueño llama *"aprovechar todo el
+ancho"* **solo** se consigue ensanchando el modal, y el único mando es `context.dialog_size` en el `dict` que
+devuelve `printflow.flow.lot.tray.action_assign_lot_bulk` (`wizard/printflow_flow_lot_tray.py`) — **1 línea**,
+**fuera** del alcance que fijó §3.P.3 punto 7 (*"la bandeja no se toca"*). **Reportado, no tocado.**
+
+---
+
+**MIRE 3 — RESULTADO (18/10, ya con T12-e · T12-f · T12-g aplicados).** Recarga **real** del cliente
+(`location.reload()`, verificada con marca de página) y modal abierto por la vía real. **Todo medido en la BD de
+PRUEBA:**
+
+| Qué se mide | Partida | Tras 1.ª corrección | **AHORA (3.ª mirada)** | Criterio |
+|---|---|---|---|---|
+| Tabla **de unidades**: barra horizontal | `653 = 653` (oculta por cómo se medía) | **`539 > 435` = BARRA** ❌ | **`601 = 601` SIN barra** ✅ | **CA-13** |
+| Tabla **de lotes**: barra horizontal | `357 = 357` | `439 = 439` | **`601 = 601` SIN barra** ✅ | **CA-13** |
+| `<div>` de prosa (ancho × alto) | columna vertical (`0` / `150 px`) | `601` ✅ | **`601 × 21 px`** ✅ | **CA-11** |
+| Ancho del contenido (overflow) | — | — | **`633 = 633`, sin desborde** ✅ | CA-6 |
+| Contenido total del modal | **1813 px** | 1156 px | **1315 px** ✅ (≤ techo) | **CA-14** |
+| Cabecera "Selección" | 355 px | 396 px | **388 px** ✅ (≤ techo) | **CA-14** |
+| Columnas visibles en unidades | 6 | 6 | **6, con *Lote a asignar* a la vista sin arrastrar** ✅ | CA-6 · CA-7 |
+| `confirm_exception` (bloque "Motivo") | presente | presente | **presente** ✅ | T10 de §3.O |
+| Nodo oculto `own_lot_id` | — | — | **presente** ✅ | desviación Lote 2 |
+
+**Fotos (el "informe de mirada" que pedía §3.8):** `docs/evidencia/3P-live-03-DESPUES-cabecera-y-unidades.png`
+(cabecera + tabla de unidades **completa**) · `docs/evidencia/3P-live-04-DESPUES-lotes-y-motivo.png` (tabla de
+lotes + bloque "Motivo" con su check). **Antes:** `3P-live-01-…` y `3P-live-02-…`.
+
+**Veredicto de la mirada:** **CA-11 · CA-13 · CA-14 se cumplen** y los candados de CA-1/CA-2/CA-3/CA-5/CA-6/
+CA-7/CA-8 se ven en pantalla (filas **sin** lote pre-llenado, *Lote propio* informado, *Disponible aquí*, las 6
+columnas en su orden). **H-049 y H-050 quedan `resuelto`.**
+
+**Observaciones que NO se tocan (para que el dueño sepa qué ve y por qué):**
+
+- La cabecera muestra **1 campo por fila** y los rótulos largos parten en dos líneas. **No es un defecto**: a
+  <992 px el core apila (`InnerGroup` + `fit-content(150px)`) y **el modal está topado en 800 px** (**H-052**).
+  Se vería a 2 columnas solo si el modal pasa de 992 px ⇒ **decisión del dueño** (H-052).
+- Las **3 filas vacías** bajo el único lote de la tabla "Lotes con existencia" son **filas de relleno** del
+  render de lista de Odoo (ocupa el alto del contenedor), no datos fantasma.
+- Las cantidades siguen con **6 decimales** (`3,680000`, `0,206000`): es `decimal.precision` **de la BD**
+  (**H-053**), no código.
+
+
+---
+
+## 3.Q (ANEXO · TAREA CERRADA) — Ventana ancha del wizard + orden de lectura de la cabecera (H-052 · H-054)
+
+> **Turno:** Odoo Analista (apertura · paso 1) ✅ → `odoo-dev` · Lote 1 (T1) ✅ → `odoo-vistas` · Lote 2 (T2) ✅
+> → `odoo-dev` · Lote 3 (T3 · corrección viva 1) ✅ → **Odoo Analista (mirada en vivo · cierre)** ✅
+> **Estado:** ✅ **TAREA CERRADA (2026-10-18)** — **CA-1…CA-6 cumplidos** (CA-1 y CA-3 **medidos en vivo**,
+> §3.Q.5); **29/29 candados verdes**; motor `x_product_dimensional_pricing` **sin diff**.
+> **Autorización del dueño: SÍ (2026-10-18)** — *"ejecuta las primeras dos tareas"* (las dos deudas que el
+> Analista le presentó al cerrar §3.P). **Deudas que quedan abiertas (no entran aquí):** H-053 (decimales) y
+> H-048 (rótulo repetido).
+> **Tamaño: TRIVIAL (×2) ⇒ camino rápido (§4.1):** cada tarea toca **1 archivo** y **no** hay decisión de
+> diseño, ni datos, ni flujos. **No** se llama al Planificador ni se escribe plan largo; **no** se llama al
+> Verificador: **la mirada en vivo la hace el Analista** (es su evidencia `[pantalla]`, §3.8 regla 8).
+> El cambio de T1 es de **PRESENTACIÓN** (tamaño de la ventana): **no** altera ni un paso del flujo de la bandeja.
+> **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**).
+> **Dónde:** `C:\odoo_custom\printflow_gestion_inventario` (aquí SÍ se escribe).
+> **Nota de alcance:** la bandeja estaba declarada fuera de alcance en **§3.P punto 7**; el dueño **levantó** ese
+> límite para este caso concreto y **solo** para la línea de T1 (autorización explícita, Ficha de §3.Q).
+
+### 3.Q.1 Contrato §3.3
+
+1. **Dónde** — `Fuente: odoo-impreven / Ciber Estudios 2015 RESTAURADA` (PRUEBA) · ruta
+   `C:\odoo_custom\printflow_gestion_inventario` · motor `C:\odoo_custom\x_product_dimensional_pricing`
+   (**SOLO LECTURA, NO se edita**).
+2. **Qué** — **T1 (`[motor]`)**: `wizard/printflow_flow_lot_tray.py`, método `action_assign_lot_bulk`
+   (L1091-1098): al `dict` que devuelve, **añadir una sola clave** `'context': {'dialog_size': 'xl'}`.
+   **T2 (`[pantalla]`)**: `wizard/printflow_flow_lot_assign_bulk_views.xml` (L40-54): **intercambiar**
+   `total_demand` y `assignable_count` entre los dos `<group>` anidados de la cabecera.
+3. **Objetivo acotado** —
+   (a) el wizard abre **más ancho** (`modal-xl`) en pantalla grande, en vez del tope de 800 px (`modal-lg`);
+   (b) la cabecera se lee **en el orden del acta** (**CA-8**): producto · ubicación · "Unidades por asignar" ·
+   "Unidades a entregar" · "Lotes con existencia". **Nada más**: no se cambia ningún rótulo, no se quita ni se
+   añade ningún campo, no se toca ningún otro wizard.
+4. **Definición de terminado** —
+   T1: la acción devuelve `context.dialog_size = 'xl'` y el DOM del modal trae la clase **`modal-xl`**
+   (lo mide el Analista en vivo); **los candados del contenedor siguen verdes**.
+   T2: en el DOM del form, los dos grupos quedan **`[product_id · (source_label) · assignable_count]`** y
+   **`[location_id · total_demand · candidate_count · omitted_count]`** ⇒ leída fila por fila, la cabecera da
+   **producto · ubicación · Unidades por asignar · Unidades a entregar · Lotes con existencia** (medido en vivo
+   por el Analista; foto nueva).
+5. **Restricciones duras** —
+   - **MOTOR INTOCABLE:** `x_product_dimensional_pricing` sin diff. **Código sí, datos no.**
+   - **No forzar flujos nativos** de Odoo (inventario/ventas/pagos): no se toca `stock.quant`/`stock.move` ni
+     ningún estado.
+   - En T1 **solo** el `dict` de retorno: **no** cambian los guardias, los mensajes de error, el `_pf_populate`,
+     el `search`, ni el filtro/clasificación de la bandeja. **Está prohibido** "aprovechar" y cambiar algo más
+     del método.
+   - ⚠️ **Conejeras:** (a) el `context` de la acción **se mezcla** con el del wizard ⇒ **solo** se añade
+     `dialog_size`, ninguna otra clave (una clave de más viaja al wizard y a sus dominios); (b) en T2 **no**
+     reordenar "de paso" los demás campos: `omitted_count` conserva su `invisible="omitted_count == 0"` y
+     `selection_note` su `nolabel="1" colspan="2"`; (c) **no** tocar el nodo oculto `own_lot_id` del tree de
+     líneas (sin él el módulo no carga — desviación declarada del Lote 2 de §3.P) ni el `alert` de
+     `multi_location`.
+6. **Qué se RETIRA** — `n/a` (no reemplaza nada).
+7. **Fuera de alcance** —
+   - **NO** cambiar el tamaño de los otros wizards (el selector `printflow.flow.lot.picker`, la ventana de
+     resultado `..._result`): si el dueño los quiere, es **otra tarea**.
+   - **NO** tocar la **vista** de la bandeja ni su botón de cabecera (**H-041**).
+   - **NO** intentar "arreglar" el orden en **ventana angosta** (<992 px): ahí el core **apila** por diseño
+     (`InnerGroup` + `col-lg-*`); es comportamiento responsivo, **no** un defecto.
+   - **NO** tocar **H-053** (decimales: es `decimal.precision` de la BD ⇒ dato) ni **H-048** (rótulo repetido en
+     un campo interno invisible).
+
+### 3.Q.2 Plan por LOTES (camino rápido · un dueño por lote)
+
+**Lote 1 (T1) `[motor]` → `odoo-dev`**
+- [x] **T1 — Ancho de la ventana (H-052).** En `action_assign_lot_bulk` (`wizard/printflow_flow_lot_tray.py`
+  L1091-1098) añadir al dict de retorno **solo** `'context': {'dialog_size': 'xl'}` (junto a `'target': 'new'`).
+  Evidencia: diff de **1 línea** + los candados del contenedor verdes (salida a archivo) + botón de reinicio
+  apretado (`Odoo8071-printflow_gestion_inventario`).
+
+**Lote 2 (T2) `[pantalla]` → `odoo-vistas`**
+- [x] **T2 — Orden de lectura de la cabecera (H-054).** En `wizard/printflow_flow_lot_assign_bulk_views.xml`
+  (L40-54) **intercambiar** los dos conteos entre los grupos anidados: `assignable_count` pasa al **grupo 1**
+  (después de `source_label`) y `total_demand` pasa al **grupo 2** (antes de `candidate_count`).
+  **Motivo medido:** en pantalla ancha (≥992 px) los dos grupos van **lado a lado** y se leen **fila por fila**;
+  como están hoy, la fila 2 sale "Unidades a entregar | Unidades por asignar" ⇒ **al revés** del acta (CA-8).
+  Evidencia: el form carga y el Analista mide el orden en el DOM + foto.
+
+### 3.Q.3 Criterios de aceptación
+
+- **CA-1** — La acción del wizard trae `context.dialog_size = 'xl'` y el DOM del modal trae **`modal-xl`**
+  (medido por el Analista). En pantalla ≥1200 px el modal sube de 800 a **1140 px**.
+- **CA-2** — `action_assign_lot_bulk` **conserva todo** su comportamiento (guardias, mensajes, `_pf_populate`,
+  `active_domain`): el diff es **solo** la clave de contexto.
+- **CA-3** — La cabecera, leída **fila por fila**: producto · ubicación · "Unidades por asignar" ·
+  "Unidades a entregar" · "Lotes con existencia" · "Filas omitidas".
+- **CA-4** — Ningún campo de la cabecera se pierde ni se renombra: `source_label` sigue `invisible="1"`,
+  `omitted_count` sigue condicional, `selection_note` sigue a ancho completo (**CA-11** de §3.P se mantiene).
+- **CA-5** — Los **29 candados** del contenedor siguen **verdes** (`T11` de §3.P incluido).
+- **CA-6** — Motor `x_product_dimensional_pricing` **sin diff**; **cero** escrituras de datos.
+
+### 3.Q.4 CORRECCIÓN VIVA 1 — la llave del tamaño del modal: `'xl'` **no** es `'extra-large'` · **Lote 3 (T3) `[motor]`**
+
+> **Qué pasó (mirada en vivo del Analista, 18/10/2026).** T1 se aplicó **exactamente** como estaba escrito
+> (el dev **no** inventó nada ✅)… pero **no hizo nada**: el modal siguió saliendo en `modal-lg`.
+> **Evidencia medida en el navegador:** la acción devuelve `context = {'dialog_size': 'xl'}` ✅ y el DOM del
+> modal trae `modal-dialog modal-dialog-centered **modal-lg**` ❌ (viewport de prueba 736 px).
+> **Causa raíz (leída en el core, no supuesta):** en
+> `web/static/src/webclient/actions/action_service.js` el mapa es
+> `DIALOG_SIZES = { "extra-large": "xl", large: "lg", medium: "md", small: "sm" }` (**L95-100**) y se usa así:
+> `const size = DIALOG_SIZES[action.context.dialog_size]; if (size) actionDialogProps.size = size;` (**L785-788**).
+> Con `'xl'`, `DIALOG_SIZES['xl']` = `undefined` ⇒ `size` falsy ⇒ **no** se pone tamaño ⇒ el `Dialog` se queda con
+> su tamaño por defecto (que es `lg`; `core/dialog/dialog.xml` L11: `t-attf-class="modal-{{props.size}}"`).
+> **El defecto estaba en la cura que escribí en H-052** (decía `'xl'`), no en el dev.
+> **La corrección es de una palabra:** `'xl'` → **`'extra-large'`**.
+> **Nota de ancho (para medir sin alarmas):** `modal-xl` **no** encoge nada en ventana angosta — por debajo de
+> 992 px el tope lo pone la regla base de `.modal-dialog` (650 px medidos, igual con `lg` y con `xl`); entre 992 y
+> 1200 px queda en 800 px (igual que hoy) y **solo desde 1200 px** sube a **1140 px**. ⇒ **cero regresión** en
+> angosto, ganancia completa en pantalla ancha (el caso del dueño).
+
+**Lote 3 (T3) `[motor]` → `odoo-dev`**
+- [x] **T3 — Corregir el valor de la llave (H-052).** En `wizard/printflow_flow_lot_tray.py` →
+  `action_assign_lot_bulk`: el contexto pasa de `{'dialog_size': 'xl'}` a **`{'dialog_size': 'extra-large'}`**.
+  **Nada más** (mismo `dict`, misma línea, ninguna otra clave). Evidencia obligatoria: la acción devuelve
+  `'extra-large'` **y** el DOM del modal trae la clase **`modal-xl`** (lo mide el Analista) + los candados del
+  contenedor verdes + botón de reinicio apretado (`Odoo8071-printflow_gestion_inventario`).
+
+> **CA-1 (corregido)** — `context.dialog_size` = **`'extra-large'`** ⇒ el DOM del modal trae **`modal-xl`**:
+> **1140 px** desde 1200 px de viewport · **800 px** entre 992 y 1200 px · **650 px** por debajo de 992 px.
+
+### 3.Q.5 MIRE EN VIVO DEL ANALISTA (la evidencia `[pantalla]` · 18/10/2026)
+
+> **Medido en el navegador, con recarga REAL verificada**, sobre `odoo-impreven` / BD
+> `Ciber Estudios 2015 RESTAURADA`. La sesión se había caído con los reinicios del servidor: se volvió a
+> entrar (`uid 2`) y **se confirmó la BD antes de medir**.
+
+| Criterio | Qué se midió | Resultado |
+|---|---|---|
+| **CA-1** | el `context` de la acción **y** la clase del modal | acción = `{'dialog_size': 'extra-large'}` ✅ · DOM = `modal-dialog modal-dialog-centered **modal-xl**` ✅ |
+| **CA-1 (ancho)** | ancho del modal según el viewport | **650 px** por debajo de 992 px (**igual que antes ⇒ sin regresión**) · **800 px** entre 992 y 1200 px · **1140 px** desde 1200 px (**el caso del dueño**) |
+| **CA-3 (pantalla ancha)** | geometría de la cabecera con el viewport ≥992 px **replicado** (ver nota) | columna 1 (**546 px**) = *Producto · Unidades por asignar*; columna 2 (**546 px**) = *Ubicación · Unidades a entregar · Lotes con existencia · Filas omitidas*, **lado a lado** (mismo `top`) ⇒ leída **fila por fila**: **producto · ubicación · "Unidades por asignar" · "Unidades a entregar" · "Lotes con existencia" · "Filas omitidas"** = **literal de CA-3** ✅ |
+| **CA-3 (ventana angosta)** | orden del DOM con la ventana de prueba (736 px) | Producto · Unidades por asignar · Ubicación · Unidades a entregar · Lotes con existencia · Filas omitidas (los dos grupos **se apilan**: es el corte `lg` del core respondiendo al **viewport**, responsivo, no un defecto) |
+| **CA-4** | campos de la cabecera | los **6 datos + la nota** siguen ahí; `source_label` invisible; `omitted_count` condicional; la nota a ancho completo (divs **601 px** en angosto / **1091 px** en ancho) ✅ |
+| **CA-5** | candados del contenedor | **29/29 verdes** (los corre el dev, salida a archivo) ✅ |
+| **CA-6** | motor y alcance del diff | `x_product_dimensional_pricing` **sin diff** ✅ · el diff del tray es **1 línea** ✅ · **cero** escrituras de datos ✅ |
+
+**Fotos:** `docs/evidencia/3Q-live-04-ANGOSTA-modal-xl.png` (ventana de prueba: modal `xl` a 650 px, sin scroll
+horizontal, orden apilado) · `docs/evidencia/3Q-live-05-ANCHA-simulada-2-columnas.png` (pantalla ancha: las **dos
+columnas** de la cabecera + las dos tablas a **1091 px**).
+
+> **⚠️ CÓMO SE MIDIÓ LA PANTALLA ANCHA (se declara, no se disimula).** El navegador del Analista tiene una
+> ventana de **736 px** y **no existe herramienta para agrandarla** (la ventana emergente sale del mismo ancho;
+> el marco interno está bloqueado por el navegador). **No se iba a "medir cerca" y llamarlo medido.** Así que se
+> replicó **en el navegador** (nunca en el módulo) **la única regla que cambia con el ancho**: la que el core
+> aplica a los grupos anidados (**`form_group.xml` L9 ⇒ `col-lg-6`**, que Bootstrap activa desde **992 px** de
+> viewport ⇒ **50 %** cada uno) y el ancho del modal (`modal-xl` = **1140 px**). Con eso la cabecera se mide y se
+> fotografía **como la verá el dueño**. **Regla del taller:** *"medir cerca no es medir"* — esto es una
+> **simulación declarada**, y quien cierra la última milla es el dueño con un vistazo en su monitor (1 segundo).
+> **Artefacto encontrado y descartado:** en la primera pasada de la simulación una tabla salió con scroll
+> horizontal; se repitió con un modal **fresco** y salió **601 = 601, sin scroll** ⇒ era **efecto de la prueba**
+> (la tabla se había dibujado con el ancho simulado y no se recalculó), **no** una regresión del módulo.
+> **Nada de esto quedó en el código:** los estilos fueron de usar y tirar y el módulo no se tocó.
+
+> **✅ VISTAZO DEL DUEÑO (2026-10-18 · 2.ª vuelta):** el dueño abrió el wizard en **su monitor** y dio el visto
+> bueno — *"está bien como quedó"*. Con eso **CA-3 queda cerrado al 100 %**: la última milla (que solo se ve en su
+> pantalla) la confirma **quien la usa**. Y su decisión sobre la deuda que quedaba: **H-053 (decimales) se OMITE
+> por ahora** ⇒ sigue **`abierto`** (no `descartado`), con su cura y su riesgo escritos, lista para cuando quiera.
+> **Ciclo §3.Q: CERRADO y ratificado por el dueño.**
+
+---
 
 ## 3.O (ANEXO · TAREA CERRADA) — Asignación de lote POR ORDEN: el operador decide qué caja va a qué unidad (H-039 · H-040 · cierra H-034)
 
@@ -6758,4 +8240,681 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   turno devuelto a **NINGUNO**. Push: `25c27ab..865fda2` (incluyó `a3e49e1`) en `origin/main`.
   **Pendiente del dueño (funcional, no bloqueante):** probar el camino en su ventana amplia
   (Productos → producto → Flujo → ENTREGA → Solucionar → bandeja → marcar filas → **Asignar lote**).
-
+- [2026-10-18 · Odoo Analista] **APERTURA §3.P — rediseño de la pantalla y limpieza del wizard "Asignar lote en
+  bloque"** (Fase A completa: idea → exámenes → diseño → convergencia → autorización).
+  *Fuente:* `odoo-impreven` / `Ciber Estudios 2015 RESTAURADA` (**solo lectura**: no se escribió ni un registro).
+  *Ruta escrita:* `C:\odoo_custom\printflow_gestion_inventario` (solo `CONTEXT.md` y `HALLAZGOS.md`; **aún no hay
+  código tocado**). *Motor `x_product_dimensional_pricing`:* **no se abrió para escritura**.
+  *Síntomas (el dueño):* el wizard "no se entiende"; el ancho está mal repartido; sobran espacios y columnas; la
+  tabla de lotes se pisa; hay información que engaña.
+  *Exámenes (solo lectura) y diagnóstico:* **5 hechos** con evidencia (H-043…H-047): la tabla muestra la
+  disponibilidad **GLOBAL** mientras la elegibilidad se decide con la del **almacén de la entrega**
+  (`available_here`); el `include_lot_ids` del contenedor lista lotes en `0.00` que el desplegable **no ofrece**;
+  el **pre-llenado** del lote propio contradice la regla del wizard (*"es elegir OTRO lote"*); la columna que
+  **decide** ("Lote a asignar") queda **fuera de la vista**, empujada por `move_id` ("Unidad"); y la fila pinta
+  **11 columnas** mientras la cabecera **repite en prosa** los conteos ya rotulados.
+  *Contraste con la red (`prior art`):* se verificó en el **código del core** que en Odoo 17 un `<group string=…>`
+  **no** es plegable (`web/static/src/views/form/form_group/form_group.xml` no tiene colapso) y que el dato
+  correcto (`available_here`, rotulado "Libre aquí" en el **selector por documento**) **ya existía**: no hay que
+  reinventar nada — la misión es **alinear** el contenedor con la pieza que ya funciona.
+  *Diseño:* se dibujó la **maqueta** del modal, el **flujo de UX** (8 pasos) y un **antes/después**, con los
+  **datos reales** del dueño (producto **13571 IMPRESION BANNER**; entregas WH/OUT/06483, /07271, /10859; lotes con
+  existencia `12569`, `54234327`, `8635836`, `876786` = 1 u cada uno; los lotes propios `S06847-L11419`,
+  `S07244-L12141`, `S07244-L12142` **sin ninguna fila de quant**).
+  *Conejeras (`C:\odoo_custom\CONEJERAS.md`: consultado — **vacío**, `n/a`):* las de esta tarea nacen del
+  análisis y quedan **escritas** en §3.P.5 (el candado es **solo de dominio**; `include_lot_ids` es **compartido**
+  con el picker; `available_here` es **agregada** con varias ubicaciones; `own_lot_qty` no llega por el mismo
+  camino que el nombre).
+  *Autorización:* **SÍ (2026-10-18)** — *"ok ejecuta la tarea hasta el final, te dejaré trabajando, me voy a
+  dormir"* ⇒ compuerta §4.0 superada **con mandato de ciclo completo**.
+  *Tamaño:* **GRANDE** (toca la asignación de lote de entregas = flujo de inventario) ⇒ cadena completa
+  Analista → Planificador → Analista → Agente del lote → Verificador → Analista.
+  **Hallazgos abiertos:** **H-043 · H-044 · H-045 · H-046 · H-047** (los cinco `en tarea`, al plan de §3.P).
+  **Turno → siguiente: Odoo Planificador** (paso 2: plan COMPLETO por lotes en **§3.P.7**).
+- [2026-10-18 · Odoo Planificador → Odoo Analista] **PASO 2 COMPLETO:** **§3.P.7** escrita — **plan COMPLETO · 11
+  tareas · 5 lotes**, ordenado **por dependencia** (modelo antes que vista), con **dueño por tarea** y **sin
+  mezclar dueños**:
+  **L1 (T1–T3) `[motor]`** pre-llenado + `include_lot_ids` + test `per_move` · **L2 (T4–T6) `[motor]`** dominio
+  candado + texto corto de `selection_note` + test `result` · **L3 (T7) `[motor]`** test NUEVO del rediseño ·
+  **L4 (T8–T10) `[pantalla]`** cabecera + tabla de lotes + fila de unidades · **L5 (T11) `[motor]`** candado del
+  `arch` (sin navegador: en §3.O el Verificador **no tenía** navegador y ese fue el único motivo de su `no cumple`).
+  Trae además la **matriz CA-1…CA-10 → tarea que lo implanta / que lo candadea**, el **orden de creación de
+  archivos** y una tabla de **riesgos**. Trazabilidad completa: **11 tareas ↔ 10 CA**, sin CA huérfano.
+- [2026-10-18 · Odoo Analista] **PASO 3 — REVISIÓN DEL PLAN (Analista): APROBADO.** Contraste contra §3.P.3:
+  ✅ el plan es **dos borrados + un dominio** (+ **un** campo contador + la vista + tests) — **no reescribe la
+  asignación**; ✅ **motor, orquestador `_pf_assign_lots_to_document`, `_pf_reassign_*`, picker y bandeja quedan
+  fuera** (y el plan los candadea con el `diff` vacío del Verificador, CA-10); ✅ **`confirm_exception` se
+  conserva** (T8 tiene **prohibido** tocar el bloque "Motivo"); ✅ la **conejera del candado** (fila que no cierra
+  cuando su único lote con existencia es el propio) queda **declarada y sin resolver** — es el flujo NATIVO
+  (D-5); ✅ **`candidate_count` antes de la vista** (el módulo no carga si la vista pinta un campo inexistente);
+  ✅ cada test que un cambio **rompe** va **en su mismo lote**; ✅ rojos pre-existentes (**B1/H-002**, H-035, H-038)
+  declarados como **ajenos** para no confundirlos con regresión.
+  **Turno → siguiente: `odoo-dev` · Lote 1 (T1–T3) `[motor]`** — *"el contenedor deja de decidir por el
+  operador"*.
+- [2026-10-18 · `odoo-dev`] **LOTE 1 (T1–T3) `[motor]` ✅ CERRADO — "el contenedor deja de decidir por el
+  operador".** *Fuente:* `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**solo lectura**; **cero
+  escrituras** de datos). *Ruta escrita:* `C:\odoo_custom\printflow_gestion_inventario`. Motor
+  `x_product_dimensional_pricing`: **NO se tocó** (sin diff).
+  *Tareas hechas (3/3):*
+  - **T1 (CA-1/CA-2/CA-3)** — `wizard/printflow_flow_lot_assign_bulk.py::_pf_populate`: `'lot_id': False` en
+    **todas** las filas (fuera el pre-llenado) y **fuera** el argumento `include_lot_ids=list(own_lot_ids)` de
+    `_pf_available_lots`. **Retiradas en el mismo lote** las piezas que solo existían para el pre-llenado: el
+    dict `effective_by_lot` y la variable `effective` por fila. **Conservados** `own_lot_ids` (alimenta
+    `is_own_lot`), `qty_by_lot` (alimenta `own_lot_qty`), `lot_by_name` (alimenta `own_lot_id`),
+    `multi_location` y el resto del método. **Residuo 0**: docstring de la clase/función y los 3 comentarios que
+    prometían pre-llenado quedaron reescritos al contrato nuevo.
+  - **T2 (CA-8)** — `candidate_count = fields.Integer(string='Lotes con existencia', compute=…, readonly=True)`
+    + `_compute_candidate_count` con `@api.depends('candidate_ids')` ⇒ `len(rec.candidate_ids)`. **Un** campo,
+    ni uno más (D-9). `assignable_count` / `total_demand` / `omitted_count`: **sin cambios** (contrato H-031).
+  - **T3 (CA-1/CA-2/CA-3 + CA-9 por los que NO se tocan)** — `tests/test_product_flow_lot_assign_bulk_per_move.py`:
+    bloque "(b)" de `test_ca3_each_row_shows_own_lot_and_selector` reescrito al contrato nuevo (`line_a.own_lot_qty
+    == 1.0` **pero** `line_a.lot_id` **vacío**; `line_b` vacío con `0.0` y nombre visible) + docstring del módulo
+    y el rótulo de la sección. **Conservados** "(a)" y "(c)" y los otros 8 tests.
+  *Sustituí/retiré (anti-acumulación):* se **sustituyó** el pre-llenado por `lot_id=False` y se **retiró**
+  `include_lot_ids` del contenedor — **el parámetro de `_pf_available_lots` y el picker quedan intactos** (el
+  `test_include_lot_ids_lists_zero_lots` sigue verde).
+  *Archivos modificados (2):* `wizard/printflow_flow_lot_assign_bulk.py` · `tests/test_product_flow_lot_assign_bulk_per_move.py`.
+  *Desviaciones:* **ninguna**.
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`** (proceso propio, `--data-dir` temporal, `--no-http`,
+  `-u printflow_gestion_inventario --test-enable`) con 6 clases acotadas ⇒ **`0 failed, 0 error(s) of 33 tests`**
+  (exit code **0**). Log: `C:\Users\User\AppData\Local\Temp\opencode\pf_lote1_tests.log`. **Sin rojos nuevos**;
+  los tracebacks del log son del **`-u`** sobre xmlids de `x_product_dimensional_pricing` que **faltan en esa BD
+  de test** (pre-existentes, ajenos a este lote).
+  *Observación (para el Analista, no bloquea):* Odoo registra **1 WARNING** de rotulado — `candidate_count` y
+  `candidate_ids` comparten el `string` "Lotes con existencia" (es **exactamente** el exigido por D-9/T7). El
+  módulo carga y los tests pasan; si se quiere silenciar, la vía es cambiar el `string` de **`candidate_ids`**
+  (pieza de la vista, Lote 4), **no** el de `candidate_count`.
+  *Reinicio+módulo:* ver la línea de evidencia del reporte (botón `Odoo8071-printflow_gestion_inventario`).
+  **Turno → siguiente: `odoo-dev` · Lote 2 (T4–T6) `[motor]`** (candado de dominio del lote propio + texto corto
+  de `selection_note` + test del resultado).
+- [2026-10-18 · `odoo-dev`] **LOTE 2 (T4–T6) `[motor]` ✅ CERRADO — "el candado de dominio y el texto corto".**
+  *Fuente:* `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**solo lectura**; **cero escrituras** de
+  datos). *Ruta escrita:* `C:\odoo_custom\printflow_gestion_inventario`. Motor
+  `x_product_dimensional_pricing`: **NO se tocó** (sin diff).
+  *Tareas hechas (3/3):*
+  - **T4 (CA-4)** — `wizard/printflow_flow_lot_assign_bulk_line.py::lot_id`: al `domain` se le añadió
+    **`('id', '!=', own_lot_id)`** (campo de la propia línea, referenciado directo) + `help` reescrito y el
+    comentario del bloque declaran el candado (D-3 · prevención). El desplegable sigue listando **solo lotes
+    con existencia** (`parent.product_id` + `parent.candidate_lot_ids`); semántica del selector intacta.
+  - **T5 (CA-8)** — `wizard/printflow_flow_lot_assign_bulk.py::_compute_selection_note`: el texto pasa a ser
+    **exactamente** el de D-8 — *"Cada fila es una unidad: un movimiento de la entrega = una línea de pedido."*
+    — en **una sola línea** y **sin** los conteos; el cómputo queda **sin los parámetros `n`/`m`** (y sin su
+    `'%.2f'`), con **`@api.depends()`** (el texto no varía) y docstring nuevo. `assignable_count` /
+    `total_demand` / `omitted_count`: **sin cambios** (contrato de rótulos **H-031**).
+  - **T6 (CA-8)** — `tests/test_product_flow_lot_assign_bulk_result.py`: la aserción de `selection_note` de
+    `test_ca4_selection_labels_and_note` pasa al texto **exacto** de D-8; **conservadas** las aserciones de
+    rótulos (`total_demand`/`assignable_count`/`omitted_count`) y la de `digits`. Docstring del módulo
+    actualizado (CA-4 cita ahora **H-047** y el texto corto).
+  *Sustituí/retiré (anti-acumulación):* se **sustituyó** la prosa larga de `selection_note` por la frase corta
+  (se **retiraron** `n`/`m` y su `%`-formateo) y se **sustituyó** el `@api.depends('assignable_count',
+  'total_demand')` por `@api.depends()`. **Sin residuo**: el `help` del campo ya no promete cifras.
+  *Archivos modificados (4):* `wizard/printflow_flow_lot_assign_bulk.py` ·
+  `wizard/printflow_flow_lot_assign_bulk_line.py` · `tests/test_product_flow_lot_assign_bulk_result.py` ·
+  **`wizard/printflow_flow_lot_assign_bulk_views.xml`** (ver *Desviación declarada*).
+  *DESVIACIÓN DECLARADA (1):* **la premisa de T4 ("el campo es de la propia línea ⇒ se referencia directo,
+  sin ruta al padre") NO valida en Odoo 17.** La **1.ª corrida del lote abortó** con
+  `ParseError: while parsing file:.../printflow_flow_lot_assign_bulk_views.xml:19 — Field 'own_lot_id' used
+  in domain of python field 'lot_id' ([('product_id','=',parent.product_id),('id','in',
+  parent.candidate_lot_ids),('id','!=',own_lot_id)]) must be present in view but is missing` (exit **-1**).
+  **Causa verificada en el fuente del core** (`base/models/ir_ui_view.py`): `_validate_tag_field` (L1418-1443)
+  → `_validate_domain_identifiers` (L1877-1885) → `NameManager.must_have_field`/`check` (L2827-2836 y
+  L2900-2919): el validador exige que **todo** nombre de campo citado como valor en un dominio esté
+  **PRESENTE en la vista**; **solo** los nombres con prefijo **`parent.`** se resuelven contra la vista
+  PADRE (L2833-2834) — y `own_lot_id` no existe en el contenedor (es de la línea). **Solución mínima (mismo
+  patrón del precedente **DEV-1** de §3.O, **ratificado** por el Analista):** se pintó
+  `<field name="own_lot_id" column_invisible="True"/>` **junto a los demás campos técnicos ocultos** del
+  `tree` de `line_ids` (**1 nodo**, **sin cambio visual ni de UX**: no es rediseño). Se dejó **comentario en
+  el XML y en el `.py`** avisando que **NO se puede quitar** (sin él el módulo **no carga**). **Aviso para el
+  Lote 4 (`odoo-vistas`):** conservar ese nodo oculto (T10 ya conserva `kind`/`res_model`/`res_id`/
+  `assignable`/`location_id`: añadirle **`own_lot_id`**). El `domain` se dejó **literal** como pide el plan ⇒
+  **CA-4** y el candado literal de **T7 (c)** se cumplen tal cual.
+  *Conejera respetada:* si el único lote con existencia de una unidad es **su propio** lote, el desplegable
+  de esa fila queda **vacío** y la fila **no se cierra desde el wizard** ⇒ **correcto** (D-5, flujo NATIVO).
+  **No** se añadió botón, ni excepción en el dominio, ni validación en el servidor.
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`** (proceso propio, `--data-dir` temporal
+  `pf_lote2_datadir`, `--no-http`, `-u printflow_gestion_inventario --test-enable --stop-after-init`) con las
+  **mismas 6 clases** del Lote 1 ⇒ **`0 failed, 0 error(s) of 33 tests`** (**exit code 0**). Log:
+  `C:\Users\User\AppData\Local\Temp\opencode\pf_lote2_tests.log`. `TestProductFlowLotAssignBulkResult`
+  **4/4** (incluye `test_ca4_selection_labels_and_note` con el texto nuevo). **Sin rojos nuevos**; la vista
+  del contenedor **carga** (ya no aborta) y el `-u` terminó sin error. Los `External ID not found
+  … x_product_dimensional_pricing.menu_printflow_health_center` del log son **pre-existentes y ajenos** (ya
+  documentados).
+  *Reinicio+módulo:* ver la línea de evidencia del reporte (botón `Odoo8071-printflow_gestion_inventario`).
+  **Turno → siguiente: `odoo-dev` · Lote 3 (T7) `[motor]`** (test NUEVO del rediseño: CA-1/CA-3/CA-4/CA-8).
+- [2026-10-18 · `odoo-dev`] **LOTE 3 (T7) `[motor]` ✅ CERRADO — "los candados NUEVOS del modelo".**
+  Sesión NUEVA; no se retomó ninguna anterior. *Fuente:* `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`
+  (**solo lectura**; **cero escrituras** de datos). *Ruta escrita:* `C:\odoo_custom\printflow_gestion_inventario`.
+  Motor `x_product_dimensional_pricing`: **NO se tocó** (sin diff).
+  *Tarea hecha (1/1):*
+  - **T7 (CA-1/CA-3/CA-4/CA-8)** — archivo **NUEVO** `tests/test_product_flow_lot_assign_bulk_redesign.py`
+    (estilo de la casa: `# -*- coding: utf-8 -*-`, docstring del módulo, `TransactionCase`,
+    `@tagged('post_install', '-at_install')`) + **1 línea** de alta en `tests/__init__.py` (tras el bloque de
+    `..._per_move`, con su comentario). **5 casos**, todos por **API de modelo** (sin navegador) y montando sus
+    propios productos/albaranes (la escritura NATIVA del propio flujo queda en la transacción que
+    `TransactionCase` revierte):
+    (a) **CA-1** — con el lote propio de la unidad **CON** existencia (`own_lot_qty == 1.00`), `line.lot_id`
+    queda **VACÍO** y todas las filas en `pending` (nada pre-llenado: D-1);
+    (b) **CA-3** — con el lote propio **SIN** mercancía (`own_lot_name` visible, `own_lot_qty == 0.00`) + un lote
+    **REAL** con existencia: `candidate_ids` **sí** contiene el real, **no** el propio, y **ningún** candidato
+    tiene `qty_on_hand <= 0` (fuera el `include_lot_ids` del contenedor: D-2);
+    (c) **CA-4** — candado **literal** sobre `printflow.flow.lot.assign.bulk.line._fields['lot_id'].domain`
+    (normalizando espacios): exige `('id', '!=', own_lot_id)` y conserva las otras dos hojas del dominio
+    (`parent.product_id` / `parent.candidate_lot_ids`) ⇒ **no necesita navegador** (así lo pidió el plan);
+    (d) **CA-8** — `bulk.candidate_count == len(bulk.candidate_ids)` y
+    `fields_get('candidate_count')['string'] == 'Lotes con existencia'` (D-9).
+    Y el candado de **SQL crudo** de los **2** archivos tocados del rediseño
+    (`assertNotIn('cr.execute(')` / `'cr.commit(')` sobre `wizard/printflow_flow_lot_assign_bulk.py` y
+    `wizard/printflow_flow_lot_assign_bulk_line.py`), con la misma convención de los otros candados (nunca se
+    audita a sí mismo).
+  *Sustituí/retiré (anti-acumulación):* **nada** — el lote **solo AGREGA** un archivo de test y su alta; no se
+  creó campo, método ni vista nuevos, y no se dejó residuo (no había nada que sustituir en este lote).
+  *Archivos modificados (2, ambos nuevos/1 línea):* `tests/test_product_flow_lot_assign_bulk_redesign.py`
+  (**NUEVO**) · `tests/__init__.py` (**+5 líneas** de alta + comentario).
+  *Desviaciones:* **ninguna** (el `domain` de T4 se candadeó **tal cual** lo dejó el Lote 2, literal).
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`** (proceso propio, `--data-dir` temporal
+  `pf_lote3_datadir`, `--no-http`, `--max-cron-threads=0`, `-u printflow_gestion_inventario --test-enable
+  --test-tags /printflow_gestion_inventario:<Clase> --stop-after-init`, salida a `--logfile`).
+  **(1)** solo el candado nuevo ⇒ **`0 failed, 0 error(s) of 5 tests`** (exit **0**),
+  log `C:\Users\User\AppData\Local\Temp\opencode\pf_lote3_tests.log`.
+  **(2)** los **tres** candados del contrato del contenedor juntos (`...Redesign` + `...PerMove` + `...Result`)
+  ⇒ **`0 failed, 0 error(s) of 18 tests`** (exit **0**),
+  log `…\Temp\opencode\pf_lote3_tests_candados.log`. **Sin rojos nuevos.** Los `External ID not found …
+  x_product_dimensional_pricing.menu_printflow_dashboards / printflow_health_center_*` del log son
+  **pre-existentes y ajenos** (ya documentados en O-6).
+  *Reinicio+módulo:* **OK** (`20261018-043959-printflow_gestion_inventario.log` · tarea=0 · PID **10360→5268** ·
+  puerto **8071 OK** · `-u` código de salida **0** · `write_date` **2026-10-18 08:40:12 UTC**) — botón
+  `Odoo8071-printflow_gestion_inventario`, reinicia + `-u`, en ese orden.
+  **Turno → siguiente: `odoo-vistas` · Lote 4 (T8–T10) `[pantalla]`** (cabecera compacta + tabla de lotes
+  "Disponible aquí" + fila de unidades; ⚠️ **conservar** el nodo oculto `own_lot_id` y el bloque
+  `confirm_exception`). **NO** arranco el Lote 5 (T11): lo ejecuta otra sesión.
+- [2026-10-18 · `odoo-vistas`] **LOTE 4 (T8–T10) `[pantalla]` ✅ CERRADO — "la pantalla del modal".**
+  Sesión NUEVA; no se retomó ninguna anterior. *Fuente:* `odoo-impreven` / BD `Ciber Estudios 2015
+  RESTAURADA` (**PRUEBA**; **solo lectura**; **cero escrituras** de datos: el único `write` fue el `-u`
+  del botón sobre `ir.ui.view`). *Ruta escrita:* `C:\odoo_custom\printflow_gestion_inventario`. Motor
+  `x_product_dimensional_pricing`: **NO se tocó** (sin diff). **Un solo archivo:**
+  `wizard/printflow_flow_lot_assign_bulk_views.xml`.
+  *Tareas hechas (3/3):*
+  - **T8 (CA-8)** — cabecera compacta del bloque "Selección": izquierda `product_id` · `assignable_count`
+    ("Unidades por asignar") · **`candidate_count` ("Lotes con existencia", el campo del Lote 1)**; derecha
+    `location_id` · `total_demand` ("Unidades a entregar") · `omitted_count` (**`invisible="omitted_count == 0"`**:
+    se pinta solo si hay omitidas). `source_label` ⇒ **`invisible="1"`** (queda en el registro, no se pinta) y
+    `selection_note` se queda como **una sola línea** (`nolabel="1" colspan="2"`, texto corto de D-8 del Lote 2).
+    Lectura resultante: producto · ubicación · **asignar** · **entregar** · **lotes**, en ese orden. **NO** se
+    tocaron el `alert` de disponibilidad agregada (`multi_location`) ni el bloque "Motivo" con **`confirm_exception`**.
+  - **T9 (CA-5/CA-6)** — tabla "Lotes con existencia": `available` ("Disponible" **global**) ⇒
+    **`column_invisible="True"`**; se **pinta** `available_here` con **`string="Disponible aquí"`** (D-4);
+    `reserved` ⇒ **`optional="hide"`**. Quedan visibles **4** columnas: **Lote · Existencia · Disponible aquí ·
+    Rol** (entra sin scroll horizontal en el modal del dueño). El bloque queda **siempre visible** (D-6).
+    `printflow_flow_lot_candidate.py` **sin cambios**.
+  - **T10 (CA-7)** — tree de `line_ids`: se **quitó** el `optional="hide"` de `sale_order_name` y se **movió
+    antes** de `own_lot_name`; `move_id` ("Unidad") pasa a **`optional="hide"`** (era el que empujaba fuera la
+    columna que decide — H-046/P4); `sale_line_id`, `demand_qty`, `result` y `result_note` ⇒ **`optional="hide"`**
+    (`result_note` venía en `optional="show"`). Visibles por defecto y en orden: **# · Entrega · Pedido · Lote
+    propio · Existencia · Lote a asignar** (**6** columnas). **Conservados** los 6 `column_invisible`
+    (`kind`/`res_model`/`res_id`/`assignable`/`location_id` + **`own_lot_id`**), el `readonly="not assignable"`,
+    las `options` de `lot_id` y las **4** `decoration-*`. **NO** se tocaron el botón del pie
+    (`action_assign_lot_bulk`, `btn-primary`) ni su firma.
+  *⚠️ Desviación del Lote 2 RESPETADA:* se **conservó** el nodo oculto
+  `<field name="own_lot_id" column_invisible="True"/>` que el Lote 2 añadió al tree (el candado de dominio de T4
+  lo cita y sin él el módulo **no carga**); su comentario "NO quitar" sigue en el archivo.
+  *Sustituí/retiré (anti-acumulación):* **nada** — ningún campo se sacó de la vista, ningún `<div>` se añadió ni
+  se quitó, no hay residuo. La columna `available` sigue **en la vista** pero `column_invisible` (así el
+  veredicto "no visible" es verificable); lo retirado de la vista por defecto es **recuperable** por el operador
+  (`optional="hide"`), nunca borrado del modelo.
+  *Archivos modificados (1):* `wizard/printflow_flow_lot_assign_bulk_views.xml` (**+52 / −17**).
+  *Desviaciones propias:* **ninguna** (los `string=`/orden/`invisible` salen literalmente de D-4/D-6/D-7 y de T8–T10).
+  *Métricas de diseño (`odoo-view-design` §3.4 — medidas, no olfateadas):* tamaño del archivo **11.223** chars
+  (**7.225** sin comentarios; los comentarios son **36 %**) contra el presupuesto del modal de decisión del core
+  (**1,5K–6K**: `account.payment.register` = 6.207 con 39 campos) ⇒ **EXCEDIDO y declarado** — lo explican (a) los
+  comentarios, (b) los **11** campos técnicos invisibles que el validador de dominios de Odoo 17 **obliga** a
+  pintar, y (c) **dos** tablas en un mismo modal (el nativo con tabla, `base.partner.merge`, pesa 5.006). Otras:
+  **43** `<field>` · **6** `<group>` · **4** `<div>` (mediana del core **0–1**; **igual que antes**: no añadí
+  ninguno) · **2** `colspan` (el del aviso y el de la línea de aclaración que pide el plan) · **2** `<tree>` ·
+  **10** `column_invisible` · **6** `optional="hide"` · texto en pantalla más largo **188** chars (el `<div>` del
+  "Motivo", **pre-existente**; mediana del core **0**, máximo de `stock.*` **340**) · **1** frase de aclaración
+  (D-8) · columnas visibles **6** (unidades) y **4** (lotes). Checklist `VIEW-REVIEW-CHECKLIST.md` pasado: los
+  únicos incumplimientos son los **pre-existentes fuera del alcance de retiro** de §3.P.3-6 (los 4 `<div>` y sus
+  textos) — **declarados, no tocados**.
+  *Observaciones (no bloquean; para el Analista — NO las toqué):* (1) el `<div>` bajo "Unidades de la entrega"
+  ("Elige el lote de CADA unidad: cada fila es un movimiento…") **repite** lo que ya dice `selection_note` del
+  encabezado ⇒ **duplicidad de microcopy**; cura de 1 línea, pero **retirar texto no estaba en el plan** y el
+  dueño aprobó el borrador de pantalla en la Fase A. (2) El `<div>` del "Motivo" (188 chars) y el `title=` del
+  botón (~150) son los textos más largos y son **pre-existentes**. (3) **H-048** (rótulo compartido
+  `candidate_count`/`candidate_ids`) sigue **abierto y fuera de §3.P**: el `-u` lo re-emite como **1 WARNING**
+  invisible al operador (delta **0**, idéntico al log del Lote 3).
+  *Pruebas (evidencia):* proceso propio, BD de test **`pf_picker_tests`**, `--data-dir` temporal
+  `pf_lote4_datadir`, `--no-http --max-cron-threads=0 --stop-after-init`, salida a `--logfile`.
+  **(1) Carga de la vista:** `-u printflow_gestion_inventario` ⇒ **exit code 0**, `Modules loaded`,
+  **0 ERROR** y **78 WARNING sin delta** (los mismos **12** avisos de accesibilidad del `alert` y el WARNING
+  **H-048**, ambos **pre-existentes**: idénticos en el log del Lote 3); el parseo de
+  `printflow_flow_lot_assign_bulk_views.xml` **no aborta** (log `pf_lote4_views.log`).
+  **(2) Candados del contenedor (las 4 clases):** `TestProductFlowLotAssignBulk` +
+  `...PerMove` + `...Result` + `...Redesign` ⇒ **`0 failed, 0 error(s) of 28 tests`** (exit **0**),
+  log `pf_lote4_tests_candados.log`. **Sin rojos nuevos** (los `External ID not found …
+  x_product_dimensional_pricing.menu_printflow_dashboards / *_health_center_*` del log son **pre-existentes y
+  ajenos**, ya documentados).
+  **(3) La BD viva quedó con los cambios** (solo lectura, `odoo-impreven`): `arch_db` de
+  `printflow_gestion_inventario.printflow_flow_lot_assign_bulk_view_form` (`write_date` **2026-10-18 08:52:32 UTC**)
+  ⇒ contiene `available_here`, **no** pinta `available`, contiene `candidate_count`, `own_lot_id` oculto,
+  `confirm_exception`, `source_label … invisible="1"`, `invisible="omitted_count == 0"` y los 5
+  `optional="hide"` de la fila; módulo `printflow_gestion_inventario` `installed`, `write_date`
+  **2026-10-18 08:52:39 UTC**.
+  *Reinicio+módulo:* **OK** (`20261018-045228-printflow_gestion_inventario.log` · tarea=**0** · PID
+  **5268→3632** · puerto **8071 OK** · `-u` código de salida **0** · `Resultado ........... OK`) — botón
+  `Odoo8071-printflow_gestion_inventario`, reinicia + `-u`, en ese orden.
+  *Sin verificación en vivo:* **NO** la ejecuté (me corresponde solo el archivo; la mira `odoo-verificador` al
+  cerrar el ciclo con `VIEW-LIVE-CHECK.md`, abriendo el modal en la BD de **PRUEBA** y **sin** accionar
+  "Asignar lote").
+  **Turno → siguiente: `odoo-dev` · Lote 5 (T11) `[motor]`** (candado del `arch` del modal, sin navegador).
+  **NO** lo arranco.
+- [2026-10-18 · `odoo-dev`] **LOTE 5 (T11) `[motor]` ✅ CERRADO — "el candado de la VISTA (sin navegador)".
+  ÚLTIMO lote del plan (§3.P.7).** Sesión NUEVA; no se retomó ninguna anterior. *Fuente:* `odoo-impreven` / BD
+  `Ciber Estudios 2015 RESTAURADA` (**solo lectura**; **cero escrituras** de datos). *Ruta escrita:*
+  `C:\odoo_custom\printflow_gestion_inventario`. Motor `x_product_dimensional_pricing`: **NO se tocó** (sin diff).
+  *Tarea hecha (1/1):*
+  - **T11 (CA-5 · CA-6 · CA-7 · CA-8)** — **AMPLIADO** (no un archivo nuevo)
+    `tests/test_product_flow_lot_assign_bulk_redesign.py` con **un** caso de `[motor]` que lee el `arch` de
+    `printflow_gestion_inventario.printflow_flow_lot_assign_bulk_view_form` (`self.env.ref(...).arch`, el arch
+    **combinado**) y lo inspecciona con `lxml.etree` (**el mismo estilo del candado de la bandeja/
+    `test_diagnostic_selector_view`**), **sin navegador**:
+    · **CA-5** — `available_here` presente con `string="Disponible aquí"` y `available` presente **pero**
+    `column_invisible="True"` (la global NO se pinta: D-4).
+    · **CA-6** — la tabla `candidate_ids` sigue **en el `arch`** (siempre visible: D-6).
+    · **CA-7** — las **6** columnas visibles (`seq`, `label`, `sale_order_name`, `own_lot_name`, `own_lot_qty`,
+    `lot_id`) **sin** `optional="hide"` **y en el orden de CA-7** (por posición en el `arch`), y las **5** piezas
+    de trazabilidad (`move_id`, `sale_line_id`, `demand_qty`, `result`, `result_note`) **con** `optional="hide"`
+    (recuperables, nunca borradas del modelo).
+    · **CA-8** — `candidate_count` en la cabecera, `source_label` con `invisible="1"` y
+    **`confirm_exception` presente** (T10 de §3.O: sin él no se cierra con política estricta).
+    Aserciones **mínimas** (nombre de campo + `optional`/`column_invisible`/`invisible`), **cero** cadenas largas
+    de maquetación ⇒ el candado **no persigue cosmética** (mitigación declarada del plan). Docstring del módulo
+    **ampliado** con CA-5/CA-6/CA-7 y el CA-8 actualizado (`source_label`/`confirm_exception`); **+1 import**
+    (`from lxml import etree`, orden stdlib → terceros → odoo).
+  *Sustituí/retiré (anti-acumulación):* **nada** — el lote **solo AGREGA** un caso + su helper `_modal_arch()` y
+  el import; **no** se creó campo, método, vista ni archivo nuevos, y no había residuo que retirar. El candado de
+  SQL crudo de T7 queda **intacto** (T11 no toca archivos `.py` del wizard: solo el test).
+  *Archivos modificados (1):* `tests/test_product_flow_lot_assign_bulk_redesign.py` (**+1 import**, **+~75 líneas**:
+  helper `_modal_arch` + `test_view_arch_locks_ca5_to_ca8`).
+  *Desviaciones:* **ninguna**.
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`** (proceso propio, `--data-dir` temporal
+  `pf_lote5_datadir`, `--no-http`, `--max-cron-threads=0`, `--stop-after-init`, salida a `--logfile`).
+  **(1)** mi candado + los 5 de T7 ⇒ **`0 failed, 0 error(s) of 6 tests`** (exit **0**),
+  log `C:\Users\User\AppData\Local\Temp\opencode\pf_lote5_tests.log` (corrido con `-u
+  printflow_gestion_inventario`; el `parseo` del `arch` del modal no reproduce el `ParseError` del Lote 2).
+  **(2)** los **cuatro** candados del contenedor juntos (`...Bulk` + `...PerMove` + `...Result` + `...Redesign`)
+  ⇒ **`0 failed, 0 error(s) of 29 tests`** (exit **0**),
+  log `…\Temp\opencode\pf_lote5_candados.log`. **Sin rojos nuevos.** Los `External ID not found …
+  x_product_dimensional_pricing.menu_printflow_dashboards / printflow_health_center_*` del log son
+  **pre-existentes y ajenos** (ya documentados).
+  *Reinicio+módulo:* ver la línea de evidencia del reporte (botón `Odoo8071-printflow_gestion_inventario`).
+  **CICLO DE LOTES COMPLETO (1–5):** T1–T11 `[x]` ⇒ **turno al `odoo-verificador`** (UNA sola pasada al final:
+  CA-1…CA-10 + delta de suite) y **verificación en vivo** del modal en la BD de **PRUEBA** según **§3.8**
+  (`VIEW-LIVE-CHECK.md`: se **abre**, **nunca** se acciona *Asignar lote*). **NO** la ejecuto yo.
+- [2026-10-18 · `odoo-vistas`] **LOTE 6 (T12) `[pantalla]` ✅ CERRADO — "la corrección viva del modal
+  (H-049 · H-050 · H-051)"**. Sesión NUEVA; no se retomó ninguna anterior. *Fuente:* `odoo-impreven` / BD
+  `Ciber Estudios 2015 RESTAURADA` (**solo lectura**; **cero escrituras** de datos). *Ruta escrita:*
+  `C:\odoo_custom\printflow_gestion_inventario`. Motor `x_product_dimensional_pricing`: **NO se tocó**.
+  *Tarea hecha (1 tarea, los 4 ajustes de T12):*
+  - **T12-a (H-051)** — los **dos `<group>` anidados** de la cabecera se **retiraron** y sus campos quedaron
+    **directos** dentro de un único `<group string="Selección">` (el idioma del core). **Conservados**: los
+    **5 datos con su rótulo** (**H-031**: `Producto`, `Unidades por asignar`, `Lotes con existencia`,
+    `Ubicación`, `Unidades a entregar` — **no** se renombró nada), el orden de lectura, `source_label`
+    `invisible="1"` (**D-7**), `omitted_count` `invisible="omitted_count == 0"` y `selection_note`
+    `nolabel="1" colspan="2"` (**línea propia, ancho completo**).
+  - **T12-b (H-050 · CA-11)** — los **tres** `<div class="text-muted">` se **sacaron del `<group>`** y ahora
+    son **hijos directos de `<form>`** (como el `alert`): "Unidades de la entrega" y "Lotes con existencia"
+    **antes** de su bloque, y el del "Motivo" **después** de sus dos campos — **misma posición relativa** que
+    tenían (cambio mínimo, no se inventó ubicación nueva). **Cero** `<div>` dentro de `<group>` y **cero**
+    `colspan` nuevo: se respetó el candado del checklist *"No quedaron `<div colspan>` dentro de
+    `<group col="1">`"* (la 1.ª opción que ofrecía el plan).
+  - **T12-c (H-049)** — el `<div>` de "Unidades de la entrega" se recortó a *"Elige el lote de CADA
+    unidad."* (**103 → 29** chars): la aclaración de **qué es una fila** vive ya en `selection_note` (D-8).
+    **H-049 cerrado.**
+  - **T12-d** — **intactos** (verificado, no solo declarado): el `alert` de `multi_location`, el bloque
+    "Motivo" con `reason` + `confirm_exception` (CA-6), el nodo oculto `own_lot_id` (**NO quitar**: sin él el
+    módulo no carga) y **las columnas de las dos tablas** (CA-5 · CA-6 · CA-7). Los **4 candados** corridos
+    (**29** tests, incluido el del `arch` de T11) y **la vista quedó cargada** en el 8071.
+  *Sustituí/retiré (anti-acumulación):* **2 `<group>` anidados** (los de la cabecera) — **retirados**, no
+  comentados; **ningún** campo salió de la vista, **ningún** `<div>` se añadió ni se borró (siguen **4**),
+  **ninguna** vista/acción nueva ⇒ **sin residuo**.
+  *Archivos modificados (1):* `wizard/printflow_flow_lot_assign_bulk_views.xml` (**183 → 193** líneas;
+  **11.223 → 11.697** chars).
+  *Desviaciones:* **ninguna** (los 4 ajustes salen literalmente de §3.P.8 T12-a…T12-d).
+  *Métricas de diseño (`odoo-view-design` §3.4 — **medidas** con script, no olfateadas):* archivo **11.697**
+  chars (**6.981** sin comentarios; los comentarios son **40 %**) — sigue **por encima** del presupuesto del
+  modal de decisión del core (**1,5K–6K**, `account.payment.register` = 6.207) y **se declara**: lo explican
+  los comentarios, los **11** campos técnicos invisibles que el validador de dominios **obliga** a pintar y
+  **dos** tablas en un mismo modal. Otras: **43** `<field>` · **4** `<group>` (**antes 6**: −2 anidados) ·
+  **4** `<div>` (igual) · **2** `colspan` (igual: el del `alert` y el de la nota) · **2** `<tree>` ·
+  **grupos dentro de grupo: 0** (**H-051** estructural) · **divs dentro de `group`: 0** (**H-050** estructural)
+  · texto en pantalla más largo **206** chars (el `alert`), **184** (el `<div>` del "Motivo") y **91** (el de
+  "Lotes con existencia") — los tres **pre-existentes y fuera de alcance**; el recortado quedó en **29**.
+  *Observación técnica (no bloquea; para el ANALISTA — la decide él, yo no la toqué):* al medir el core para
+  T12-a quedó a la vista **por qué H-051 aparece**: (1) el `<group>` sin anidar es un **`InnerGroup`** con
+  **solo 2 pistas CSS** (`grid-template-columns: fit-content(150px) minmax(0,1fr)`,
+  `form_controller.scss:433`) y **todo `<field>` con rótulo ocupa 2 pistas** (`form_compiler.js:320-321`)
+  ⇒ **un campo por línea**; eso es el idioma del core para una ranura, **no** "2 columnas de pares
+  etiqueta+valor" — y `col="N"` **no** añade columnas (`--columns` se declara y **nunca** se lee); (2) las
+  2 columnas del "antes" venían del **`col-lg-6`** que el grupo externo pone a cada grupo anidado, y es una
+  clase **Bootstrap `lg` = ventana ≥ 992 px**: la foto 1 es una ventana de **~735 px** ⇒ los dos grupos
+  anidados **se apilan a ancho completo** (Bootstrap 5: `.row > * { width: 100% }`), que es lo que la foto
+  muestra. **Consecuencia declarada:** con T12-a la cabecera **queda igual de alta** a 735 px (una ranura por
+  línea) y **se pierden** las 2 columnas que sí aparecían en ventana ancha; y la otra mitad de **CA-12**
+  (*"ningún rótulo parte en dos líneas"*) **no es alcanzable** con estos rótulos: la pista de etiqueta está
+  topada en **150 px** y "Unidades por asignar / Lotes con existencia / Unidades a entregar" piden ~**176 px**
+  (renombrar los rótulos lo prohíbe **H-031**; ensanchar el modal, **H-052**, está fuera de alcance).
+  **No decidí nada de esto** (ni `col-6`, ni rótulos, ni ancho de modal): lo dejo medido para que **el
+  Analista** lo juzgue con **su** mirada en vivo. Tampoco toqué `HALLAZGOS.md` (no es mi tarea): **H-049**
+  queda para cerrar, **H-050/H-051** para que el Analista verifique el cierre en vivo.
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`**, proceso propio, `--data-dir` temporal
+  `pf_lote6_datadir`, `--no-http --max-cron-threads=0 --stop-after-init`, salida a `--logfile`.
+  **(1) Parseo + carga:** el XML de la vista **parsea** (`xml.dom.minidom`) y el `-u
+  printflow_gestion_inventario` **no aborta** (exit **0**, `Modules loaded`, **0 ERROR** que citen el modal
+  o `assign_bulk`; los únicos `ERROR` del log son los **ajenos y pre-existentes** `External ID not found …
+  x_product_dimensional_pricing.menu_printflow_dashboards / printflow_health_center_*`, y el `WARNING` de
+  **H-048** (rótulo compartido `candidate_count`/`candidate_ids`) sale **igual** que en el Lote 5).
+  **(2) Candados del contenedor (las 4 clases):** `TestProductFlowLotAssignBulk` +
+  `...PerMove` + `...Result` + `...Redesign` ⇒ **`0 failed, 0 error(s) of 29 tests`** (exit **0**),
+  log `C:\Users\User\AppData\Local\Temp\opencode\pf_lote6_candados.log`. **Sin rojos nuevos.** *Aprendizaje
+  de este lote (para el próximo que corra candados):* `--test-tags "/mod:ClaseA,ClaseB"` **NO** expande las
+  clases — corrí primero **10** tests sin darme cuenta; hay que repetir el prefijo en cada clase
+  (**`"/mod:ClaseA,/mod:ClaseB,…"`**), y así salieron los **29**.
+  *Reinicio+módulo:* **OK** (`20261018-060004-printflow_gestion_inventario.log` · tarea=**0** · PID
+  **10756→5760** · puerto **8071 OK** · `-u` código de salida **0** · `Resultado ........... OK`) — botón
+  `Odoo8071-printflow_gestion_inventario`, reinicia + `-u`, en ese orden. **La BD viva quedó con la vista
+  nueva** (MCP `odoo-impreven`, solo lectura): `ir.ui.view` **12752** `printflow.flow.lot.assign.bulk.form`
+  `write_date` **2026-10-18 10:00:08 UTC** y módulo `installed` `write_date` **2026-10-18 10:00:16 UTC**
+  (posteriores a mi edición ⇒ el `-u` sí se aplicó).
+  *Sin verificación en vivo:* **NO** la ejecuté (no me toca, y **no tengo navegador**): la **mirada en vivo**
+  del modal en la BD de **PRUEBA** (fotos + `VIEW-LIVE-CHECK.md`, **sin** accionar *Asignar lote*) es del
+  **Analista** — y es la que decide **CA-11** y **CA-12**, que son **medidos en vivo, no leídos del código**.
+  **Turno → siguiente: Odoo Analista** (mirada en vivo del modal y cierre de H-049 · H-050 · H-051).
+  **NO** lo arranco yo.
+- [2026-10-18 · `odoo-vistas`] **LOTE 7 (T12-e · T12-f · T12-g) `[pantalla]` ✅ CERRADO — "revertir la
+  cabecera plana y devolverle el ancho a las dos tablas"**. Sesión NUEVA; **no** se retomó ninguna
+  anterior. *Fuente:* `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**solo lectura**; **cero**
+  escrituras de datos). *Ruta escrita:* `C:\odoo_custom\printflow_gestion_inventario` (1 archivo). Motor
+  `x_product_dimensional_pricing`: **NO se tocó** (sin diff). **NO** se tocó `HALLAZGOS.md`.
+  *Tareas hechas (3/3) — §3.P.9:*
+  - **T12-e (revierte T12-a)** — **RESTAURADOS los DOS `<group>` anidados** dentro de
+    `<group string="Selección">` (la forma de §3.O): se recuperó el `OuterGroup` ⇒ cada grupo anidado
+    vuelve a recibir la clase Bootstrap **`col-lg-6`** (2 columnas a partir de **992 px** de ventana) y
+    por debajo el core los apila a ancho completo (responsivo, no defecto). **Conservado** el contenido
+    del Lote 4: los **5 datos rotulados** (`product_id`, `location_id`, `total_demand`,
+    `assignable_count`, `candidate_count`), `source_label` `invisible="1"` (D-7) y `omitted_count`
+    `invisible="omitted_count == 0"`; **cero** rótulos renombrados (**H-031** intacto). `selection_note`
+    se dejó **fuera** de los grupos anidados **con `nolabel="1" colspan="2"`**: en un `OuterGroup`,
+    `colspan == maxCols` ⇒ el hijo **no** recibe clase de columna y Bootstrap (`.row > *`) le da
+    **`width: 100 %`** ⇒ **línea propia a ancho completo** (era el requisito de T12-e). **Retirado** (no
+    comentado) el comentario de T12-a que declaraba el grupo plano; en su lugar queda el porqué del
+    revert.
+  - **T12-f (CA-13) — la barra horizontal de la tabla de unidades: RESUELTA por `colspan` + retiro del
+    `col="1"`, medido contra el core y no adivinado.** Diagnóstico confirmado en el core de **esta** BD
+    (`Odoo 17.0.20250124`): (a) el `<group>` sin anidar es un `InnerGroup` cuya rejilla es
+    `fit-content(150px) minmax(0,1fr)` (`form_controller.scss` L433) ⇒ **2 pistas**; (b) su **título** se
+    pinta como celda `g-col-sm-{{col}}` (`form_group.xml` L16) y con **`col="1"`** ocupaba **solo la
+    pista 1**, así que la tabla caía por auto-flujo en la **pista de valor** con `width: 100 %` de esa
+    pista (≈ **435 px** medidos por el Analista) mientras el renglón pedía **539**; (c) `col="1"` además
+    habría dado **`width: 200 %`** al celda con `colspan` (`form_group.js` L109-113: `itemSpan ×
+    100/(maxCols − labels)` con `maxCols = 1`) ⇒ la vía del plan **sola no alcanzaba**: había que
+    **retirar el `col="1"`**. Cambio aplicado: `<group string="Unidades de la entrega">` (sin `col`) +
+    `<field name="line_ids" nolabel="1" colspan="2">` ⇒ la celda recibe **`grid-column: span 2`**
+    (`form_group.xml` L29) y **`width: 100 %`** (`maxCols = 2`) ⇒ ocupa **las dos pistas** = **todo el
+    ancho del modal** (≈ **601 px** de cuerpo, el mismo que ya medían los `<div>` de prosa) frente a los
+    **539** que la tabla necesita. **Misma vía, misma tira:** `<group string="Lotes con existencia">` +
+    `candidate_ids … colspan="2"` (la tira de candidatos pasa de **439** a ancho completo).
+    **El `<div>` de la nota y las columnas de las dos tablas NO se tocaron** (CA-5 · CA-6 · CA-7).
+  - **T12-g — verificación.** Re-corridos los **4 candados** del contenedor (**29** tests, con el
+    **`arch`** de T11) y **la vista quedó cargada** en el 8071 (botón disparado).
+  *Sustituí/retiré (anti-acumulación):* **3 `col="1"`** (los de los grupos "Unidades de la entrega",
+  "Lotes con existencia" y "Motivo") **retirados**, no comentados; **cero** campos fuera de la vista,
+  **cero** `<div>` nuevos (siguen **4**), **cero** vistas/acciones nuevas, y el comentario de T12-a
+  **reemplazado** por el del revert (sin residuo de la hipótesis descartada).
+  *Archivos modificados (1):* `wizard/printflow_flow_lot_assign_bulk_views.xml` (**193 → 209** líneas;
+  **11.697 → 12.772** chars; **7.198** sin comentarios).
+  *Desviaciones (declaradas):* **1** — se aplicó la **misma vía** (`colspan="2"` + sin `col="1"`) al
+  `<field name="reason">` del **"Motivo"**, porque el propio §3.P.9 T12-f lo ofrece como parte de la
+  pista (*"…y en `reason` del 'Motivo'"*): sin ella el campo quedaba en la pista de valor con la mitad
+  izquierda vacía, el mismo desperdicio que el dueño señaló. **Los dos campos del bloque siguen
+  intactos** (`reason` + `confirm_exception`, T12-d). Si el Analista prefiere dejar el "Motivo" como
+  estaba, el revert es de **1 atributo** (`col`).
+  *Métricas de diseño (`odoo-view-design`, medidas con script):* **43** `<field>` · **6** `<group>`
+  (**2** de ellos anidados: la cabecera vuelve al idioma del core) · **4** `<div>` (igual) · **5**
+  `colspan` (los 2 de `selection_note`/`alert` + los **3 nuevos**, todos sobre campos `nolabel="1"`) ·
+  **2** `<tree>` · `col="1"` **reales: 0**. Archivo **12.772** chars (**7.198** sin comentarios): sigue
+  **por encima** del presupuesto del modal de decisión del core (**1,5K–6K**) y **se declara** por lo
+  mismo que el Lote 6 (comentarios + **11** campos técnicos invisibles que el validador de dominios
+  obliga a pintar + **dos** tablas en un modal); el contenido útil creció solo **~12** chars netos.
+  *Lo que NO medí (y por qué):* **CA-13 · CA-11 · CA-14 son medidas EN VIVO** y esta sesión **no tiene
+  navegador**. Lo que sí puedo afirmar con evidencia de archivo/core: la celda de las dos tablas recibe
+  `grid-column: span 2` + `width: 100 %` (compilador y plantilla del core citados arriba) y **no** queda
+  ninguna pista de rótulo a su izquierda. **La medición (`scrollWidth <= clientWidth + 1`) la hace el
+  Analista** en su 3.ª mirada: es exactamente el hueco que abrió este apartado.
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`**, proceso propio, `--data-dir` temporal
+  `pf_lote7_datadir`, `--no-http --max-cron-threads=0 --stop-after-init`, salida a `--logfile`.
+  **(1) Parseo + carga:** el XML **parsea** (`xml.dom.minidom`) y el `-u printflow_gestion_inventario`
+  **no aborta**: `loading printflow_gestion_inventario/wizard/printflow_flow_lot_assign_bulk_views.xml`
+  y **0** `ERROR` que citen la vista o `assign_bulk`; los **40** `ERROR`/`View error context` del log son
+  los **ajenos y pre-existentes** `External ID not found … x_product_dimensional_pricing.
+  menu_printflow_dashboards / printflow_health_center_*`, y el `WARNING` de **H-048** (rótulo compartido
+  `candidate_count`/`candidate_ids`) sale **idéntico** al Lote 5/6.
+  **(2) Candados del contenedor (las 4 clases):** `TestProductFlowLotAssignBulk` +
+  `…PerMove` + `…Result` + `…Redesign` ⇒ **`0 failed, 0 error(s) of 29 tests`** (exit **0**),
+  log `C:\Users\User\AppData\Local\Temp\opencode\pf_lote7_candados.log`. **Sin rojos nuevos** (el candado
+  del `arch` de **T11** sigue verde: asertó campos y atributos, **no** maquetación).
+  *Reinicio+módulo:* **OK** (`20261018-062435-printflow_gestion_inventario.log` · tarea=**0** · PID
+  **5760→7112** · puerto **8071 OK** · `-u` código de salida **0** · `Resultado ........... OK`) — botón
+  `Odoo8071-printflow_gestion_inventario`, reinicia + `-u`, **en ese orden**. **La BD viva quedó con la
+  vista nueva** (MCP `odoo-impreven`, solo lectura): `ir.ui.view` **12752** `printflow.flow.lot.assign
+  .bulk.form` `write_date` **2026-10-18 10:24:39 UTC**, con `colspan="2"` en `line_ids`,
+  `candidate_ids` y `reason`, **0** atributos `col="1"`, y los candados de contenido intactos
+  (`available_here`, `candidate_count`, `confirm_exception`, `own_lot_id` oculto, `alert` de
+  `multi_location`); módulo `installed` `write_date` **2026-10-18 10:24:47 UTC** (posterior a la edición
+  ⇒ el `-u` se aplicó).
+  *Sin verificación en vivo:* **NO** la ejecuté (no me toca y **no tengo navegador**): la **3.ª mirada**
+  del modal en la BD de **PRUEBA** (fotos + `VIEW-LIVE-CHECK.md`, **sin** accionar *Asignar lote*) es del
+  **Analista** — es la que decide **CA-13** (`scrollWidth <= clientWidth + 1` en las **dos** tablas),
+  **CA-11** (prosa a ~601 px) y **CA-14** (contenido ≤ 1156 px y cabecera ≤ 396 px).
+  **Turno → siguiente: Odoo Analista** (3.ª mirada en vivo: CA-13 · CA-11 · CA-14). **NO** lo arranco yo.
+- [2026-10-18 · Odoo Analista → **CIERRE DE §3.P**] **3.ª MIRE EN VIVO + VEREDICTO FINAL: `cumple`.**
+  **Trampa de método que corregí (queda escrita para que no se repita):** mi 1.ª mirada fue **inválida** por dos
+  motivos — (a) mi "recarga" del cliente **solo cambió el *hash*** de la URL ⇒ **no recargó** y medí la **vista
+  vieja**; (b) la ventana medía **736 px** (por debajo del corte `lg` = 992 px de Bootstrap). **De ahí nació
+  H-051, que resultó ser un artefacto del viewport** y que hoy está `descartado` leyendo el core
+  (`form_compiler.js` L264 · `form_controller.scss` L431-433 · `form_group.xml` L9). *Medir cerca no es medir.*
+  La 2.ª y 3.ª miradas se hicieron con `location.reload()` **verificado con marca de página**.
+  **Medidas de la 3.ª mirada (BD de PRUEBA, la vista final):** tabla de **unidades `601 = 601`** y tabla de
+  **lotes `601 = 601`** ⇒ **CA-13 ✅** (antes: `539 > 435` = con barra horizontal); los **3 `<div>` de prosa a
+  `601 × 21 px`** ⇒ **CA-11 ✅**; contenido **1315 px** (techo 1813) y cabecera **388 px** (techo 396) ⇒
+  **CA-14 ✅**; `633 = 633` sin desborde y las **6 columnas** de la fila de unidades con *Lote a asignar* **a la
+  vista sin arrastrar barra**; `confirm_exception` y el nodo oculto `own_lot_id` **intactos**.
+  **Fotos (informe de mirada de §3.8):** `docs/evidencia/3P-live-03-DESPUES-cabecera-y-unidades.png` y
+  `3P-live-04-DESPUES-lotes-y-motivo.png` (antes: `01` y `02`).
+  **Veredicto del `odoo-verificador` (pasada final): `cumple`** — CA-1…CA-14; **29/29** candados del contenedor
+  (`pf_lote7_candados.log`) + **19/19** de los contratos *no tocados* (`pf_verif_delta.log`); **motor sin diff**
+  imputable; picker y bandeja sin diff; **ningún rojo nuevo**. Su sesión **no tiene navegador** ⇒ se apoyó en
+  **mis medidas y fotos** como evidencia `[pantalla]` (y verificó que el `ir.ui.view` vivo es posterior al
+  archivo). Sus **3 observaciones** quedaron registradas: la fila **H-051 con celdas de más** (**la corregí**:
+  ese defecto de formato era **mío**, en `HALLAZGOS.md`), el **orden de lectura** de la cabecera (**H-054**) y el
+  alza de **1156 → 1315 px** (dentro del techo de CA-14).
+  **Hallazgos:** **H-043 · H-044 · H-045 · H-046 · H-047 · H-049 · H-050 ⇒ `resuelto`** (el código y la pantalla
+  los sostienen). **H-051 ⇒ `descartado`** (diagnóstico mío, artefacto del viewport). **H-048 · H-052 · H-053 ·
+  H-054 ⇒ `abierto`**: deudas **declaradas**, con **cura exacta** y **fuera** del alcance acordado.
+  **Compuerta §4.3:** checklist **T1–T11 + T12-a…d + T12-e…g: todo `[x]`**; tests **verdes**; verificación
+  **`cumple`**; **cero escrituras** de datos (solo el `-u` del botón sobre `ir.ui.view`); motor **intacto**.
+  **Turno → CERRADO.** *Tres cosas quedan a decisión del dueño (nada se toca sin su visto bueno):* **H-052**
+  ensanchar el modal (`context.dialog_size` en la **bandeja** — 1 línea, fuera del alcance de §3.P), **H-054**
+  el orden literal de la cabecera (2 líneas, obliga a **repetir la mirada**) y **H-053** los 6 decimales
+  (es `decimal.precision` **de la BD** ⇒ *"datos no"*).
+- [2026-10-18 · `odoo-dev`] **§3.Q · LOTE 1 (T1) `[motor]` ✅ CERRADO — "ventana ancha del wizard (H-052)"**.
+  Sesión NUEVA; no se retomó ninguna anterior. *Fuente:* `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA`
+  (**PRUEBA**; **solo lectura**; **cero escrituras** de datos). *Ruta escrita:*
+  `C:\odoo_custom\printflow_gestion_inventario`. Motor `x_product_dimensional_pricing`: **NO se tocó**.
+  *Tarea hecha (1 tarea):*
+  - **T1 (H-052) — ancho de la ventana.** En `wizard/printflow_flow_lot_tray.py::action_assign_lot_bulk`
+    (dict de retorno, L1091-1098) se añadió **solo** `'context': {'dialog_size': 'xl'}` (junto a
+    `'target': 'new'`). El resto del método (guardias de permisos, mensajes de error, `_pf_populate`,
+    `search` del `active_domain`) quedó **intacto** ⇒ **CA-2**. El `xl` es el **único** mando del tamaño
+    (el tamaño del modal sale del **contexto de la acción**, `DIALOG_SIZES` de `action_service.js`) ⇒ de
+    **800 px** (`modal-lg`) a **1140 px** (`modal-xl`) en pantalla ≥1200 px. **Conejera respetada**
+    (§3.Q.1 punto 5-a): **una sola** clave en el `context`, ninguna otra (una de más viajaría al wizard y
+    a sus dominios).
+  *Sustituí/retiré (anti-acumulación):* **nada** — el lote **solo AGREGA** 1 clave; **no** se creó campo,
+    método, vista, acción ni archivo nuevos, y **no** había residuo que retirar.
+  *Archivos modificados (1):* `wizard/printflow_flow_lot_tray.py` (**+1 línea** de código).
+  *Desviaciones:* **ninguna**.
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`** (proceso propio, `--data-dir` temporal
+  `pf_q1_datadir`, `--no-http`, `--max-cron-threads=0`, `-u printflow_gestion_inventario`, `--test-enable`,
+  salida a `--logfile`). Los **cuatro candados del contenedor** (`...Bulk` + `...PerMove` + `...Result` +
+  `...Redesign`) ⇒ **exit 0**, **`0 failed, 0 error(s) of 29 tests`** ⇒ **CA-5** verde y **sin rojos
+  nuevos** (los `External ID not found … x_product_dimensional_pricing.menu_printflow_dashboards /
+  printflow_health_center_*` del log son **pre-existentes y ajenos**, ya documentados).
+  Log: `C:\Users\User\AppData\Local\Temp\opencode\pf_q_lote1_candados.log`.
+  **CA-1** (el DOM del modal trae `modal-xl`) la **mide el Analista en vivo** — es su evidencia
+  `[pantalla]` (§3.8 regla 8); **no** la ejecuto yo.
+  *Reinicio+módulo:* botón **`Odoo8071-printflow_gestion_inventario`** (skill `reiniciar-servidor-odoo`) ⇒
+  reinicia + `-u` y deja el cambio **VIVO**.
+  **Turno → siguiente: `odoo-vistas` · Lote 2 (T2) `[pantalla]`** — orden de lectura de la cabecera (**H-054**),
+  en `wizard/printflow_flow_lot_assign_bulk_views.xml` (L40-54). **Solo T1 queda `[x]`**, T2 **no** se tocó.
+- [2026-10-18 · `odoo-vistas`] **§3.Q · LOTE 2 (T2) `[pantalla]` ✅ CERRADO — "orden de lectura de la
+  cabecera (H-054)"**. Sesión NUEVA; **no** se retomó ninguna anterior. *Fuente:* `odoo-impreven` / BD
+  `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**; **solo lectura**; **cero** escrituras de datos). *Ruta
+  escrita:* `C:\odoo_custom\printflow_gestion_inventario`. Motor `x_product_dimensional_pricing`: **NO se tocó**
+  (sin diff).
+  *Tarea hecha (1 tarea):*
+  - **T2 (H-054) — los dos conteos, INTERCAMBIADOS entre los grupos anidados de la cabecera.** En
+    `wizard/printflow_flow_lot_assign_bulk_views.xml` (§3.Q.1 punto 2) va el **único** movimiento de nodos:
+    `assignable_count` pasó al **grupo 1** (tras `source_label`) y `total_demand` al **grupo 2** (antes de
+    `candidate_count`). **Árbol de nodos que quedó** (el `arch` leído de la BD **viva**, solo lectura):
+    **grupo 1** = `product_id · source_label(invisible="1") · assignable_count` · **grupo 2** = `location_id ·
+    total_demand · candidate_count · omitted_count`; `selection_note` sigue **fuera** de los grupos anidados ⇒
+    leída **fila por fila** (2 columnas ≥992 px) la cabecera da **producto · ubicación · Unidades por asignar ·
+    Unidades a entregar · Lotes con existencia · Filas omitidas** (**CA-3**; la **mide en vivo el Analista**).
+  *Conejeras respetadas (§3.Q.1 punto 5-b/c):* **ningún otro campo se reordenó** (`omitted_count` conserva
+    `invisible="omitted_count == 0"` y `selection_note` su `nolabel="1" colspan="2"`), **no** se tocó el nodo
+    oculto `own_lot_id` del tree de líneas, ni el `alert` de `multi_location`, ni **ninguna** columna; **cero**
+    rótulos cambiados (**H-031** intacto) y **cero** campos añadidos o quitados.
+  *Sustituí/retiré (anti-acumulación):* **nada** — no había residuo (solo se movieron **2** nodos); **no** se
+    creó campo, vista, acción ni archivo nuevos.
+  *Archivos modificados (1):* `wizard/printflow_flow_lot_assign_bulk_views.xml` (**208 → 211** líneas: el
+    intercambio + **3** líneas de comentario del *por qué*, para que nadie lo "arregle" de vuelta).
+    **1** archivo, **1** movimiento de nodos.
+  *Desviaciones:* **ninguna** (el comentario nuevo documenta el porqué; **no** decide nada).
+  *Métricas de diseño (`odoo-view-design`, medidas con script sobre el `arch` **sin comentarios**):* **43**
+    `<field>` · **6** `<group>` (**2** anidados) · **4** `<div>` · **5** `colspan` · `col="1"` **0** · **2**
+    `<tree>` ⇒ **idénticas** a las del Lote 7 de §3.P (el swap **no** cambia estructura, solo el orden).
+    Archivo **13.001** chars (**6.857** sin comentarios): sigue **por encima** del presupuesto del modal de
+    decisión del core (**1,5K–6K**) y **se declara** por lo mismo que los Lotes 5–7 (comentarios + **11**
+    campos técnicos invisibles que el validador de dominios obliga a pintar + **dos** tablas); el contenido
+    útil **no** creció.
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`** (proceso propio, `--data-dir` temporal
+    `pf_q2_datadir`, `--no-http`, `--max-cron-threads=0`, `-u printflow_gestion_inventario`, `--test-enable`,
+    `--test-tags` con el prefijo repetido por clase, salida a `--logfile`): los **cuatro candados del
+    contenedor** (`...Bulk` + `...PerMove` + `...Result` + `...Redesign`) ⇒ **exit 0**, **`0 failed, 0
+    error(s) of 29 tests`** ⇒ **CA-5** verde y **sin rojos nuevos**. Log:
+    `C:\Users\User\AppData\Local\Temp\opencode\pf_q_lote2_candados.log`. **Parseo + carga:** el XML parsea
+    (`xml.dom.minidom`) y el log trae `loading printflow_gestion_inventario/wizard/
+    printflow_flow_lot_assign_bulk_views.xml` **sin** ningún `ERROR`/`WARNING` que cite la vista (los **40**
+    `ERROR` del log son los **pre-existentes y ajenos** `External ID not found …
+    x_product_dimensional_pricing.menu_printflow_dashboards / printflow_health_center_*`).
+  *Reinicio+módulo:* botón **`Odoo8071-printflow_gestion_inventario`** (skill `reiniciar-servidor-odoo`) ⇒
+    reinicia + `-u`, **en ese orden**, y deja el cambio **VIVO**. Evidencia: `Reinicio+módulo: OK
+    (20261018-090438-printflow_gestion_inventario.log · tarea=0 · PID 10932→2608 · puerto 8071 OK ·
+    write_date 2026-10-18 13:04:41)`. En la BD viva (MCP `odoo-impreven`, **solo lectura**): `ir.ui.view`
+    **12752** `printflow.flow.lot.assign.bulk.form` `write_date` **2026-10-18 13:04:41 UTC** y módulo
+    `installed` `write_date` **2026-10-18 13:04:49 UTC** (posteriores a mi edición ⇒ el `-u` **sí** se aplicó).
+  *Sin verificación en vivo:* **NO** la ejecuté (no me toca y **no tengo navegador**): la **mirada en vivo**
+    del modal en la BD de **PRUEBA** (fotos + `VIEW-LIVE-CHECK.md`, **sin** accionar *Asignar lote*) es del
+    **Analista** — es la que decide **CA-3** (orden fila por fila) y **CA-1** (`modal-xl`, de T1), que son
+    **medidas en vivo, no leídas del código**.
+    **Turno → siguiente: Odoo Analista** (mirada en vivo: **CA-1 · CA-3** + foto). **NO** lo arranco yo.
+    Con T2 `[x]`, **el plan de §3.Q queda COMPLETO (T1–T2)**: no hay lote siguiente.
+- [2026-10-18 · `odoo-dev`] **§3.Q.4 · LOTE 3 (T3) `[motor]` ✅ CERRADO — "la llave del tamaño del modal:
+  `'xl'` no es `'extra-large'` (H-052, corrección viva 1)"**. Sesión NUEVA; **no** se retomó ninguna anterior.
+  *Fuente:* `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**; **solo lectura**; **cero**
+  escrituras de datos). *Ruta escrita:* `C:\odoo_custom\printflow_gestion_inventario`. Motor
+  `x_product_dimensional_pricing`: **NO se tocó** (sin diff).
+  *Tarea hecha (1 tarea):*
+  - **T3 (H-052) — el valor de la llave del contexto, corregido.** En `wizard/printflow_flow_lot_tray.py`
+    → `action_assign_lot_bulk` (L1098) el contexto pasa de `{'dialog_size': 'xl'}` a
+    **`{'dialog_size': 'extra-large'}`**. **Nada más**: mismo `dict`, misma línea, **ninguna** otra clave
+    (la conejera de §3.Q.1 punto 5-a: el `context` se **mezcla** con el del wizard ⇒ una clave de más viaja
+    al wizard y a sus dominios).
+    **Por qué:** el mapa del core `DIALOG_SIZES` (`web/static/src/webclient/actions/action_service.js`
+    L95-100) es `{"extra-large": "xl", "large": "lg", "medium": "md", "small": "sm"}` ⇒ con `'xl'` el
+    `DIALOG_SIZES['xl']` era `undefined`, no se fijaba tamaño y el `Dialog` caía en su default (`lg`).
+    La llave correcta para pedir `modal-xl` es **`extra-large`**.
+  *Sustituí/retiré (anti-acumulación):* el valor **`'xl'`** fue **sustituido** por `'extra-large'` **en la
+  misma línea** (L1098) ⇒ **cero** residuo: queda **una sola** clave `dialog_size` y **un solo** valor.
+  No se creó ni se dejó campo, wizard, vista, acción ni archivo nuevos.
+  *Archivos modificados (1):* `wizard/printflow_flow_lot_tray.py` (**1** línea cambiada: `'xl'` →
+  `'extra-large'`). Diff:
+  `-            'context': {'dialog_size': 'xl'},` →
+  `+            'context': {'dialog_size': 'extra-large'},`
+  *Desviaciones:* **ninguna** (solo el valor de la llave; guardias, mensajes, `_pf_populate`, `active_domain`
+  y el resto del método **intactos** ⇒ **CA-2**).
+  *Pruebas (evidencia):* BD de test **`pf_picker_tests`** (proceso propio, `--data-dir` temporal `pf_q2_datadir`,
+  `--no-http`, `--max-cron-threads=0`, `-u printflow_gestion_inventario`, `--test-enable`, `--test-tags` con el
+  prefijo repetido por clase, salida a `--logfile`): los **cuatro candados del contenedor**
+  (`TestProductFlowLotAssignBulk` + `...PerMove` + `...Result` + `...Redesign`) ⇒ **exit 0**, **`0 failed,
+  0 error(s) of 29 tests`** ⇒ **CA-5** verde y **sin rojos nuevos**. Log:
+  `C:\Users\User\AppData\Local\Temp\opencode\pf_q_lote3_candados.log`.
+  *Reinicio+módulo:* botón **`Odoo8071-printflow_gestion_inventario`** (skill `reiniciar-servidor-odoo`) ⇒
+  reinicia + `-u`, **en ese orden**, y deja el cambio **VIVO**. Evidencia: `Reinicio+módulo: OK
+  (20261018-091530-printflow_gestion_inventario.log · tarea=0 · PID 2608→9320 · puerto 8071 OK ·
+  write_date 2026-10-18 13:15:42)` (`-u` código de salida **0**, `Resultado ........... OK`). En la BD viva
+  (MCP `odoo-impreven`, **solo lectura**): módulo `printflow_gestion_inventario` (id **945**) `installed`
+  `write_date` **2026-10-18 13:15:42 UTC** (posterior a mi edición y dentro de la ventana del `-u`
+  09:15:32→09:15:46 local ⇒ el `-u` **sí** se aplicó).
+  *Sin verificación en vivo:* **NO** la ejecuté (no me toca y **no tengo navegador**): la **mirada en vivo**
+  del modal en la BD de **PRUEBA** (foto + `VIEW-LIVE-CHECK.md`, **sin** accionar *Asignar lote*) es del
+  **Analista** — es la que decide **CA-1** (`context.dialog_size = 'extra-large'` ⇒ DOM con **`modal-xl`**:
+  **1140 px** desde 1200 px de viewport · **800 px** entre 992 y 1200 px · **650 px** por debajo de 992 px),
+  medida **en vivo, no leída del código**.
+  **Turno → siguiente: Odoo Analista** (mirada en vivo: **CA-1** + foto). **NO** lo arranco yo.
+- [2026-10-18 · Odoo Analista] **Cierre de §3.Q (H-052 · H-054).** Mirada en vivo con **recarga REAL**
+  verificada (la sesión se había caído con los reinicios ⇒ se volvió a entrar, `uid 2`, y **se confirmó la BD**
+  antes de medir). **CA-1 ✅:** la acción devuelve `{'dialog_size': 'extra-large'}` y el DOM trae **`modal-xl`**
+  (en ventana angosta sigue con **650 px** ⇒ **sin regresión**; 800 px entre 992 y 1200; **1140 px** desde 1200).
+  **CA-3 ✅:** con el viewport ≥992 px **replicado en el navegador** (solo la regla del core `col-lg-6` + el ancho
+  `modal-xl`; **nada escrito en el módulo**), las dos columnas salen **lado a lado** (546 px cada una) ⇒ la
+  lectura **fila por fila** da **producto · ubicación · "Unidades por asignar" · "Unidades a entregar" · "Lotes
+  con existencia"** = **literal de CA-3**. **CA-4/CA-5/CA-6 ✅:** los 6 datos y la nota intactos; **29/29**
+  candados; motor `x_product_dimensional_pricing` **sin diff**; diff del tray = **1 línea**.
+  **Artefacto descartado:** el scroll horizontal que asomó en la 1.ª pasada era **efecto de la simulación** (la
+  tabla se dibujó con el ancho forzado y no se recalculó); con modal **fresco** ⇒ **601 = 601**.
+  Fotos: `docs/evidencia/3Q-live-04-ANGOSTA-modal-xl.png` y `3Q-live-05-ANCHA-simulada-2-columnas.png`.
+  Hallazgos: **H-052 → `resuelto`** y **H-054 → `resuelto`** (antes se corrigieron su descripción errónea de los
+  grupos y su premisa —el tope de 800 px **no** era la causa del apilado: el apilado depende del **viewport**).
+  §3.Q → **ANEXO · TAREA CERRADA**. **Turno → siguiente: el dueño** (vistazo de la última milla de CA-3 en su
+  monitor, y decisión sobre **H-053** decimales · **H-048** rótulo repetido · commit).
+- [2026-10-18 · Odoo Analista] **Ratificación del dueño y cierre definitivo de §3.Q.** El dueño miró el wizard en
+  **su monitor**: *"está bien como quedó"* ⇒ **CA-3 cerrado al 100 %** (la última milla, que solo se ve en pantalla
+  ancha, la confirma quien la usa). Decisión suya sobre la deuda pendiente: **H-053 (decimales) se OMITE POR
+  AHORA** ⇒ la fila **sigue `abierto`** (no `descartado`), con su cura —precisión *Product Unit of Measure* a **2
+  desde la BD**— y su alternativa de vista ya escritas, para cuando quiera retomarla. **No** se toca
+  `decimal.precision` (es **DATO**). **H-048** (rótulo repetido en un campo interno invisible) queda igual:
+  `abierto`, cosmético. Registro verificado: **54 filas, todas de 9 celdas, sin IDs duplicados** — 13 `abierto` /
+  33 `resuelto` / 8 `descartado` / 0 `en tarea` (se arreglaron 4 filas viejas que traían la nota **dentro** de la
+  celda de estado, lo que rompía el conteo). **Nada commiteado** (`main` = `3422608`): **9 archivos modificados + 7
+  sin rastrear** (6 fotos de evidencia y el test nuevo `tests/test_product_flow_lot_assign_bulk_redesign.py`), a la
+  espera de la decisión del dueño. **Turno → siguiente: el dueño** (commit).
+- [2026-10-19 · Odoo Analista] **CIERRE §3.R — veredicto `cumple`.** El wizard "Asignación en bloque" **ya cambia el
+  lote de una unidad TACHADA** (`picked`) de cualquier entrega **abierta** (venga del POS o no): se acabó el
+  *"El lote no quedó reservado en la unidad."*. Cura = **baile del tachón** (apartar 🔑 → liberar → reservar →
+  devolver 🔒) dentro de **un solo mecanismo** (`stock.move._pf_reassign_lots`), **savepoint por unidad** y el
+  tachón vuelve **solo si la unidad quedó completa** (vara = demanda + redondeo de la UdM). Ejecutado en **2 lotes**
+  `[motor]` (T0–T2 · T3–T5), en sesiones nuevas, con `reiniciar-servidor-odoo` al cerrar cada uno en el 8071.
+  **Archivos:** `models/stock_move.py` (baile + `_pf_unit_is_covered` + guardián del lote **vacío**, H-058) ·
+  `wizard/printflow_flow_lot_assign_bulk.py` (veredicto de 4 ramas honesto + savepoint + `invalidate_recordset`) ·
+  `wizard/printflow_product_flow.py` (`_pf_reassign_move_lot` delega en el mecanismo único) ·
+  `tests/test_product_flow_lot_picked_reassign.py` (**NUEVO**). **Retirado:** el cortocircuito
+  `if self.picked or …`, la comparación `reserved < demand - _EPS` y el mensaje viejo. **Motor SIN tocar**
+  (huella `22293F95…106B` · 12.690 bytes · `git status --porcelain` = 143, idéntica al abrir y al cerrar).
+  **Evidencia:** nuevos **11/11** · candados **31/31** · corrida del lote **52/52** · suite **688** con los **8
+  rojos exactos** del baseline ⇒ **delta 0** · **regresión real** probada en los dos lotes (revertir el baile ⇒
+  `test_ca1` falla; revertir T3 ⇒ `test_ca6` falla; quitar el savepoint ⇒ `test_ca7` falla).
+  **Hallazgos:** **H-055 · H-056 · H-057 · H-058 → `resuelto`** (58 filas · 13 `abierto` / 37 `resuelto` /
+  8 `descartado` / 0 `en tarea`). **Dato corregido:** la UdM `m` (id 5) redondea a **0,001**; el `0,01` es
+  `decimal.precision` *Product Unit of Measure* (H-053), que es otra cosa. **Queda para el dueño:** el árbol de
+  trabajo sigue **sin commitear** (su decisión; `git-seguro` antes de tocar git).

@@ -1,0 +1,81 @@
+# §3.R.7 · Lote 1 (T0–T2) — evidencia de tests y huella del motor
+
+**Fecha:** 2026-10-19 · **Módulo:** `printflow_gestion_inventario` (ruta `C:\odoo_custom\printflow_gestion_inventario`)
+**BD de test (NUNCA la de producción):** `pf_picker_tests` · `--data-dir` temporal · `--no-http`
+**Motor `x_product_dimensional_pricing`:** SOLO LECTURA (huella al abrir y al cerrar, abajo).
+
+## 1) T0 — Sonda de la Opción C (uso único)
+
+Ver `docs/evidencia/3R-t0-opcion-c.txt`. Veredicto: **DESCARTADA como cura**
+(no cumple CA-4, sobre-reserva el quant y sería un tercer camino de escritura) ⇒ **D-8 ratificada**.
+La sonda `tests/test_3r_probe_opcion_c.py` y su import en `tests/__init__.py` se **borraron**.
+
+## 2) T1 + T2 — tests nuevos (8/8)
+
+```text
+odoo-bin -c "C:\Program Files\Odoo 17.0.20250124\server\odoo.conf"
+  -d pf_picker_tests -u printflow_gestion_inventario
+  --data-dir <temp> --no-http --max-cron-threads=0 --test-enable
+  --test-tags /printflow_gestion_inventario:TestProductFlowLotPickedReassign,
+               /printflow_gestion_inventario:TestProductFlowLotAssignBulkVerdict
+  --logfile <temp>/pf_3r_lote1_nuevos.log --stop-after-init
+EXIT=0 · 0 failed, 0 error(s) of 8 tests
+```
+
+| Clase | Test | Qué prueba |
+|---|---|---|
+| `TestProductFlowLotPickedReassign` | `test_ca1_picked_unit_changes_lot` | CA-1: unidad tachada cambia de lote; reserva solo en el nuevo; tachón devuelto en move **y** líneas; lote viejo recupera su libre |
+| | `test_ca2_no_stacked_reservation` | CA-2: reservado viejo = 0, nuevo = 1, sin reservas ni físicos negativos |
+| | `test_ca3_done_or_cancel_untouched` | CA-3 (D-2): `done`/`cancel` devuelven `0.0` sin tocar nada |
+| | `test_ca4_short_unit_loses_pick` | CA-4a: unidad corta ⇒ `partial` y **sin** tachón; reserva parcial **no** trancada |
+| `TestProductFlowLotAssignBulkVerdict` | `test_ca5_uom_rounding_is_covered` | CA-5: el helper usa el redondeo de la UdM (0,018 cubre 0,018182 con rounding 0,001) ⇒ `assigned` |
+| | `test_ca4_short_unit_is_partial` | CA-4b: falta real (demanda 2 / reservado 1) ⇒ `partial` |
+| | `test_ca5_zero_reservation_is_error_with_reason` | CA-5: sin reserva ⇒ `error` con el motivo real (nombra el lote) |
+| | `test_ca5_zero_demand_is_skipped` | CA-5: demanda 0 ⇒ `skipped` |
+
+## 3) Candados del contenedor + camino por documento (31/31, CA-9)
+
+```text
+--test-tags TestProductFlowLotAssignBulk, ...PerMove, ...Result,
+            ...Redesign, TestProductFlowLotPendingOrderAssign
+EXIT=0 · 0 failed, 0 error(s) of 31 tests
+```
+
+## 4) Regresión REAL del baile (obligatoria)
+
+Se **revirtió temporalmente** el baile (se dejó el cortocircuito
+`if self.picked or self.state in ('done','cancel'): return 0.0`) y se corrió solo `test_ca1`:
+
+```text
+FAIL: TestProductFlowLotPickedReassign.test_ca1_picked_unit_changes_lot
+AssertionError: 'error' != 'assigned'
+- error
++ assigned
+ : El lote "3R-CA1-NUEVO" no tiene existencia disponible aquí.
+EXIT=1 · 1 failed
+```
+
+Es exactamente **H-055** (la unidad tachada no se podía tocar). Después se **restauró** el baile:
+`SHA-256(models/stock_move.py)` = `FBCFD48EBAE0CF2C7774DA64AD9EFC9173BA1DC6BEDB52DA82401FAACD511F41`
+(byte a byte el archivo que pasó 8/8).
+
+## 5) Corrida FINAL del lote (39/39)
+
+```text
+--test-tags TestProductFlowLotPickedReassign, TestProductFlowLotAssignBulkVerdict,
+            TestProductFlowLotAssignBulk, ...PerMove, ...Result, ...Redesign,
+            TestProductFlowLotPendingOrderAssign
+EXIT=0 · 0 failed, 0 error(s) of 39 tests (8 nuevas + 31 candados)
+```
+
+## 6) Huella del motor (CA-8 · H-038)
+
+`git diff` NO sirve: `models/stock_move.py` del motor está **sin versionar** (`??`). La prueba es la huella.
+
+| Medición | Al abrir el lote | Al cerrar el lote | ¿Idéntica? |
+|---|---|---|---|
+| `SHA-256(x_product_dimensional_pricing/models/stock_move.py)` | `22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B` | `22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B` | **SÍ** |
+| bytes del archivo | 12.690 | 12.690 | **SÍ** |
+| `git status --porcelain \| wc -l` del motor | 143 | 143 | **SÍ** |
+
+⇒ **motor sin tocar** (CA-8).
