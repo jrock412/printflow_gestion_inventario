@@ -30,23 +30,39 @@
                 <field name="candidate_lot_ids" invisible="1"/>
                 <field name="multi_location" invisible="1"/>
 
+                <!-- Cabecera COMPACTA (T8 · D-7): solo los datos que el operador
+                     necesita para decidir. Los conteos ya van rotulados al lado,
+                     así que la prosa que los repetía sobra. -->
+                <!-- T12-e: DOS grupos ANIDADOS (forma de §3.O; el grupo externo
+                     es `OuterGroup` y da 2 columnas desde 992 px, abajo apila:
+                     es responsivo, no un defecto). El grupo plano de T12-a no
+                     compró nada medible y quitó la 2ª columna ⇒ se revierte. -->
                 <group string="Selección">
                     <group>
                         <field name="product_id" readonly="1"/>
-                        <field name="source_label" readonly="1"/>
-                        <field name="total_demand" readonly="1"/>
+                        <!-- Queda en el registro pero NO se pinta (D-7). -->
+                        <field name="source_label" readonly="1" invisible="1"/>
+                        <!-- T2 (§3.Q · H-054): los dos conteos salen
+                             INTERCAMBIADOS respecto de §3.P para que la fila 2
+                             lea "por asignar | a entregar". NO reordenar. -->
+                        <field name="assignable_count" readonly="1"/>
                     </group>
                     <group>
                         <field name="location_id" readonly="1"/>
-                        <field name="assignable_count" readonly="1"/>
-                        <field name="omitted_count" readonly="1"/>
-                        <!-- Texto VISIBLE (no tooltip): declara la UNIDAD de
-                             cada ranura. Cada fila es una UNIDAD (un
-                             movimiento); la demanda va en UNIDADES. Evita la
-                             lectura confusa "26 vs 30" (H-031). -->
-                        <field name="selection_note" readonly="1"
-                               nolabel="1" colspan="2"/>
+                        <field name="total_demand" readonly="1"/>
+                        <field name="candidate_count" readonly="1"/>
+                        <!-- Se pinta SOLO cuando hay filas omitidas (D-7). -->
+                        <field name="omitted_count" readonly="1"
+                               invisible="omitted_count == 0"/>
                     </group>
+                    <!-- Texto VISIBLE (no tooltip): declara QUÉ es cada ranura
+                         (una UNIDAD = un movimiento; la demanda va en UNIDADES),
+                         sin repetir los conteos (H-031/H-047). `colspan="2"` en
+                         un grupo externo = hijo sin clase de columna ⇒
+                         `width: 100 %` (Bootstrap `.row > *`): línea propia a
+                         ANCHO COMPLETO de la cabecera (T12-e). -->
+                    <field name="selection_note" readonly="1"
+                           nolabel="1" colspan="2"/>
                 </group>
 
                 <!-- Aviso VISIBLE: sin una única ubicación efectiva la
@@ -61,12 +77,25 @@
                     asignar; la que no alcance queda parcial u omitida.
                 </div>
 
-                <group string="Unidades de la entrega" col="1">
-                    <div class="text-muted">
-                        Elige el lote de CADA unidad: cada fila es un movimiento (una
-                        unidad / línea de pedido) de la entrega.
-                    </div>
-                    <field name="line_ids" nolabel="1">
+                <!-- T12-b (H-050): la prosa va FUERA del `<group>` (Odoo 17 la
+                     metería como celda de la rejilla ⇒ tira vertical ilegible);
+                     a ancho completo, como el aviso de arriba. -->
+                <!-- T12-c (H-049): qué es una fila ya lo dice `selection_note`. -->
+                <div class="text-muted">
+                    Elige el lote de CADA unidad.
+                </div>
+
+                <!-- T12-f (CA-13): `colspan="2"` ⇒ la celda recibe
+                     `grid-column: span 2` (`form_group.xml` L29) y ocupa las DOS
+                     pistas del `InnerGroup` en vez de la de valor; y sin `col="1"`
+                     el ancho relativo sale con maxCols=2 (100 %, no 200 %). La
+                     tabla usa así el ancho completo del modal. Columnas intactas. -->
+                <group string="Unidades de la entrega">
+                    <!-- Fila de UNIDADES (T10 · CA-7): a la vista y en este orden
+                         # · Entrega · Pedido · Lote propio · Existencia · Lote a
+                         asignar. Lo demás queda recuperable por el operador
+                         (optional="hide"), nunca borrado del modelo. -->
+                    <field name="line_ids" nolabel="1" colspan="2">
                         <tree create="false" delete="false" editable="bottom"
                               decoration-success="result == 'assigned'"
                               decoration-warning="result == 'partial'"
@@ -74,39 +103,67 @@
                               decoration-danger="result == 'error'">
                             <field name="seq" string="#"/>
                             <field name="label" string="Entrega"/>
-                            <field name="sale_order_name" string="Pedido"
-                                   optional="hide"/>
-                            <field name="sale_line_id" string="Línea de pedido"/>
-                            <field name="move_id" string="Unidad"/>
+                            <field name="sale_order_name" string="Pedido"/>
                             <field name="own_lot_name" string="Lote propio"/>
                             <field name="own_lot_qty" string="Existencia"/>
                             <field name="lot_id" string="Lote a asignar"
                                    options="{'no_create': True, 'no_open': True}"
                                    readonly="not assignable"/>
-                            <field name="demand_qty" string="Demanda"/>
-                            <field name="result" string="Resultado"/>
+                            <!-- Fuera de la vista por defecto (T10 · CA-7).
+                                 ``move_id`` empujaba fuera la columna que
+                                 decide (H-046). -->
+                            <field name="sale_line_id" string="Línea de pedido"
+                                   optional="hide"/>
+                            <field name="move_id" string="Unidad"
+                                   optional="hide"/>
+                            <field name="demand_qty" string="Demanda"
+                                   optional="hide"/>
+                            <field name="result" string="Resultado"
+                                   optional="hide"/>
                             <field name="result_note" string="Nota"
-                                   optional="show"/>
+                                   optional="hide"/>
                             <field name="kind" column_invisible="True"/>
                             <field name="res_model" column_invisible="True"/>
                             <field name="res_id" column_invisible="True"/>
                             <field name="assignable" column_invisible="True"/>
                             <field name="location_id" column_invisible="True"/>
+                            <!-- Campo TÉCNICO OBLIGATORIO (no es una columna):
+                                 el dominio del selector por fila
+                                 (``printflow.flow.lot.assign.bulk.line.lot_id``)
+                                 cita ``own_lot_id`` para NO ofrecer el lote propio
+                                 de la unidad (candado de dominio, D-3). El
+                                 validador de vistas de Odoo 17 exige que TODO
+                                 nombre de campo citado en un dominio esté
+                                 presente en la vista (``must_have_fields``): sin
+                                 este nodo el módulo NO carga. NO quitar. -->
+                            <field name="own_lot_id" column_invisible="True"/>
                         </tree>
                     </field>
                 </group>
 
-                <group string="Lotes con existencia" col="1">
-                    <div class="text-muted">
-                        Informativo: lotes con existencia del producto. La decisión
-                        se toma arriba, en cada unidad.
-                    </div>
-                    <field name="candidate_ids" nolabel="1">
+                <!-- SIEMPRE VISIBLE (T9 · D-6): es la "memoria" de la decisión.
+                     4 columnas: Lote · Existencia · Disponible aquí · Rol. -->
+                <!-- T12-b (H-050): prosa fuera del grupo ⇒ ancho completo. -->
+                <div class="text-muted">
+                    Informativo: lotes con existencia del producto. La decisión
+                    se toma arriba, en cada unidad.
+                </div>
+
+                <!-- T12-f (CA-13): misma vía que la tabla de unidades. -->
+                <group string="Lotes con existencia">
+                    <field name="candidate_ids" nolabel="1" colspan="2">
                         <tree create="false" delete="false" editable="false">
                             <field name="lot_name" string="Lote"/>
                             <field name="qty_on_hand" string="Existencia"/>
-                            <field name="reserved" string="Reservado"/>
-                            <field name="available" string="Disponible"/>
+                            <field name="reserved" string="Reservado"
+                                   optional="hide"/>
+                            <!-- Fuera de la vista (T9 · D-4): la disponibilidad
+                                 GLOBAL engaña; la cifra que DECIDE es la del
+                                 almacén de la entrega (``available_here``). -->
+                            <field name="available" string="Disponible"
+                                   column_invisible="True"/>
+                            <field name="available_here"
+                                   string="Disponible aquí"/>
                             <field name="role_label" string="Rol"/>
                             <field name="is_own_lot" column_invisible="True"/>
                             <field name="is_elective" column_invisible="True"/>
@@ -115,8 +172,10 @@
                     </field>
                 </group>
 
-                <group string="Motivo de la asignación" col="1">
-                    <field name="reason" nolabel="1" required="1"
+                <!-- T12-f: la misma vía en el "Motivo" (`reason` a ancho
+                     completo). Los DOS campos siguen intactos (T12-d). -->
+                <group string="Motivo de la asignación">
+                    <field name="reason" nolabel="1" colspan="2" required="1"
                            placeholder="¿Por qué se asigna este lote a cada unidad?"/>
                     <!-- Restituido (T10 · regresión de T4): la acción
                          ``action_assign_lot_bulk`` EXIGE este check cuando la
@@ -125,13 +184,17 @@
                          forma de confirmar desde la UI. -->
                     <field name="confirm_exception"
                            help="La política vigente exige confirmar la excepción."/>
-                    <div class="text-muted">
-                        El motivo es OBLIGATORIO y queda en la bitácora de cada
-                        documento. La asignación requiere jefe de
-                        taller/administrador y ESCRIBE inventario por la vía NATIVA
-                        (reasignación de reserva).
-                    </div>
                 </group>
+
+                <!-- T12-b (H-050): la prosa del "Motivo" también va fuera del
+                     grupo ⇒ ancho completo. Los dos campos de arriba NO se tocan
+                     (T12-d). -->
+                <div class="text-muted">
+                    El motivo es OBLIGATORIO y queda en la bitácora de cada
+                    documento. La asignación requiere jefe de
+                    taller/administrador y ESCRIBE inventario por la vía NATIVA
+                    (reasignación de reserva).
+                </div>
 
                 <footer>
                     <button name="action_assign_lot_bulk" type="object"

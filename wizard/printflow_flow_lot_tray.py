@@ -1095,6 +1095,7 @@ class PrintflowFlowLotTray(models.TransientModel):
             'res_id': bulk.id,
             'view_mode': 'form',
             'target': 'new',
+            'context': {'dialog_size': 'extra-large'},
         }
 
     @api.model

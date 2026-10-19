@@ -55,20 +55,30 @@ class PrintflowFlowLotAssignBulkLine(models.TransientModel):
         help='``stock.move`` que respalda esta UNIDAD de la entrega (una fila = '
              'un movimiento = una unidad / línea de pedido). Es lo único que se '
              'escribe al aplicar.')
-    # El dominio del selector POR FILA usa la RUTA AL PADRE (``parent.``): el
-    # contenedor (``printflow.flow.lot.assign.bulk``) declara ``product_id`` y
+    # El dominio del selector POR FILA usa la RUTA AL PADRE (``parent.``) para el
+    # producto y los lotes elegibles: el contenedor
+    # (``printflow.flow.lot.assign.bulk``) declara ``product_id`` y
     # ``candidate_lot_ids`` en su form, así el dominio resuelve en el cliente y la
     # validación de vistas de Odoo 17 lo acepta (un dominio que apunte a
     # ``bulk_id.<campo>`` obligaría a pintar ``bulk_id`` en la sub-vista y hoy
-    # rompe la carga del módulo). Semántica idéntica: SOLO lotes con existencia
-    # del producto (D4).
+    # rompe la carga del módulo). Semántica: SOLO lotes con existencia del
+    # producto (D4) MENOS el lote propio de la unidad: ``own_lot_id`` es campo de
+    # ESTA línea ⇒ se referencia directo, sin ruta al padre. El lote propio NO se
+    # ofrece en su propia fila (candado de DOMINIO, D-3 · prevención).
+    # ⚠️ El validador de vistas de Odoo 17 (``must_have_fields``) exige que TODO
+    # campo citado en un dominio esté PRESENTE en la vista: por eso la vista del
+    # contenedor pinta ``own_lot_id`` con ``column_invisible="True"``. Si se
+    # quita ese nodo, el módulo deja de cargar (``must be present in view``).
     lot_id = fields.Many2one(
         'stock.lot', string='Lote a asignar',
         domain="[('product_id', '=', parent.product_id), "
-               "('id', 'in', parent.candidate_lot_ids)]",
+               "('id', 'in', parent.candidate_lot_ids), "
+               "('id', '!=', own_lot_id)]",
         help='Lote que el operador decide asignar a ESTA unidad. El desplegable '
-             'solo lista lotes con existencia del producto (D4); la decisión es '
-             'fila por fila, no una caja para toda la selección.')
+             'solo lista lotes con existencia del producto (D4) y NO ofrece el '
+             'lote propio de la unidad (candado de dominio, D-3): el uso normal '
+             'es elegir OTRO lote. La decisión es fila por fila, no una caja '
+             'para toda la selección.')
     own_lot_id = fields.Many2one(
         'stock.lot', string='Registro del lote propio', readonly=True,
         help='Registro ``stock.lot`` del lote propio de la unidad, si existe. '
