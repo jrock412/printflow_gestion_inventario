@@ -17,10 +17,11 @@ detalle se llevan POR UNIDAD.
   ``views == [(False, 'form')]``: Odoo solo normaliza ``views`` en la acción de
   PRIMER nivel, así que sin ella el cliente revienta en
   ``action_service.js::_preprocessAction`` (``action.views.map``).
-* **CA-4 (H-031)** — la ranura "Selección" declara su unidad: "Unidades por
-  asignar" / "Unidades a entregar" / "Filas omitidas" + el texto aclaratorio
-  VISIBLE ``selection_note`` que declara que CADA FILA es una UNIDAD (un
-  movimiento); ``total_demand`` CONSERVA su ``digits``.
+* **CA-4 (H-031 / H-047)** — la ranura "Selección" declara su unidad: "Unidades
+  por asignar" / "Unidades a entregar" / "Filas omitidas" + el texto aclaratorio
+  VISIBLE ``selection_note``, que declara qué ES cada fila (una UNIDAD = un
+  movimiento de la entrega = una línea de pedido) SIN repetir los conteos ya
+  rotulados al lado (D-8 de §3.P); ``total_demand`` CONSERVA su ``digits``.
 
 Es de SOLO LECTURA sobre datos ajenos salvo la ÚNICA escritura del flujo (la
 reasignación NATIVA de reserva que dispara el wizard con su guardia y su motivo):
@@ -282,8 +283,8 @@ class TestProductFlowLotAssignBulkResult(TransactionCase):
         self.assertEqual(bulk.assignable_count, 2)
         self.assertEqual(
             bulk.selection_note,
-            'Cada fila es una unidad (un movimiento de la entrega = una línea '
-            'de pedido). 2 unidades por asignar = 6.00 unidades a entregar.')
+            'Cada fila es una unidad: un movimiento de la entrega = una línea '
+            'de pedido.')
 
     # ==================================================================
     # Candado — sin SQL crudo

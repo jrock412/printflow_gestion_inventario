@@ -12,8 +12,9 @@ lleva **SU** selector de lote; el operador decide el par caja ↔ unidad.
 * **CA-2** — un albarán con **2 movimientos** del producto produce **2 filas**
   (2 ``move_id`` distintos, ``demanda = 1`` cada una) ⇒ **H-034 cerrado**.
 * **CA-3/CA-4** — cada fila muestra **pedido · línea · lote propio con su
-  existencia**; el lote propio **con** existencia llega **pre-llenado** y el
-  **vacío** llega **vacío y visible** (``0.00``).
+  existencia**; **ninguna** fila llega pre-llenada (``lot_id`` **vacío**) aunque
+  su lote propio tenga existencia, y el **sin** existencia se informa en
+  ``0.00`` con su nombre visible.
 * **CA-5** — dos lotes elegidos **uno por fila** cubren las 2 unidades: cada
   movimiento queda con SU ``move_line`` y SU lote (2/2).
 * **CA-6** — motivo obligatorio, política de excepción (cero hardcodeo) y
@@ -226,7 +227,7 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
         self.assertEqual(bulk.assignable_count, 2)
 
     # ==================================================================
-    # CA-3/CA-4 — lote propio por fila + pre-llenado según su existencia
+    # CA-3/CA-4 — lote propio por fila (informativo) + selector por fila
     # ==================================================================
     def test_ca3_each_row_shows_own_lot_and_selector(self):
         product = self._product('BULK POR UNIDAD CA3')
@@ -257,13 +258,18 @@ class TestProductFlowLotAssignBulkPerMove(TransactionCase):
         self.assertEqual(line_a.own_lot_name, own_name_a)
         self.assertEqual(line_b.own_lot_name, own_name_b)
 
-        # (b) pre-llenado SOLO cuando el lote propio tiene existencia.
+        # (b) NINGUNA fila llega pre-llenada (CA-1): el lote propio solo
+        # INFORMA su existencia (CA-2), aunque la tenga.
         self.assertAlmostEqual(line_a.own_lot_qty, 1.0)
-        self.assertEqual(line_a.lot_id, lot_a)
+        self.assertFalse(
+            line_a.lot_id,
+            'El lote propio con existencia NO se pre-llena (D-1).')
         self.assertAlmostEqual(line_b.own_lot_qty, 0.0)
         self.assertFalse(line_b.lot_id, 'El lote propio vacío llega SIN lote.')
         self.assertTrue(
             line_b.own_lot_name, 'El nombre del lote propio queda visible.')
+        self.assertTrue(
+            line_a.own_lot_name, 'El nombre del lote propio queda visible.')
 
         # (c) el selector por fila ofrece SOLO lotes con existencia.
         self.assertIn(lot_a, bulk.candidate_lot_ids)
