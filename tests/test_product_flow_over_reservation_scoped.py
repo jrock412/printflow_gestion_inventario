@@ -179,7 +179,7 @@ class TestProductFlowOverReservationScoped(TransactionCase):
         tray = self.Tray._pf_populate(None, 'data_anomaly', product)
         self.assertTrue(tray.line_ids)
         line = tray.line_ids[:1]
-        action = tray.action_run(line.id, 'release_reservation')
+        action = tray.action_run(line.id, 'release_document')
         self.assertEqual(action['type'], 'ir.actions.client')
         self.assertEqual(action['tag'], 'display_notification')
 

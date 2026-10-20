@@ -100,6 +100,14 @@ from . import test_product_flow_failure_tray_generic
 from . import test_product_flow_failure_permissions_split
 # Reserva colgada REAL vs existencia negativa + bandeja guiada de saneo.
 from . import test_product_flow_failure_over_reservation
+# §3.S: la reserva colgada remonta sus evidencias POR DOCUMENTO (UNA fila por
+# stock.move.line del albarán u OF) + campos del documento en la bandeja del
+# tray + navegación `view_document` (albarán u OF). CA-1/CA-2.
+from . import test_product_flow_failure_by_document
+# §3.S · T1 (H-060): cura del saneo ACOTADO — guardia de recordset vacío +
+# re-reserva por OF sin albarán + tachón de la línea colgada soltado BEFORE de
+# liberar + acote POR DOCUMENTO (`lines=...`) con el MISMO contrato de retorno.
+from . import test_product_flow_stock_remedy_h060
 # Lote reservado SIN existencia (`lot_no_stock`) en la bandeja GUIADA: el
 # "Solucionar" con el producto explícito abre `printflow.flow.failure.tray`
 # (una fila por lote + saneo `reassign`); la clásica sigue como fallback

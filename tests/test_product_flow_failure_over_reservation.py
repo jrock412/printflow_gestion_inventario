@@ -154,17 +154,18 @@ class TestProductFlowFailureOverReservation(
         self.assertEqual(len(tray.line_ids), 1)
         line = tray.line_ids[:1]
         self.assertEqual(line.res_model, 'stock.quant')
+        # §3.S: lista blanca POR DOCUMENTO + fallback de quant (este colgado
+        # del extra NO tiene línea activa que lo respalde ⇒ fila de quant).
         keys = set(line.action_ids.mapped('key'))
         self.assertEqual(
-            keys, {'release_reservation', 'view_quant', 'leave'})
+            keys, {'release_document', 'view_document', 'leave'})
 
         # Lista blanca: una clave desconocida NO ejecuta nada (cierra).
         action = tray.action_run(line.id, 'clave_desconocida')
         self.assertEqual(action['type'], 'ir.actions.act_window_close')
-        # Navegar: abre el quant afectado (solo lectura).
-        action = tray.action_run(line.id, 'view_quant')
-        self.assertEqual(action['res_model'], 'stock.quant')
-        self.assertEqual(action['res_id'], line.res_id)
+        # El fallback de quant NO tiene documento: view_document cierra.
+        action = tray.action_run(line.id, 'view_document')
+        self.assertEqual(action['type'], 'ir.actions.act_window_close')
 
     def test_flow_solution_opens_guided_tray(self):
         """El "Solucionar" de ``data_anomaly`` abre la bandeja guiada."""
@@ -208,10 +209,13 @@ class TestProductFlowFailureOverReservation(
                 product)['has_negative_quant'])
 
         tray = self.Tray._pf_populate(None, 'data_anomaly', product)
-        line = tray.line_ids[:1]
-        action = tray.action_run(line.id, 'release_reservation')
-        self.assertEqual(action['type'], 'ir.actions.client')
-        self.assertEqual(action['tag'], 'display_notification')
-        # Tras re-asignar, la reserva no puede superar el físico real (1).
+        # §3.S: la acción corre POR FILA (documento): saneo acotado línea a
+        # línea hasta que el quant ya no sostenga más reserva que su físico.
         quant.invalidate_recordset()
+        for line in tray.line_ids:
+            action = tray.action_run(line.id, 'release_document')
+            self.assertEqual(action['type'], 'ir.actions.client')
+            self.assertEqual(action['tag'], 'display_notification')
+            quant.invalidate_recordset()
+        # Tras re-asignar, la reserva no puede superar el físico real (1).
         self.assertLessEqual(quant.reserved_quantity, 1.0 + 1e-6)
