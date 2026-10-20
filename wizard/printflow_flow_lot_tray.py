@@ -257,9 +257,14 @@ class PrintflowFlowLotTray(models.TransientModel):
         for rec in self:
             rec.finding_code = Registry._pf_code_for_kind(rec.kind) or False
 
-    @api.depends('kind', 'res_model', 'res_id')
+    @api.depends('kind', 'res_model', 'res_id', 'lot_id')
     def _compute_finding_is_authorized(self):
-        """Marca las filas cuyo hallazgo formal ya está autorizado (en BLOQUE)."""
+        """Marca las filas cuyo hallazgo formal ya está autorizado (en BLOQUE).
+
+        Se compara contra el destino FORMAL (``_pf_formal_target``), no contra el
+        documento de la fila: los hallazgos de lote viven sobre el LOTE, no sobre
+        el movimiento que lo usa (H-065/H-066).
+        """
         Exception = self.env['printflow.finding.exception']
         targets = {}
         for rec in self:
@@ -267,16 +272,67 @@ class PrintflowFlowLotTray(models.TransientModel):
             if code and code not in targets:
                 targets[code] = Exception._pf_suppressed_targets(code)
         for rec in self:
+            _model, target_id = rec._pf_formal_target()
             rec.finding_is_authorized = bool(
-                rec.finding_code and rec.res_id
-                and rec.res_id in targets.get(rec.finding_code, set()))
+                rec.finding_code and target_id
+                and target_id in targets.get(rec.finding_code, set()))
 
-    @api.depends('finding_code', 'res_id', 'finding_is_authorized')
+    @api.depends('finding_code', 'res_model', 'res_id', 'lot_id',
+                 'finding_is_authorized')
     def _compute_can_authorize_finding(self):
-        """La fila admite autorizar su hallazgo si lo tiene, tiene id y no está ya."""
+        """La fila admite autorizar su hallazgo si tiene DESTINO y no está ya.
+
+        Un hallazgo cuyo destino es el LOTE exige que la fila traiga el lote: sin
+        él no hay registro que autorizar.
+        """
         for rec in self:
+            _model, target_id = rec._pf_formal_target()
             rec.can_authorize_finding = bool(
-                rec.finding_code and rec.res_id and not rec.finding_is_authorized)
+                rec.finding_code and target_id
+                and not rec.finding_is_authorized)
+
+    def _pf_formal_target(self):
+        """``(modelo, id)`` del registro sobre el que VIVE el hallazgo formal.
+
+        El destino lo declara el registry (``target_model``), NO la fila: la
+        bandeja pinta el DOCUMENTO que usa el lote (``stock.move``), pero
+        ``lot_generic`` / ``lot_no_stock`` / ``lot_mixed`` se autorizan sobre el
+        LOTE. En los demás (``lot_missing`` -> ``stock.move``,
+        ``lot_unassigned_finished`` -> ``mrp.production``) el destino sigue siendo
+        el documento de la fila.
+
+        Un hallazgo de lote cuya fila no trae lote devuelve id ``0`` (= no hay
+        nada que autorizar; ``can_authorize_finding`` queda en Falso).
+        """
+        self.ensure_one()
+        Registry = self.env['printflow.finding.exception.registry']
+        target_model = (
+            Registry._pf_target_model(self.finding_code) or self.res_model)
+        if target_model == 'stock.lot':
+            if self.res_model == 'stock.lot' and self.res_id:
+                return target_model, self.res_id
+            return target_model, self.lot_id.id or 0
+        return target_model, self.res_id or 0
+
+    def _pf_formal_label(self):
+        """Rótulo de la excepción formal, coherente con su DESTINO (H-067).
+
+        Cuando el hallazgo vive sobre el LOTE, la etiqueta es el NOMBRE DEL LOTE
+        (``SN000001``): el rótulo de la fila pinta el DOCUMENTO que lo usa
+        (``Movimiento WH/MO/01584``) y hace creer al operador que autorizó el
+        movimiento. En los hallazgos de movimiento/MO el rótulo no cambia.
+
+        Se resuelve desde el MISMO destino que ``_pf_formal_target`` (una sola
+        fuente de verdad), así la etiqueta no puede describir otro registro.
+        """
+        self.ensure_one()
+        target_model, target_id = self._pf_formal_target()
+        if target_model != 'stock.lot' or not target_id:
+            return self.label or ''
+        lot = self.lot_id
+        if lot.id != target_id:
+            lot = self.env['stock.lot'].sudo().browse(target_id).exists()
+        return lot.name or self.label or ''
 
     # ── Documento (columna navegable) y modo de acción ────────────────────
     @api.depends('res_model', 'res_id')
@@ -959,6 +1015,7 @@ class PrintflowFlowLotTray(models.TransientModel):
         wizard = self.env['printflow.flow.lot.exception.authorize'].create({
             'lot_id': self.lot_id.id,
             'product_id': self.product_id.id or False,
+            'finding_code': self.finding_code or '',
             'source_model': self.res_model or '',
             'source_id': self.res_id or 0,
             'source_label': (
@@ -1029,10 +1086,15 @@ class PrintflowFlowLotTray(models.TransientModel):
             'Autorización en bloque: %(product)s (%(n)s lote(s))') % {
                 'product': product.display_name if product else '',
                 'n': len(lots)}
+        # El wizard escribe UNA excepción formal por lote con UN código: solo se
+        # declara si la selección es homogénea (la bandeja se puebla por producto
+        # + estado). Con tipos mezclados no se inventa destino (conejera CT-3).
+        codes = {rec.finding_code for rec in pending if rec.finding_code}
         wizard = self.env[
             'printflow.flow.lot.exception.authorize.bulk'].create({
                 'lot_ids': [(6, 0, lots.ids)],
                 'skipped': skipped,
+                'finding_code': codes.pop() if len(codes) == 1 else '',
                 'source_label': source_label,
             })
         return {
@@ -1200,11 +1262,12 @@ class PrintflowFlowLotTray(models.TransientModel):
             raise UserError(_(
                 'Esta fila no tiene un hallazgo autorizable (o ya está '
                 'autorizado).'))
+        target_model, target_id = self._pf_formal_target()
         return self.env['printflow.finding.exception']._pf_authorize_action(
             self.finding_code,
-            self.res_model,
-            self.res_id,
-            target_label=self.label,
+            target_model,
+            target_id,
+            target_label=self._pf_formal_label(),
             lot_id=self.lot_id.id or False,
             source_model='printflow.flow.lot.tray',
             source_id=self.id,
@@ -1228,13 +1291,16 @@ class PrintflowFlowLotTray(models.TransientModel):
             return self._pf_authorize_selected_notification(_(
                 'No había hallazgos por autorizar: ya estaban autorizados o no '
                 'son autorizables.'))
-        lines = [(0, 0, {
-            'finding_code': row.finding_code,
-            'target_model': row.res_model,
-            'target_id': row.res_id,
-            'target_label': row.label,
-            'lot_id': row.lot_id.id or False,
-        }) for row in pending]
+        lines = []
+        for row in pending:
+            target_model, target_id = row._pf_formal_target()
+            lines.append((0, 0, {
+                'finding_code': row.finding_code,
+                'target_model': target_model,
+                'target_id': target_id,
+                'target_label': row._pf_formal_label(),
+                'lot_id': row.lot_id.id or False,
+            }))
         wizard = self.env[
             'printflow.finding.exception.authorize.bulk'].create({
                 'line_ids': lines,

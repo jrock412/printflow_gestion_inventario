@@ -45,6 +45,11 @@ class PrintflowFlowLotExceptionAuthorizeBulk(models.TransientModel):
         string='Motivo',
         help='Justificación COMÚN para todos los lotes autorizados. Queda '
              'guardada junto con quién autoriza.')
+    finding_code = fields.Char(
+        string='Hallazgo', readonly=True,
+        help='Clave del hallazgo formal COMÚN a la selección (registry de GI). Si '
+             'su destino declarado es el LOTE, al confirmar se autoriza TAMBIÉN '
+             'ese hallazgo sobre cada lote, además de la excepción de mezcla.')
 
     def action_authorize(self):
         """Autoriza TODOS los lotes de la selección (guardia + motivo)."""
@@ -55,11 +60,18 @@ class PrintflowFlowLotExceptionAuthorizeBulk(models.TransientModel):
         if not (self.reason or '').strip():
             raise UserError(_('Debes indicar el motivo de la autorización.'))
         Health = self.env['printflow.stock.health']
+        Exception = self.env['printflow.finding.exception']
         source_label = self.source_label or _(
             'Autorización en bloque desde la bandeja de lote')
         for lot in self.lot_ids:
             Health._pf_authorize_lot_exception(
                 lot, reason=self.reason, source_label=source_label)
+            # ADEMÁS: el hallazgo FORMAL del lote (genérico/sin existencia/mezcla)
+            # se autoriza sobre el LOTE, que es lo que declara el registry
+            # (H-065). Si el código no aplica al lote, no hace nada.
+            Exception._pf_authorize_lot_finding(
+                self.finding_code, lot, reason=self.reason,
+                source_label=source_label)
         message = _('%s lote(s) autorizado(s).') % len(self.lot_ids)
         if self.skipped:
             message = '%s %s' % (message, _(

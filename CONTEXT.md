@@ -17,7 +17,15 @@
   → **Los agentes de lote la APRIETAN al cerrar su turno** (no piden nada al dueño) y dejan la evidencia
   (log del botón + PID + `write_date`). *Si algún día no existe, el lote cierra declarando "el módulo quedó sin
   recargar".*
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **14 abiertos** · **39** `resuelto` · **8** `descartado` · **0 en tarea** (**61** filas) (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **16 abiertos** · **44** `resuelto` · **8** `descartado` · **0 en tarea** (**68** filas) (compañero del CONTEXT.md; ver skill §2.2).
+  **20/10 (cierre §3.U):** **H-062 · H-064 ⇒ `resuelto`** (lista de 7 columnas con el documento como referencia
+  nativa, "SANEAR TODAS" y refresco con resumen; Verificador `cumple` en código + mirada en vivo del dueño).
+  Queda **H-063** `abierto` (tope del tablero: lo cura el **dueño** con `pf_reservation_cleanup_limit = 0`).
+  **20/10 (§3.V · autorización del LOTE):** se ABREN **H-065** (el nodo Entrega del DTF queda en `lot_generic` y
+  **ninguna** de las dos autorizaciones de la bandeja lo apaga: "Autorizar lote" escribe en `printflow.lot.exception`
+  —que el motor solo lee para MEZCLA— y "Autorizar excepción" apunta al **MOVIMIENTO**, no al lote) y **H-066**
+  (`_pf_suppressed_targets` ignora `target_model` ⇒ colisión de ids movimiento↔lote). Ambos entran `en tarea` a §3.V.
+  **20/10 (Fase A · "Reserva colgada"):** se ABREN **H-062** (tras accionar una corrección la bandeja **se cierra**: sin "después" ni resumen) · **H-063** (el tablero corta en **50 de 81** alertas y no deja llegar a las reservas del producto) · **H-064** (el botón de la **llave** no dice qué hace: el operador cree que abre el documento). **H-062 · H-064 ⇒ `en tarea`** (los cura **§3.U**); **H-063 ⇒ `abierto`** (cura = parámetro `pf_reservation_cleanup_limit = 0` en Ajustes, lo deja el **dueño**; no es código).
   **18/10 (MIRE EN VIVO del modal, navegador del Analista):** se ABREN **H-050** (los `<div>` de prosa dentro de
   `<group col="1">` se pintan en **columna vertical**, una palabra por línea ⇒ **ilegible**; **PREENSA** anciano)
   y **H-051** (la cabecera "Selección" se **apila en una columna**: rótulos partidos + **mitad derecha vacía**;
@@ -59,6 +67,51 @@
   **Cierre 17/10: H-029, H-030 y H-031 pasan a `resuelto`** (T1–T9 en 3 lotes; `odoo-verificador` = `cumple`).
   Del cierre anterior: **H-021** y **H-026** `resuelto`; **H-027** `descartado` (intencional);
   **H-028** `abierto` (baja, deuda de nomenclatura — no se toca).
+- **✅ TAREA CERRADA (20/10/2026 · NORMAL · §3.V · 2 lotes · veredicto `cumple`):** **la autorización del LOTE apaga el hallazgo
+  `lot_generic`**. El dueño reportó que en el **DTF** (producto 13797) el nodo **Entrega** queda en "Lote genérico"
+  y **ninguna** de las dos autorizaciones de la bandeja lo apaga. Diagnóstico medido (solo lectura): (a) "Autorizar
+  lote" escribe en `printflow.lot.exception`, que el motor **solo** consulta para **MEZCLA**
+  (`x_product_dimensional_pricing/models/printflow_stock_health.py` L897-904; el genérico se decide en L921-922 y
+  **no** la lee); (b) "Autorizar excepción" guarda `target_model='stock.move'` con el id del **movimiento**
+  (`wizard/printflow_flow_lot_tray.py` L1203-1206), mientras el registry declara el hallazgo sobre el **lote**
+  (`models/printflow_finding_exception_registry.py` L67-73) y el filtro resta **ids de lote** contra esos ids ⇒
+  `{71366, 72121, 71912, 71315}` vs lotes `{1, 3051}` = **cero** coincidencias. Ataca **H-065 · H-066**.
+  **Autorización del dueño: SÍ (2026-10-20)** — *"si aplica la cura a"* (**cura A**: el botón autoriza el **LOTE**,
+  usando el `target_model` del registry). **NO** toca el motor `x_product_dimensional_pricing` ni datos.
+  **Plan:** **Lote 1 `[motor]`** (T1–T3) → `odoo-verificador` (1 pasada) → mirada en vivo del Analista.
+  **PRIMER LOTE A EJECUTAR: Lote 1 (T1–T3) `[motor]` → `odoo-dev`.**
+  **Estado (20/10):** ✅ **Lote 1 EJECUTADO** (T1–T3 `[x]`, CA-1…CA-6 verdes en el Verificador) ·
+  ✅ **desplegado** (`Reinicio+módulo: OK` · log `20261020-020137` · PID 8436→8552 · `-u` salida 0 ·
+  `write_date` 2026-10-20 06:01:49 UTC) · ✅ **validado en vivo por el dueño**: excepciones **9** (lote 3051)
+  y **10** (lote 1) creadas con `target_model='stock.lot'` y el nodo **Entrega** del DTF **apagado**.
+  ✅ **Lote 2 EJECUTADO** (T4–T5 `[x]`): `_pf_formal_label()` (la excepción se etiqueta con el **lote**) + suite
+  completa **718 tests · 7 failed + 1 error = los 8 del baseline ⇒ delta 0**, evidencia en
+  `docs/evidencia/3V-lote2-suite.txt` · redespliegue `Reinicio+módulo: OK` (log `20261020-021903` · PID
+  8552→10516 · `-u` 0 · `write_date` 06:19:13 UTC) · motor con huella idéntica.
+  ✅ **CERRADA (20/10 · 2.ª y última pasada del Verificador = `cumple`)**: CA-1…CA-7 verdes, delta 0
+  (718 tests, los 8 rojos son el baseline), motor con huella idéntica, datos sin tocar. **H-065 · H-066 ·
+  H-067 ⇒ `resuelto`**. Deuda de documentación registrada como **H-068** (`abierto`, baja): la sección 4 de
+  `docs/evidencia/3V-lote2-suite.txt` quedó con comodines `<antes>/<después>/<UTC>` (los valores reales están
+  en la bitácora del 20/10); no bloquea nada, lo rellena el dev en el próximo lote que toque el módulo.
+- **✅ TAREA CERRADA (20/10/2026 · NORMAL · §3.U · 2 lotes `[motor]`+`[pantalla]` · veredicto `cumple` + mirada del dueño):** **rediseño de la ventana "Solucionar" de la reserva
+  colgada** (`data_anomaly`): la **tarjeta** de evidencias pasa a **lista** de 7 columnas (Ubicación · Lote · A mano ·
+  Reservado · Libre · Documento · Cantidad), el **Documento** se pinta como **referencia nativa clickeable**
+  (`WH/PDV/06699`, `WH/MO/01562`) que abre el albarán o la OF, se añade **"SANEAR TODAS"** (reusa
+  `_pf_cleanup_products`) y, tras accionar, la bandeja **se repuebla y se reabre con un resumen en palabras**
+  (**H-062**). Ataca **H-062 · H-064**; **H-063** queda `abierto` (parámetro del dueño).
+  **Autorización del dueño: SÍ (2026-10-20)** — *"si"* al diseño mínimo dibujado (lista + documento clickeable +
+  saneo masivo + resumen + tope en 0). **NO** toca la lógica del saneo (la reusa) ni el motor.
+  **Plan (ejecutado):** **Lote 1 `[motor]`** (T1–T3) → **Lote 2 `[pantalla]`** (T4) → `odoo-verificador` (1 pasada) →
+  **mirada en vivo del dueño**. **T1–T4 `[x]`**, **2 archivos + 2 tests nuevos**, suite **47+4 verde** (delta 0 con la
+  suite completa: 718 tests, los 8 rojos del baseline), módulo **`-u` OK** (log `20261020-012952` · `write_date`
+  01:30:09 local), motor con **huella idéntica** (`22293F95…106B` · 143), **cero escrituras de datos**.
+  **Verificador (20/10): `cumple` en código** — `document_ref` existe en la BD (`ttype=reference`), el refresco y el
+  masivo sin `cr.execute` ni escritura de `reserved_quantity`, botón masivo solo en `data_anomaly`, motor intacto.
+  Única salvedad: el Verificador **no tiene navegador** ⇒ la **mirada en vivo la hizo el dueño** ese mismo día y
+  declaró *"ya verifiqué y está bien"* (sin foto en el repo: no se inventa evidencia). **H-062 · H-064 ⇒ `resuelto`**;
+  **H-063** sigue `abierto` (lo cura el dueño con `pf_reservation_cleanup_limit = 0` en Ajustes, no es código).
+  **NADA COMMITEADO** (el `CONTEXT.md` mezcla §3.U y §3.V: no se puede separar limpio ⇒ decide el dueño).
+  Ojo: el `-u` de 01:29 cargó también el **código parcial de §3.V** que estaba en disco (no es de §3.U).
 - **NOTA DE INCIDENCIA (ABIERTA — 17/10/2026-c · turno Analista):** el dueño reporta **por 3.ª vez** *"asigno un
   lote y al validar me pide el número de lote"* en **IMPRESION BANNER** (producto 13571), y sospecha que hay que
   **reservar primero** y asignar el lote después. Diagnóstico con evidencia (fuente `odoo-impreven` / BD
@@ -408,6 +461,469 @@ flowchart TD
 | 🟠 Naranja | TRANSMISIÓN | Adaptadores/hooks (`_inherit` + `super()`) que propagan | Sí, con cuidado |
 | 🟢 Verde | RUEDAS | Piezas intercambiables (widgets, vistas, options) | Sí, es lo normal |
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
+
+## 3.V (TAREA ABIERTA 20/10/2026 · NORMAL) — La autorización del LOTE y el hallazgo `lot_generic`: el botón apunta al DOCUMENTO y el nodo Entrega no se apaga (H-065 · H-066)
+
+> **Fuente:** odoo-impreven / "Ciber Estudios 2015 RESTAURADA" (PRUEBA) · **Ruta:** `C:\odoo_custom\printflow_gestion_inventario`
+> **Tamaño: NORMAL** — **4 archivos de código** (+1 test nuevo), **sin campos de negocio nuevos** (solo un Char
+> readonly en dos wizards transitorios) y **sin vistas**: la decisión de diseño es UNA (a quién apunta la
+> autorización) y el dueño ya la eligió (**cura A**). **NO** toca el motor ni ningún flujo nativo.
+> **Autorización del dueño: SÍ (2026-10-20)** — *"si aplica la cura a"*.
+> **Turno:** Odoo Analista (Fase A cerrada + cura elegida) ✅ → **Lote 1 `[motor]`** (`odoo-dev`, T1–T3) →
+> `odoo-verificador` (1 pasada) → Analista (mirada en vivo + cierre).
+
+### 3.V.1 Dónde
+- **La bandeja de lote:** `wizard/printflow_flow_lot_tray.py`
+  (`action_authorize_lot` L944-974 · `action_authorize_selected` L995-1045 · `action_authorize_finding` L1190-1211 ·
+  `action_authorize_selected_findings` L1213-1251 · `_compute_finding_is_authorized` L260-272).
+- **Los dos wizards de "Autorizar lote":** `wizard/printflow_flow_lot_exception_authorize.py` (L50-76) y
+  `wizard/printflow_flow_lot_exception_authorize_bulk.py` (L49-78). **Sus vistas NO se tocan** (el campo nuevo
+  viaja por `create`, no necesita widget).
+- **El registro de excepciones formales:** `models/printflow_finding_exception.py` (`_pf_suppressed_targets`
+  L141-156 · `_pf_authorize` L175-225).
+- **El registry (contrato, NO se cambia):** `models/printflow_finding_exception_registry.py` L67-73.
+- **El adaptador de filtrado:** `models/printflow_finding_exception_filter.py` (L96-99 y L114-135) — **no se toca**;
+  ya resta por `list_key`, solo necesita que `_pf_suppressed_targets` devuelva los ids correctos.
+- **El motor (SOLO lectura):** `x_product_dimensional_pricing/models/printflow_stock_health.py`
+  L897-904 (`authorized_lot_ids` **solo** filtra `mixed_lots`) y L921-922 (`generic_lot_ids` ⇒ `lot_generic`).
+
+### 3.V.2 Qué (el objeto concreto)
+1. **La autorización de un hallazgo cuyo destino es el LOTE se guarda sobre el LOTE**, no sobre la fila. El
+   registry ya lo declara (`target_model: 'stock.lot'`); la bandeja lo ignora y pasa `self.res_model`/`self.res_id`.
+   Se sustituye por un helper único (p. ej. `_pf_formal_target()` en el tray) que devuelve:
+   - `('stock.lot', lot_id)` si `registry._pf_shape(finding_code)['target_model'] == 'stock.lot'`
+     (usando `lot_id.id`; si la fila informativa ya es `res_model='stock.lot'`, su `res_id`);
+   - `(res_model, res_id)` en cualquier otro caso (`lot_missing` → `stock.move`, `lot_unassigned_finished` →
+     `mrp.production`).
+   Ese helper se usa en **las tres** llamadas: `action_authorize_finding`, `action_authorize_selected_findings`
+   y `_compute_finding_is_authorized` (si no, la fila diría "no autorizado" para siempre).
+2. **"Autorizar lote" (el gesto que usa el operador) crea ADEMÁS la excepción formal sobre el LOTE.** Los dos
+   wizards reciben un `finding_code` (Char readonly, pasado por `create` desde las filas seleccionadas — la
+   bandeja se puebla por producto+estado, así que la selección es homogénea) y, tras la escritura actual en
+   `printflow.lot.exception` (**que se conserva intacta**, porque es la que apaga la MEZCLA en el motor),
+   llaman a `printflow.finding.exception._pf_authorize(code, 'stock.lot', lot.id, ...)`.
+3. **`_pf_suppressed_targets(finding_code)` se acota por `target_model`** = el que declare el registry para ese
+   hallazgo (una condición más en el `search`). Así las 4 excepciones históricas del DTF
+   (`target_model='stock.move'`, ids 71366/72121/71912/71315) **dejan de poder apagar un lote**, y también se
+   cierra la colisión latente de ids (`stock.move` y `stock.lot` son secuencias distintas).
+
+### 3.V.3 Objetivo acotado (lo que SÍ y lo que NO)
+- **SÍ:** que autorizar el lote (por la vía que sea: "Autorizar lote" o "Autorizar excepción") haga que el
+  hallazgo **deje de reportarse** en las superficies que aplican el filtro (diagrama, bandeja, catálogo, salud).
+- **SÍ:** que el destino quede coherente con el registry (`stock.lot` para `lot_generic`/`lot_no_stock`/`lot_mixed`;
+  `stock.move`/`mrp.production` como están hoy).
+- **NO:** cambiar el motor, el cálculo del estado, su precedencia ni el significado de `printflow.lot.exception`.
+- **NO:** que el hallazgo se ignore solo (sigue siendo un hallazgo hasta que alguien lo autorice).
+
+### 3.V.4 Definición de terminado (CA-1…CA-6)
+- **CA-1:** con un producto gestionado y **2 lotes genéricos** reservados en 2 movimientos (el caso del DTF),
+  autorizar **un** lote deja el estado en `lot_generic`.
+- **CA-2:** autorizar **los dos** lotes deja el estado en `lot_ok` (y el nodo deja de pintarse).
+- **CA-3:** confirmar el wizard de "Autorizar lote" crea **una** excepción `lot_generic` con
+  `target_model='stock.lot'` y `target_id=<id del lote>`, **y conserva** la de `printflow.lot.exception`.
+- **CA-4:** una excepción `lot_generic` creada con `target_model='stock.move'` (las 4 históricas) **no** apaga
+  `lot_generic` y **no** aparece en `_pf_suppressed_targets('lot_generic')`.
+- **CA-5:** la fila de la bandeja marca "Excepción formal" según el destino REAL (lote), y "Autorizar excepción"
+  (la formal) también apunta al lote.
+- **CA-6:** `lot_missing` (destino `stock.move`) y `lot_unassigned_finished` (destino `mrp.production`) siguen
+  comportándose **igual** (sin regresión).
+- **CA-7 (H-067):** la excepción formal creada desde la bandeja para un hallazgo de **lote** se etiqueta con el
+  **nombre del lote** (`SN000001`), nunca con el documento de la fila (`Movimiento WH/MO/01584`); para los
+  hallazgos de movimiento/MO el rótulo sigue siendo el del documento.
+- **Evidencia del lote:** tests nuevos N/N verdes con salida a `docs/evidencia/3V-lote1-tests.txt`, suite con
+  **delta 0** contra el baseline conocido (8 rojos: B1/H-002 · H-035 · H-038), huella del motor
+  `SHA-256(x_product_dimensional_pricing/models/stock_move.py)` **idéntica**, **0 escrituras de datos**, y
+  **`Reinicio+módulo: OK`** (log del botón + PID + `write_date`).
+- **Aceptación del dueño (DATO, no código):** en el DTF, autorizar los **2 lotes** (`SN000001` y `SN1256`) desde
+  la bandeja ⇒ el nodo **Entrega** deja de salir en amarillo. Es el cierre del caso real; no lo ejecuta el agente.
+
+### 3.V.5 Restricciones duras (y conejeras)
+- **Prohibido tocar `x_product_dimensional_pricing`** (motor): solo lectura con huella antes/después.
+- **Código sí, datos no:** no se borran ni se editan los 4 `stock.move`, los quant, los lotes, las 4 excepciones
+  históricas ni las 4 OF. Si sobran registros, los revoca el dueño desde la pantalla.
+- **No forzar flujos nativos** (`stock.quant`, `stock.move`, reservas, estados): aquí no se escribe inventario.
+- **Conejeras:**
+  1. ⚠️ **VERIFICADA** — `models/printflow_finding_exception.py` L152-156:
+     `exceptions = self.sudo().search([('finding_code', '=', finding_code), ('company_id', '=', company.id)])` ·
+     `return set(exceptions.mapped('target_id'))` ⇒ **hoy no mira el modelo**. Regla: **si tocas el destino de un
+     hallazgo, acota por `target_model`**; sin eso, un id de movimiento apaga el lote equivocado.
+  2. ⚠️ **VERIFICADA** — `models/printflow_finding_exception.py` L196-201: la búsqueda de reuso es por
+     `(finding_code, target_model, target_id, company_id)`. Regla: **no** añadas unicidad ni cambies esa
+     búsqueda; reusar el registro existente es intencional (re-autorizar no duplica).
+  3. ❓ **PREVISIÓN** — el wizard en bloque asume **selección homogénea** (la bandeja se puebla por producto +
+     estado, así que un solo `finding_code` alcanza). Condición: **si cambias la población de la bandeja**
+     (mezclar estados en una misma ventana), revisa el wizard de bloque antes de dar por bueno un código único.
+
+### 3.V.6 Qué se RETIRA
+- Se **retira el camino** que escribía el destino con el **documento de la fila** para los hallazgos de lote:
+  las tres llamadas de la bandeja pasan a usar el helper del punto 1 (no quedan dos formas de calcular el destino).
+- **NO se retira** la escritura en `printflow.lot.exception` (es la que apaga la MEZCLA en el motor) ni las 4
+  excepciones históricas (son datos).
+
+### 3.V.7 Fuera de alcance
+- ❌ El **estado de datos** del DTF: las 4 OF de marzo (1 en marcha, 3 confirmadas) que tienen el film reservado,
+  y el lote legado `LOTE-000001`. Los decide el dueño.
+- ❌ Las otras causas del nodo Entrega (`lot_missing`: las entregas PDV sin lote) y la reserva colgada
+  (**H-060 · H-062**).
+- ❌ **§3.U** (ventana "Solucionar" de la reserva colgada): queda **en espera**, no se toca aquí.
+- ❌ El tamaño de la ventana, los rótulos y el `modal-lg` (**H-052 · H-061**, ya resueltos).
+- ❌ Cambiar el `string`, el icono o el tooltip de los botones de la bandeja.
+
+### 3.V.8 Plan de ejecución (1 lote · 3 tareas `[motor]`)
+> Todo es `[motor]` (Python). **No hay pantalla**: ninguna vista cambia.
+
+**Lote 1 (T1–T3)**
+- [x] T1 — `[motor]` **Destino formal por registry en la bandeja**: helper `_pf_formal_target()` en
+      `wizard/printflow_flow_lot_tray.py` y su uso en `action_authorize_finding` (L1203-1206),
+      `action_authorize_selected_findings` (L1231-1237) y `_compute_finding_is_authorized` (L260-272); las filas
+      sin lote no admiten autorizar (`can_authorize_finding = False`). Pasar `finding_code` en los `create()` de
+      `action_authorize_lot` (L959-970) y `action_authorize_selected` (L1033-1041).
+- [x] T2 — `[motor]` **Los dos wizards de "Autorizar lote"** (`printflow_flow_lot_exception_authorize.py` y
+      `..._bulk.py`): campo `finding_code = fields.Char(readonly=True)` y, al confirmar, **además** de la escritura
+      actual, `printflow.finding.exception._pf_authorize(code, 'stock.lot', lot.id, reason=..., lot_id=lot.id,
+      target_label=lot.name, source_model=..., source_id=..., source_label=...)` **solo** cuando el registry
+      declare `target_model='stock.lot'`. Sin código (o con destino distinto) el comportamiento es el de hoy.
+- [x] T3 — `[motor]` **`_pf_suppressed_targets` acotado por modelo** (`models/printflow_finding_exception.py`
+      L141-156): añadir `('target_model', '=', shape['target_model'])` usando el registry (código desconocido ⇒
+      `set()` vacío) + **tests nuevos** (archivo nuevo, p. ej. `tests/test_product_flow_lot_exception_lot_target.py`)
+      que cubran CA-1…CA-6 con el caso del DTF (UdM `m`, 2 lotes genéricos, 2 movimientos).
+
+**Lote 2 (T4–T5)**
+- [x] T4 — `[motor]` **H-067 · la etiqueta dice el LOTE**: en `wizard/printflow_flow_lot_tray.py`, cuando el
+      destino formal resuelto sea `stock.lot` (helper `_pf_formal_target`), el `target_label` de la excepción
+      debe ser el **nombre del lote** (`lot_id.name`), no el rótulo de la fila: L1250 (`target_label=self.label`)
+      y L1281 (`'target_label': row.label`). Con destino `stock.move`/`mrp.production` el rótulo **no** cambia.
+      Camino correcto de referencia: `models/printflow_finding_exception.py` L263 (`target_label=lot.name`).
+- [x] T5 — `[motor]` **Suite completa + despliegue + evidencia**: correr TODA la suite del módulo con salida a
+      `docs/evidencia/3V-lote2-suite.txt`, confirmar **delta 0** contra el baseline conocido (8 rojos ajenos:
+      B1/H-002 · H-035 · H-038) y dejar en la bitácora (Sección 4) la línea `Reinicio+módulo: OK (...)` con el
+      log del botón `Odoo8071-printflow_gestion_inventario` (tarea=0 · PID antes→después · `-u` salida 0 ·
+      `write_date` del módulo).
+
+
+
+> **Fuente:** odoo-impreven / "Ciber Estudios 2015 RESTAURADA" (PRUEBA) · **Ruta:** `C:\odoo_custom\printflow_gestion_inventario`
+> **Tamaño: NORMAL** — **2 archivos** (+1 test nuevo) y **1 campo calculado**; **NO** toca la lógica del saneo:
+> la **REUSA** tal cual (misma puerta, mismo mecanismo). **No** hay decisión de arquitectura abierta: el dueño
+> aprobó el diseño dibujado (Fase A) y el plan son 2 lotes por dependencia.
+> **Autorización del dueño: SÍ (2026-10-20)** — al diseño mínimo: **lista** + **documento clickeable** +
+> **"SANEAR TODAS"** + **resumen** + **tope en 0** (este último lo ejecuta el dueño, ver §3.U.7).
+> **Turno:** Odoo Analista (Fase A cerrada + diseño aprobado) ✅ → **Lote 1 `[motor]`** → **Lote 2 `[pantalla]`**
+> → `odoo-verificador` (1 pasada) → Analista (mirada en vivo + cierres).
+> **Estado:** ✅ **CERRADA (20/10/2026)** — **T1–T4 `[x]`**, veredicto del Verificador **`cumple`** en código y
+> **mirada en vivo hecha por el dueño** (declaró *"ya verifiqué y está bien"*; no hay foto en el repo porque el
+> Verificador no tiene navegador y el Analista no inventa evidencia). **H-062 · H-064 ⇒ `resuelto`**; **H-063**
+> queda `abierto` (parámetro del dueño). **Sin commit** (decide el dueño).
+
+### 3.U.1 Dónde
+- **La ventana:** `wizard/printflow_flow_failure_tray_views.xml` — form de `printflow.flow.failure.tray`:
+  **cabecera** (L137-140) y **bloque Evidencias** (L159-237, hoy un `kanban`).
+- **La fila:** `wizard/printflow_flow_failure_tray_line.py` (campos de evidencia + botones por fila).
+- **El despacho/refresco:** `wizard/printflow_flow_failure_tray.py` (`action_run` L138-162, `_pf_notify` L288-299).
+- **El saneo que se REUSA (sin tocarlo):** `printflow.stock.health._pf_cleanup_products(products)` (motor) +
+  `printflow.stock.remedy._pf_assert_can_clean()` — exactamente lo que ya hace la fila de salud
+  (`models/printflow_inventory_health.py` L313-320).
+- **El camino:** diagrama de producto → nodo **Inventario** → "Solucionar" (falla `data_anomaly`).
+
+### 3.U.2 Qué (el objeto concreto)
+1. Las evidencias dejan de ser **tarjetas** y pasan a ser una **lista** de **7 columnas**:
+   `Ubicación · Lote · A mano · Reservado · Libre · Documento · Cantidad`, con **una fila roja** cuando
+   `Libre < 0` (colgado) y **un botón por fila** (▶ = acción principal que declaró la falla).
+2. El **Documento** deja de ser texto muerto: se pinta con un campo **referencia** (`document_ref`,
+   `stock.picking` o `mrp.production`) que en la lista muestra el **nombre** del documento
+   (`WH/PDV/06699`, `WH/MO/01562`) y **abre el albarán o la OF** al pincharlo.
+3. Botón de cabecera **"SANEAR TODAS"** (solo visible con `code == 'data_anomaly'`): suelta y re-reserva
+   **todo** el producto con el saneo que ya existe (no un bucle nuevo).
+4. **Refresco en el sitio (H-062):** tras accionar (fila ▶ o masivo), la bandeja **se repuebla y se reabre**
+   con un **resumen en palabras** ("quedan 0 documentos colgados"). Si el origen ya no existe, se conserva el
+   comportamiento de hoy (aviso + recarga).
+
+### 3.U.3 Objetivo acotado
+- El operador **ve** qué documento sostiene la reserva, **lo abre desde su nombre**, y puede **sanear todo de una
+  vez viendo el después** (cuántos quedan), sin rearmar el camino diagrama → Solucionar tras cada clic.
+
+### 3.U.4 Definición de terminado (CA verificables)
+- **CA-1:** en el quant colgado **4813** (POS, producto **13056** FOTOS 3X4, **180 documentos**) la lista muestra
+  las 7 columnas con `Libre` negativo y fila roja; el nombre `WH/PDV/…` se pincha y **abre el albarán**; en una
+  fila de **MO** (`WH/MO/01562`) abre la **orden de fabricación**.
+- **CA-2:** "SANEAR TODAS" deja el producto **sin colgados** y la bandeja reabierta **vacía** con el resumen
+  ("quedan 0 documentos colgados"), **sin UserError**; en un producto sano avisa que no había nada.
+- **CA-3:** ▶ de una fila deja la bandeja **reabierta** con el resumen y esa fila ya no está (o queda la que
+  sostiene otro documento); **no** se cierra el diálogo (fin de H-062).
+- **CA-4:** las **otras dos fallas** de la misma vista (`lot_orphan_reservation`, `lot_no_stock`) siguen abriendo
+  su bandeja, listando y accionando; **no** ven el botón masivo.
+- **CA-5:** `_pf_assert_can_clean()` sigue siendo la puerta (sin permiso ⇒ `UserError`, nunca saneo silencioso);
+  **cero** `cr.execute`, **cero** escritura de `reserved_quantity`, **cero** cambio de estados; el método masivo
+  **revalida** `code == 'data_anomaly'` (la vista lo esconde; el método no se fía).
+- **CA-6:** tests nuevos en verde + suite **sin rojos nuevos** (baseline **8 ajenos**: B1/H-002 · H-035 · H-038).
+- **CA-7:** reinicio + `-u` con el botón `Odoo8071-printflow_gestion_inventario` y **mirada en vivo con foto**
+  (en la BD de PRUEBA se **mira** la lista y el enlace; **NO** se acciona "SANEAR TODAS").
+  → **Cumplido el 20/10:** `-u` OK (log `20261020-012952`, `write_date` 01:30:09 local) y **mirada en vivo hecha
+  por el dueño** en su navegador (`"ya verifiqué y está bien"`). **Sin foto archivada** — se declara, no se simula.
+
+### 3.U.5 Restricciones duras + Conejeras
+1. **Código sí, datos no.** Nada de `quant.write`, `cr.execute` ni `move_line.unlink()`: el saneo es el que ya
+   existe (`_pf_cleanup_products` → `printflow.stock.remedy`), sin tocarlo.
+2. **No reinventar:** el botón masivo **llama** `_pf_cleanup_products(self.product_id)` (misma llamada y misma
+   guardia que la fila de salud, `printflow_inventory_health.py` L313-320). Prohibido un bucle por fila nuevo.
+3. **Motor `x_product_dimensional_pricing` SOLO LECTURA** (H-038). Huella al abrir y cerrar cada lote:
+   `SHA-256(models/stock_move.py)` = `22293F95…106B` (12.690 B) + `git status --porcelain` = **143** ⇒ idénticos.
+   **`git diff` PROHIBIDO como evidencia** (archivo sin versionar).
+4. **La vista es COMPARTIDA por 3 fallas.** La lista debe quedar inofensiva con filas de las otras dos
+   (columnas vacías). Prohibido esconder columnas por `parent.code`/`code`: la lista es una sola.
+5. **Árbol EMBEBIDO:** el core **no** pinta casillas de selección ni botones de cabecera dentro de un x2many
+   ⇒ **prohibido** diseñar el saneo con selección de filas. Evidencia: `web/static/src/views/fields/x2many/
+   x2many_field.xml` L35 (`ListRenderer` sin panel de control) · `web/static/src/views/list/list_renderer.js`
+   L2221 (`hasSelectors: false` por defecto). El patrón de **botones por fila** ya vive en la casa:
+   `wizard/printflow_flow_failure_tray_views.xml` L106-124 (árbol de `action_ids` embebido, con botones).
+6. **`document_name` NO se retira:** sigue siendo el texto que usan los mensajes y el form de la línea
+   (`printflow_flow_failure_tray.py` L325-326, L234-236). El campo nuevo es **aditivo**.
+7. **Conejeras** (sello en `CONEJERAS.md`):
+   - **CT-01 `⚠️ VERIFICADA`** — NO escribir `picked=False` a nivel de `stock.move` para liberar: el inverse
+     arrastra TODAS las líneas. Evidencia: `stock/models/stock_move.py` L214-216 ·
+     `move.move_line_ids.picked = move.picked`. La casa lo hace **por línea** en el remedy (H-060); el botón
+     masivo **no** añade ningún destildado propio (solo llama al saneo).
+   - **CT-02 `⚠️ VERIFICADA`** — el compute de `picked` SOLO escribe `True`: `stock_move.py` L208-212 y
+     `stock_move_line.py` L109-113. No esperar que "se destilde solo": el desenredo es escritura explícita
+     y ya vive en el remedy.
+   - **CT-03 `❓ PREVISIÓN`** — en tests con rollback intermedio la caché del ORM puede conservar
+     `picked`/reservas: en los tests nuevos, `invalidate_recordset()` antes de re-leer el quant
+     (condicional: **se comprueba**, no se obedece).
+
+### 3.U.6 Qué se retira (sustitución, no acumulación)
+- **El bloque `kanban` del form** (L161-236) ⇒ **se borra** al poner la lista (no quedan las dos formas).
+- **El botón `action_open` con `fa-wrench`** de la tarjeta (L226-231) ⇒ se retira: el **detalle se abre tocando
+  la fila** (el form de la línea existe y **no se toca**).
+- **No** se crea botón "Documento" ni columnas "Tipo · Socio · En marcha · Lo respalda · Detalle" (decisión del
+  dueño: solo lo necesario; ese dato vive en la ficha de la fila).
+- **SE CONSERVA (no es residuo):** `primary_label` (dato calculado de la línea; ya no se pinta como texto de
+  tarjeta), `action_ids` + el form de la línea, `action_run` con su lista blanca, `_pf_notify` (respaldo) y las
+  **dos fallas hermanas** con sus filas.
+
+### 3.U.7 Fuera de alcance (NO-GOS firmados por el dueño)
+- ❌ **NO** tocar la lógica del saneo: `models/printflow_stock_remedy.py` y el motor quedan **intactos**
+  (se llaman, no se editan).
+- ❌ **NO** casillas de selección, **NO** ventana aparte, **NO** bucle por fila con savepoint, **NO** filas de
+  ubicaciones sanas, **NO** buscador/filtro (el árbol embebido ya pagina y solo lista evidencias).
+- ❌ **NO** botón "Ver las reservas" en la fila de salud (opcional, ~5 líneas: queda para otra sesión).
+- ❌ **NO** corregir la **causa** POS de las reservas colgadas (por qué el POS las deja): tarea futura aparte.
+- ❌ **NO** escribir el parámetro `pf_reservation_cleanup_limit`: lo deja el **dueño** en Ajustes en **0**
+  (H-063; es configuración, no código). El agente **no** escribe datos.
+- ❌ **NO** accionar "SANEAR TODAS" durante la mirada en vivo (solo mirar y abrir el documento).
+
+### 3.U.8 Plan de ejecución por LOTES
+
+> **Plan COMPLETO · 4 tareas · 2 lotes** (máx. 3 por lote, **sin mezclar dueños**: T1–T3 `[motor]`, T4 `[pantalla]`).
+> Cada lote es **UNA sesión NUEVA** del agente que dice la etiqueta: marca `- [x]` **solo lo hecho**, deja su
+> **bitácora** y al cerrar **aprieta el botón del proyecto** (`Odoo8071-printflow_gestion_inventario`,
+> skill `reiniciar-servidor-odoo` ⇒ reinicia + `-u`) con evidencia (log + PID + `write_date`).
+> ➡️ **PRIMER LOTE A EJECUTAR: Lote 1 (T1–T3) · `[motor]` → `odoo-dev`.**
+> **Fuente (solo lectura):** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**).
+> **Ruta donde SÍ se escribe:** `C:\odoo_custom\printflow_gestion_inventario`.
+> **Baseline de la suite:** **701 tests ⇒ 8 rojos ajenos** (B1/H-002 · H-035 · H-038). Salida a archivo
+> (`docs/evidencia/3U-lote*-tests.txt`), skill §3.7.
+> **Orden por dependencia:** **T1** crea `document_ref` (sin él la vista no puede pintarlo) → **T2** usa la
+> línea ya con el campo y añade el refresco/masivo (el `action_run` de la fila pasa a `_pf_refresh`) → **T3**
+> prueba lo de T1/T2 (los tests necesitan ambos) → **T4** pinta la lista y el botón (vista sin campo = error).
+> **Qué se RETIRA:** el `kanban` de L161-236 y el botón `fa-wrench` (L226-231) ⇒ **T4**; **nada** de modelo se
+> retira (todo es aditivo).
+> **Archivos:** (1) `wizard/printflow_flow_failure_tray_line.py` (**MOD** · T1) · (2)
+> `wizard/printflow_flow_failure_tray.py` (**MOD** · T2) · (3) `tests/test_product_flow_failure_tray_feedback.py`
+> (**NUEVO** · T3) + `tests/__init__.py` (+1 import) · (4) `wizard/printflow_flow_failure_tray_views.xml`
+> (**MOD** · T4). **Sin** cambios en manifest, `security/` ni modelos nuevos.
+
+#### Lote 1 (T1–T3) — `[motor]` → `odoo-dev` · El documento como referencia, el refresco y el saneo de TODAS
+
+- [x] **T1 — `document_ref` (el nombre del documento, clickeable)** · `[motor]` → `odoo-dev`
+  (`wizard/printflow_flow_failure_tray_line.py`, después de `document_res_id` L65-66).
+  - Campo **aditivo**:
+    ```python
+    document_ref = fields.Reference(
+        selection=[('stock.picking', 'Albarán'),
+                   ('mrp.production', 'Orden de fabricación')],
+        string='Documento', compute='_compute_document_ref',
+        help='Enlace al documento que sostiene la reserva (se abre al pincharlo).')
+    ```
+  - Compute con `@api.depends('document_model', 'document_res_id')`: si `document_model` es
+    `'stock.picking'`/`'mrp.production'` **y** `document_res_id` > 0 ⇒ `f'{model},{res_id}'`; si no ⇒ `False`
+    (las filas de respaldo (`document_kind='quant'`) quedan sin enlace; su ficha dice "sin documento").
+  - Valores ya fijados por la falla: `over_reservation.py` L164 (`stock.picking`) · L169 (`mrp.production`) ·
+    L174/L232 (`''`, fila de quant). **No** tocar `document_name` (sigue siendo el texto).
+  - **No** navegar a mano: la lista abre el registro sola (referencia nativa).
+
+- [x] **T2 — Refresco en el sitio (H-062) + "SANEAR TODAS"** · `[motor]` → `odoo-dev`
+  (`wizard/printflow_flow_failure_tray.py`).
+  - **(a) `_pf_reopen()`** (helper privado): si `self._pf_host()` es `None` ⇒ `(empty, None)`; si no,
+    `tray = self._pf_populate(host, code, product)` (capturar `code`/`product` **antes**, porque `_pf_populate`
+    borra la bandeja vieja) y devolver la acción `act_window` a la bandeja nueva (`res_id=tray.id`, `view_mode=form`,
+    `target='new'`, nombre "Bandeja de fallas").
+  - **(b) `_pf_refresh(message, ntype='success')`**: si hay acción nueva ⇒ `display_notification` con
+    `next` = esa acción (misma forma que `_pf_notify`); si no ⇒ **`_pf_notify`** (respaldo de hoy).
+  - **(c) `action_run` (L138-162):** sustituir el `return self._pf_notify(...)` final por
+    `return self._pf_refresh(message or _('Acción aplicada.'))` — **misma lista blanca y mismo despacho**.
+  - **(d) `action_cleanup_all()` (método NUEVO, público):**
+    1. `self.ensure_one()`; **guardia de código**: `if self.code != 'data_anomaly': raise UserError(_('Este saneo es de la reserva colgada.'))`;
+    2. `self.env['printflow.stock.remedy']._pf_assert_can_clean()`;
+    3. `before = len(self.line_ids)`; `result = self.env['printflow.stock.health']._pf_cleanup_products(self.product_id)`;
+    4. `tray, action = self._pf_reopen()`; `left = len(tray.line_ids) if tray else None`;
+    5. **resumen en palabras** (3 ramas, con `result['pickings']` y `left`):
+       - `left == 0` ⇒ success: *"Reserva colgada saneada: el producto quedó limpio (0 documentos colgados;
+         %(pickings)s albarán(es) re-asignado(s))."*
+       - `0 < left < before` ⇒ warning: *"Saneo parcial: quedan %(left)s documento(s) colgado(s) de %(before)s."*
+       - `left >= before` ⇒ warning: *"No se pudo soltar ninguna reserva: siguen %(left)s documento(s) colgados."*
+    6. devolver `display_notification` con `next` = acción nueva (o `act_window_close` si no hay host).
+  - **Prohibido:** bucle por fila, `unlink` de líneas a mano, escribir `picked`, tocar `_pf_cleanup_products`.
+
+- [x] **T3 — Tests del lote** · `[motor]` → `odoo-dev`
+  (`tests/test_product_flow_failure_tray_feedback.py` **NUEVO** + import en `tests/__init__.py`).
+  1. **`test_document_ref_points_to_the_document`:** una fila con `document_model='stock.picking'` +
+     `document_res_id=<id>` ⇒ `document_ref` = `stock.picking,<id>`; una fila `document_kind='quant'` ⇒ `False`.
+  2. **`test_cleanup_all_reopens_the_tray_clean`:** preparar un quant colgado (mismo fixture del test H-060),
+     poblar la bandeja de `data_anomaly` del producto, llamar `action_cleanup_all()` ⇒ `display_notification`
+     con `next` = `act_window` a una bandeja **distinta**, esa bandeja con **0 líneas**, y el quant ya **no**
+     colgado (`invalidate_recordset()` antes de re-leer — CT-03).
+  3. **`test_row_action_keeps_the_tray_open`:** `action_run(line_id, 'release_document')` ⇒
+     `next` es `act_window` (bandeja repoblada), **no** `{'tag': 'reload'}`; la bandeja vieja ya no existe.
+  4. **`test_cleanup_all_guard_only_for_reservation_fault`:** bandeja con otro `code` ⇒ `UserError`.
+  - **Cero** datos de negocio fuera del rollback del test. Evidencia: `docs/evidencia/3U-lote1-tests.txt`.
+
+#### Lote 2 (T4) — `[pantalla]` → `odoo-vistas` · La lista de 7 columnas y el botón "SANEAR TODAS"
+
+- [x] **T4 — kanban → tree + botón de cabecera** · `[pantalla]` → `odoo-vistas`
+  (`wizard/printflow_flow_failure_tray_views.xml`).
+  - **Cabecera (L137-140):** añadir, antes de "Cerrar":
+    ```xml
+    <button name="action_cleanup_all" type="object" string="SANEAR TODAS"
+            class="btn-primary" invisible="code != 'data_anomaly'"
+            title="Soltar y re-reservar TODAS las reservas colgadas de este producto"/>
+    ```
+    (`code` ya está en el form, L147 ⇒ se puede usar en `invisible`).
+  - **Bloque Evidencias (L159-237):** **borrar** el `<kanban>` completo y poner un `<tree>` **embebido**,
+    **en este orden de columnas** (decisión del dueño):
+    ```xml
+    <field name="line_ids" nolabel="1">
+        <tree string="Evidencias" create="false" delete="false" edit="false"
+              decoration-danger="delta_qty &lt; 0">
+            <field name="location_id" string="Ubicación"/>
+            <field name="lot_name" string="Lote"/>
+            <field name="physical_qty" string="A mano"/>
+            <field name="reserved_qty" string="Reservado"/>
+            <field name="delta_qty" string="Libre"/>
+            <field name="document_ref" string="Documento"/>
+            <field name="line_qty" string="Cantidad"/>
+            <field name="primary_label" column_invisible="True"/>
+            <button name="action_run_primary" type="object" icon="fa-play"
+                    class="btn-link" invisible="not primary_label"
+                    title="Ejecutar la acción principal de esta fila (soltar la reserva del documento)"/>
+        </tree>
+    </field>
+    ```
+  - **Reglas de la vista:** un `<button>` por fila (el patrón ya vive en L106-124 de este mismo archivo);
+    **nada** de `<header>` en el tree, **nada** de checkboxes; **no** repetir `document_name` (el enlace es
+    `document_ref`); el form de la línea **no se toca** (el clic en la fila lo abre).
+  - **Prueba de vista (barata):** arch-test que confirme que el form del tray ya **no** tiene `kanban` en
+    `line_ids`, que el `tree` incluye `document_ref` y las 7 columnas, y que el botón masivo declara
+    `invisible` con `code != 'data_anomaly'`.
+  - **Mirada en vivo (Analista):** abrir el "Solucionar" de un producto con colgados y **foto** con la lista y
+    el nombre del documento como enlace (`docs/evidencia/3U-live-*.png`); **NO** accionar el botón masivo.
+
+**Bitácora — 2026-10-20 · `odoo-dev` (§3.U · Lote 1 `[motor]`) · T1–T3 `[x]`**
+
+- **Qué se tocó (3 archivos, todo ADITIVO — no se retiró nada de modelo/lógica):**
+  1. **T1** `wizard/printflow_flow_failure_tray_line.py` (**+28**): campo **`document_ref`**
+     (`fields.Reference`, `compute='_compute_document_ref'`) con su compute
+     `@api.depends('document_model', 'document_res_id')`. **Decisión de detalle (sin cambio de
+     contrato):** la `selection` del campo y la lista de modelos que el compute acepta salen de **UNA
+     sola constante** `DOCUMENT_REF_SELECTION` (fuente única, no se puede desincronizar el campo de su
+     compute). Filas `document_kind='quant'` (respaldo sin movimiento) ⇒ **`False`**, sin enlace.
+     **No** se tocó `document_name` (sigue siendo el texto de los mensajes).
+  2. **T2** `wizard/printflow_flow_failure_tray.py` (**+99/−3**), tal cual el contrato:
+     `_pf_reopen()` (captura `code`/`product` **antes** de `_pf_populate`, porque el poblado **borra**
+     la bandeja vieja) · `_pf_refresh(message, ntype)` (encadena la bandeja nueva en `next`; sin host ⇒
+     respaldo de hoy) · **`action_run` L162** pasa el `return` final de `_pf_notify` a **`_pf_refresh`**
+     (**misma lista blanca y mismo despacho**) · **`action_cleanup_all()`** (NUEVO, público): guardia de
+     código → `_pf_assert_can_clean()` → **`_pf_cleanup_products(self.product_id)`** (la MISMA llamada de
+     la fila de salud, `printflow_inventory_health.py` L313-320) → `_pf_reopen()` → **resumen en palabras**
+     en 3 ramas y `next` = bandeja nueva.
+     **Sustitución, no acumulación:** `_pf_notify` ganó el parámetro **`next_action=None`** (por defecto
+     el `reload` de siempre) **en vez de** duplicar el dict de `display_notification` en cada llamador.
+  3. **T3** `tests/test_product_flow_failure_tray_feedback.py` (**NUEVO**, 6 tests) + **1 import** en
+     `tests/__init__.py`: `document_ref` (formato de alambre `stock.picking,<id>` + fila de quant sin
+     enlace) · `action_cleanup_all` reabre **limpia** (0 líneas, bandeja vieja borrada, quant ya no
+     colgado con `invalidate_recordset` — CT-03) · producto sano no revienta · **▶ de la fila NO cierra**
+     (sin `reload`) · sin host se conserva el respaldo · **guardia de código** (`lot_orphan_reservation`
+     ⇒ `UserError`). Fixtures propios dentro del `TransactionCase` (rollback): **cero datos tocados**.
+- **NO se tocó:** la lógica del saneo (`models/printflow_stock_remedy.py`) ni `_pf_cleanup_products`;
+  **cero** `cr.execute`, **cero** escritura de `reserved_quantity`, **cero** cambios de estado,
+  **cero** `unlink` de líneas a mano. La vista (`[pantalla]`, **T4**) queda **intacta**.
+- **Motor `x_product_dimensional_pricing`:** huella **idéntica** — `SHA-256(models/stock_move.py)` =
+  `22293F95…106B` (**12.690 B**) · `git status --porcelain` = **143**.
+- **Tests del lote** (`docs/evidencia/3U-lote1-tests.txt`, salida a `--logfile`, BD de pruebas
+  `pf_picker_tests`, `--data-dir` en temp porque el filestore de `Program Files` **no** es escribible
+  por el proceso del agente): **`0 failed, 0 error(s) of 47 tests`** — **6/6** del lote + **41** de
+  las bandejas/remedy de vecindad (`..._by_document`, `..._tray_generic`, `..._over_reservation`,
+  `..._lot_no_stock`, `..._permissions_split`, `..._over_reservation_scoped`, `..._remedy_h060`) ⇒
+  **exit code 0**.
+- **Aviso fuera de alcance (NO se toca, lo decide el Analista):** el campo nuevo dispara **1 WARNING**
+  de higiene *"Two fields (document_ref, document_name) … have the same label: Documento"* — **misma
+  familia de H-048** (invisible al operador; el modelo **ya** emitía uno idéntico por `lot_name`/`lot_id`
+  "Lote"). Se conserva el `string='Documento'` porque es lo que pide el contrato (§3.U · T1).
+- **Reinicio+módulo:** botón **`Odoo8071-printflow_gestion_inventario`** ⇒
+  `20261020-012201-printflow_gestion_inventario.log` · **tarea=0** (`LastTaskResult 0`) · `-u`
+  código de salida **0** · **PID 9756 → 1424** · puerto **8071 ESCUCHANDO** · `write_date` del módulo
+  **2026-10-20 05:22:13 UTC = 01:22:13 local** (dentro de la ventana del `-u`, 01:22:03–01:22:16) ⇒ **OK**.
+- **Siguiente:** **Lote 2 (T4) `[pantalla]` → `odoo-vistas`** (la lista de 7 columnas + el botón
+  masivo). El campo `document_ref` ya está **en la base**: la vista puede pintarlo sin error.
+
+**Bitácora — 2026-10-20 · `odoo-vistas` (§3.U · Lote 2 `[pantalla]`) · T4 `[x]`**
+
+- **Qué se tocó (1 vista + 1 test nuevo + 1 import · la lógica del Lote 1 NO se tocó):**
+  1. `wizard/printflow_flow_failure_tray_views.xml` (**+20 / −77**):
+     - **Cabecera:** botón `action_cleanup_all` **"SANEAR TODAS"** antes de "Cerrar"
+       (`class="btn-primary"`, `invisible="code != 'data_anomaly'"`, `title` de **una** frase) ⇒
+       **CA-4**: las otras dos fallas (`lot_orphan_reservation`, `lot_no_stock`) **no** ven el masivo.
+     - **Zona de evidencias:** se **borra** el `<kanban>` completo (tarjetas) y entra **un** `<tree>`
+       embebido con las **7 columnas en el orden del dueño** — `Ubicación · Lote · A mano · Reservado ·
+       Libre · Documento · Cantidad` — + `primary_label` con `column_invisible` (solo alimenta al botón) +
+       el **▶ `action_run_primary`** por fila; `decoration-danger="delta_qty &lt; 0"` pinta en rojo la
+       fila **colgada**. Sin `<header>` en el árbol y **sin casillas** (el árbol embebido no las pinta).
+     - **`document_ref`** sustituye a `document_name` en la lista (referencia nativa ⇒ **abre el albarán
+       o la OF** al pincharla). `document_name` **no se retira** del modelo ni del form de la línea.
+     - **Se retira el botón de la llave** (`action_open`, `fa-wrench`) de la tarjeta (**H-064**): el
+       detalle se abre **tocando la fila** (el form de la línea, **sin tocar**).
+  2. `tests/test_product_flow_failure_tray_view_arch.py` (**NUEVO**, 4 tests, **solo lectura** de
+     `arch_db`) + **1 import** en `tests/__init__.py` — es la *"prueba de vista (barata)"* que pide T4:
+     (a) `line_ids` **sin kanban** y con **una sola** lista; (b) las **7 columnas en orden** y con sus
+     rótulos; (c) el **▶ por fila** (y `action_open` ausente); (d) el masivo con su `invisible`.
+     **Desviación declarada:** §3.U.8 no listaba archivo de test para T4 (solo la vista) ⇒ se crea uno
+     nuevo, mínimo y de solo lectura, en vez de meterlo en el archivo del Lote 1.
+- **Métricas de diseño (el metro del core, §2):** arch del form **6.969 → 2.934 chars** (banda de modal
+  de decisión **1,5K–6K**) · `<div>` **1** (el `oe_title` de la casa; el resto es `<group>`/`<separator>`)
+  · `colspan` **0** · texto visible más largo **"SANEAR TODAS" (12 chars)**; los `title` son tooltips ·
+  columnas declaradas **8** (7 visibles + 1 oculta) + **1** botón por fila.
+- **La vista es COMPARTIDA por 3 fallas:** **no** se escondió ninguna columna por `code`; con filas de
+  las otras dos, las columnas del documento quedan **vacías** (inofensivas) — conejera 4 respetada.
+- **NO se tocó:** `models/`, `_pf_cleanup_products`, la guardia `_pf_assert_can_clean()`, `action_run` /
+  `_pf_refresh` / `action_cleanup_all`, el form de la línea ni el motor. **Cero escrituras de datos**
+  (solo se **miró** `arch_db` en los tests y el `ir.module.module` por MCP en lectura).
+- **Motor `x_product_dimensional_pricing`:** huella **idéntica antes/después** —
+  `SHA-256(models/stock_move.py)` = `22293F95…106B` (**12.690 B**) · `git status --porcelain` = **143**.
+- **Tests del lote** (`docs/evidencia/3u-lote2-tests.txt`, BD de pruebas `pf_picker_tests`, `--data-dir`
+  en temp, **`--no-http`** para no tocar el 8071 vivo): **`0 failed, 0 error(s) of 4 tests`** ⇒
+  **4/4** del lote, **exit code 0**. La vista carga **sin WARNING propio** en el `-u`.
+- **Reinicio+módulo:** botón **`Odoo8071-printflow_gestion_inventario`** ⇒
+  `20261020-012952-printflow_gestion_inventario.log` · **tarea=0** (`LastTaskResult 0`) · `-u` código de
+  salida **0** · **PID 1424 → 9628** · puerto **8071 ESCUCHANDO** · `write_date` del módulo
+  **2026-10-20 05:30:09 UTC = 01:30:09 local** (dentro de la ventana del `-u`, 01:29:56–01:30:12) ⇒ **OK**.
+- **Siguiente:** `odoo-verificador` (1 pasada) → **mirada en vivo del Analista** (CA-1/CA-3: lista con
+  `WH/PDV/…`/`WH/MO/…` como **enlace** y **foto** en `docs/evidencia/3U-live-*.png`); **NO** accionar
+  "SANEAR TODAS" (CA-7).
+- **Avisos fuera de alcance (no se tocaron):** (a) la vista `printflow_flow_failure_tray_line_view_tree`
+  (la lista "suelta" de la línea) quedó **sin uso** desde **antes** de este lote (la tarjeta ya la había
+  sustituido); §3.U.6 no la retira ⇒ **se reporta**, no se borra. (b) El `-u` de este cierre también
+  aplicó el **Lote 1 de §3.V**, que ya estaba en disco (import `test_product_flow_lot_exception_lot_target`).
+  (c) §3.U arrancó con la Ficha en *"EN ESPERA hasta que §3.V cierre"*; el lote se ejecutó por
+  **instrucción directa** de la sesión que lo delegó.
 
 ## 3.T (ANEXO · TAREA CERRADA 19/10 · TRIVIAL · camino rápido) — separar los rótulos pegados en la tarjeta del tray (H-061)
 
@@ -9545,3 +10061,104 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   (transitorio nuevo, normal) · **los 5 rótulos separados** y los datos del CA-1 intactos (WH/MO/01562 · OF ·
   En marcha · reservado por · 0,200/0,040 · Delta −0,160) · botón **NO accionado** (solo mirar).
   **Registro: 61 filas × 9 celdas — 14 `abierto` / 39 `resuelto` / 8 `descartado` / 0 `en tarea`.**
+
+- [2026-10-20 · Odoo Dev] **§3.V · Lote 1 (T1–T3 `[motor]`) EJECUTADO** (sesión NUEVA) — la autorización del
+  LOTE apunta al LOTE (H-065 · H-066). **3 archivos de código + 1 test nuevo (+1 import):**
+  (T1) `wizard/printflow_flow_lot_tray.py`: helper **`_pf_formal_target()`** (destino según el `target_model`
+  del registry: `stock.lot` cuando la fila tiene lote o ya es `res_model='stock.lot'`; el documento en el resto),
+  usado en `action_authorize_finding`, en la construcción de `line_ids` de `action_authorize_selected_findings` y
+  en `_compute_finding_is_authorized`; `_compute_can_authorize_finding` deja de admitir autorizar una fila **sin
+  destino** (hallazgo de lote sin lote); `finding_code` viaja en los `create()` de `action_authorize_lot` y
+  `action_authorize_selected` (solo si la selección es homogénea; con tipos mezclados NO se inventa destino).
+  **Sustitución, no acumulación:** las tres llamadas dejaron de calcular el destino a mano (`self.res_model`/
+  `self.res_id`) ⇒ **una sola** forma de calcularlo.
+  (T2) `wizard/printflow_flow_lot_exception_authorize.py` y `..._bulk.py`: campo `finding_code` (Char readonly) y,
+  al confirmar, **además** de la escritura intacta en `printflow.lot.exception`, llamada a la **puerta única**
+  `printflow.finding.exception._pf_authorize_lot_finding(code, lot, ...)` (NUEVO en `models/printflow_finding_exception.py`):
+  autoriza el hallazgo sobre `stock.lot` **solo** si el registry lo declara así (si no, no hace nada). Se prefirió
+  la puerta única a repetir la condición del registry en cada wizard.
+  (T3) `models/printflow_finding_exception.py::_pf_suppressed_targets`: **+`('target_model','=',registry)`** (código
+  desconocido ⇒ `set()`), lo que retira de raíz la colisión de ids movimiento↔lote (H-066) y deja inertes las 4
+  excepciones históricas del DTF (`target_model='stock.move'`).
+  **Tests:** creado `tests/test_product_flow_lot_exception_lot_target.py` (6 tests: CA-1…CA-6, caso del DTF con UdM
+  `m`, 2 lotes genéricos y 2 movimientos) + registro en `tests/__init__.py`. **`0 failed, 0 error(s) of 6 tests`
+  (exit 0)** y **vecindad 60 tests ⇒ 2 failed / 0 error**, los dos **pre-existentes y ajenos** (tray_ux
+  `used_lot_available 3.0 != 5.0` y `arch.count(4 != 3)`, este último sobre una **vista** que este lote no toca).
+  Evidencia en `docs/evidencia/3V-lote1-tests.txt`.
+  **Motor `x_product_dimensional_pricing`:** huella **idéntica** (`SHA-256(stock_move.py)` = `22293F95…106B`,
+  12.690 B · `git status --porcelain` = 143). **Cero escrituras de datos** (todo en `TransactionCase` sobre la BD
+  de test `pf_picker_tests`). **No** se tocó ninguna vista (`[pantalla]` = 0 en este lote).
+  **Desviaciones:** (1) el destino se resolvió con **una** puerta única (`_pf_authorize_lot_finding`) en vez de
+  repetir el `if registry == 'stock.lot'` en los dos wizards (misma semántica, una sola fuente); (2) el wizard en
+  bloque solo declara `finding_code` cuando la selección es **homogénea** (defensa de la conejera CT-3).
+  **Turno → siguiente: `odoo-verificador` (1 pasada, al final del §3.V).**
+- [2026-10-20 · Odoo Dev] **§3.V · Lote 2 (T4–T5 `[motor]`) EJECUTADO** (sesión NUEVA) — el cierre formal del
+  caso del DTF. **2 tareas, 2 archivos tocados (+1.er archivo de test ya existente):**
+  (T4 · **H-067**) `wizard/printflow_flow_lot_tray.py`: helper **`_pf_formal_label()`** junto a
+  `_pf_formal_target()` — cuando el destino formal es `stock.lot` devuelve el **nombre del lote**
+  (`lot.name`), en cualquier otro caso el rótulo de la fila. Se usa en los **dos** sitios que armaban la
+  etiqueta a mano: `action_authorize_finding` (`target_label=self._pf_formal_label()`, antes
+  `self.label`) y las `line_ids` de `action_authorize_selected_findings` (`row._pf_formal_label()`, antes
+  `row.label`). **Sustitución, no acumulación:** la etiqueta se deriva del **MISMO** destino que la
+  autorización (una sola fuente), así no puede describir otro registro; no quedó la forma vieja. La fila
+  sigue pintando el DOCUMENTO (`Movimiento WH/OUT/…`) pero la excepción se etiqueta `SN000001`.
+  **No** cambia nada para `stock.move`/`mrp.production` (CA-6/CA-7-c).
+  (T5) **Suite COMPLETA del módulo:** `7 failed, 1 error(s) of 718 tests` ⇒ los **8 rojos son exactamente
+  los del baseline conocido** (B1/H-002 · H-035 · H-038: `diagnostic_delivery_orders` · `node_pending_enumeration`
+  · `phase7_board_permissions` · `failure_negative_reserved` · `lot_picker_ux` · `lot_tray_ux` ×2 ·
+  `solution_single` ERROR) ⇒ **delta 0 · ningún rojo nuevo**. Lo subido en el conteo (701 → 718) son los
+  tests ADITIVOS de los lotes previos. El lote entero verde: `TestProductFlowLotExceptionLotTarget` **7/7**
+  (6 de CA-1…CA-6 + el **nuevo** `test_ca7_lot_exception_label_is_the_lot_name`).
+  Evidencia: `docs/evidencia/3V-lote2-suite.txt`.
+  **Motor `x_product_dimensional_pricing`:** huella **idéntica** (`SHA-256(stock_move.py)` = `22293F95…106B`,
+  12.690 B · `git status --porcelain` = 143). **Cero escrituras de datos** (todo en `TransactionCase` sobre
+  `pf_picker_tests`). **Ninguna vista tocada** (`[pantalla]` = 0 en este lote).
+  **Reinicio+módulo: OK** (`20261020-021903-printflow_gestion_inventario.log` · tarea=0 · `-u` salida 0 ·
+  PID 8552 → 10516 · puerto 8071 ESCUCHANDO · `write_date` del módulo **2026-10-20 06:19:13 UTC = 02:19:13
+  local**, dentro de la ventana del `-u` 02:19:05–02:19:17).
+  **Desviación declarada (1):** T4 no listaba archivo de test, pero CA-7 es criterio de aceptación del
+  §3.V.4 ⇒ el test de CA-7 se **agregó al archivo del Lote 1**
+  (`tests/test_product_flow_lot_exception_lot_target.py`, +1 test, **no** archivo nuevo) en vez de dejarlo
+  sin custodiar; la cabecera del docstring se actualizó con CA-7.
+  **Turno → siguiente: `odoo-verificador` (2.ª y última pasada) → cierre de H-065 · H-066 y de §3.V.**
+- [2026-10-20 · Odoo Analista] **§3.V CERRADA · compuerta §4.3 superada — veredicto `cumple`** (2 lotes
+  `[motor]`). El Verificador midió: **CA-1…CA-7** con aserciones reales (7/7 en
+  `TestProductFlowLotExceptionLotTarget`), **delta 0** con la suite completa (**718 tests · 7 failed + 1 error =
+  los 8 del baseline** B1/H-002 · H-035 · H-038), **huella del motor idéntica** (`22293F95…106B` · 12.690 B ·
+  `git status --porcelain` = 143) y `ir.module.module.write_date` = **06:19:13 UTC**, posterior al último archivo
+  tocado ⇒ el 8071 corre el código de disco. **Caso real del DTF:** validado **en vivo por el dueño** antes del
+  cierre — excepciones **9** (`stock.lot` 3051 · SN1256) y **10** (`stock.lot` 1 · SN000001) ⇒ el nodo **Entrega**
+  se apagó; las 4 históricas (`stock.move`) quedan **inertes**, sin borrar (dato del dueño).
+  **Cierres:** **H-065 · H-066 · H-067 ⇒ `resuelto`**; se abre **H-068** (`abierto`, baja: comodines en
+  `docs/evidencia/3V-lote2-suite.txt` L75-77; los valores reales están en esta bitácora) — no bloquea nada y lo
+  rellena el dev en el próximo lote. **Se retira** el cálculo manual de `target_label` (lo sustituye
+  `_pf_formal_label()`, derivado del **mismo** destino de la autorización). **Conejeras:** las dos `⚠️ VERIFICADA`
+  se citaron bien en `HEAD`; la `❓ PREVISIÓN` queda condicional y sin disparador. **Turno → siguiente:**
+  **§3.U** (T1–T4 ya `[x]` antes de la pausa; falta su Verificador y la mirada en vivo con foto).
+- [2026-10-20 · Odoo Analista] **§3.U CERRADA · compuerta §4.3 superada — veredicto `cumple`** (2 lotes:
+  `[motor]` T1–T3 + `[pantalla]` T4). Rediseño de la ventana **"Solucionar"** de la reserva colgada
+  (`data_anomaly`): la tarjeta pasa a **lista de 7 columnas** (`Ubicación · Lote · A mano · Reservado · Libre ·
+  Documento · Cantidad`) con **fila roja** cuando `Libre < 0`, el **Documento** se pinta como **referencia nativa
+  clickeable** (`WH/PDV/06699` abre el albarán, `WH/MO/01562` abre la OF), botón de cabecera **"SANEAR TODAS"**
+  (solo con `code == 'data_anomaly'`, reusa `_pf_cleanup_products` con la misma puerta `_pf_assert_can_clean()`) y,
+  tras accionar, la bandeja **se repuebla y se reabre con un resumen en palabras** (`_pf_reopen` + `_pf_refresh`;
+  `_pf_notify` queda de respaldo).
+  **Verificador (1 pasada, `cumple` en código):** `document_ref` existe en la BD (`ttype=reference`) ⇒ el `-u`
+  cargó T1; el refresco y el masivo **sin** `cr.execute` ni escritura de `reserved_quantity`; el masivo
+  **revalida** `code` (la vista lo esconde y el método no se fía); motor `x_product_dimensional_pricing` con
+  **huella idéntica** (`22293F95…106B` · 12.690 B · `git status --porcelain` = 143); **cero escrituras de datos**.
+  Suite **47/47 + 4/4** verde; suite completa **718 tests ⇒ 7 failed + 1 error = los 8 del baseline ⇒ delta 0**.
+  **Mirada en vivo:** el Verificador **no tiene navegador** (`browser.disconnected`) y la captura del Analista quedó
+  bloqueada porque la **ventana del navegador estaba minimizada** (`document.visibilityState = "hidden"`: Odoo no
+  monta el cliente y `browser.screenshot` exige pestaña visible). La **hizo el dueño** en su navegador y declaró
+  *"ya verifiqué y está bien"*. **No hay foto archivada** — se declara, **no se simula**.
+  **Cierres:** **H-062 · H-064 ⇒ `resuelto`** (evidencia del Verificador + la mirada del dueño); **H-063** sigue
+  **`abierto`** (no es código: el dueño deja `pf_reservation_cleanup_limit = 0` en Ajustes).
+  **Conejeras:** **CT-01** y **CT-02** (`⚠️ VERIFICADA`: `picked` a nivel de movimiento arrastra todas las líneas)
+  citadas en `HEAD` y **respetadas** — el masivo **no** destilda nada, solo llama al saneo; **CT-03**
+  (`❓ PREVISIÓN`) queda condicional y se cumplió en los tests (`invalidate_recordset()` antes de re-leer el quant).
+  **Qué se retiró:** el bloque `kanban` del form y el botón `fa-wrench` (`action_open`); **no** se retiró ningún
+  campo (todo aditivo: `document_name` y `primary_label` se conservan).
+  **Estado git:** **NADA COMMITEADO** (el `CONTEXT.md` mezcla §3.U y §3.V: no se puede separar limpio) ⇒ commit a
+  decisión del dueño. **Turno → siguiente:** este módulo **sin tarea abierta**; espera decisión del dueño
+  (commit · dejar el tope en 0 · tarea futura de la causa POS).

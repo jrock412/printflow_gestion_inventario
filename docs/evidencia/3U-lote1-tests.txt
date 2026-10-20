@@ -1,0 +1,1321 @@
+2026-10-20 05:19:47,034 1860 INFO ? odoo: Odoo version 17.0-20250124 
+2026-10-20 05:19:47,034 1860 INFO ? odoo: Using configuration file at C:\Program Files\Odoo 17.0.20250124\server\odoo.conf 
+2026-10-20 05:19:47,035 1860 INFO ? odoo: addons paths: ['C:\\Program Files\\Odoo 17.0.20250124\\server\\odoo\\addons', 'c:\\program files\\odoo 17.0.20250124\\sessions\\addons\\17.0', 'c:\\program files\\odoo 17.0.20250124\\server\\odoo\\addons', 'c:\\odoo_custom', 'c:\\odoo_custom\\odoo-venezuela-17.0'] 
+2026-10-20 05:19:47,035 1860 INFO ? odoo: database: prueba@localhost:5432 
+2026-10-20 05:19:47,076 1860 WARNING ? odoo.modules.module: Missing `license` key in manifest for 'impreven_pagos_server', defaulting to LGPL-3 
+2026-10-20 05:19:47,254 1860 INFO ? odoo.addons.base.models.ir_actions_report: Will use the Wkhtmltopdf binary at C:\Program Files\Odoo 17.0.20250124\thirdparty\wkhtmltopdf.exe 
+2026-10-20 05:19:47,585 1860 INFO ? odoo.service.server: HTTP service (werkzeug) running on DESKTOP-S46KLFN:8071 
+2026-10-20 05:19:47,629 1860 INFO pf_picker_tests odoo.modules.loading: loading 1 modules... 
+2026-10-20 05:19:47,636 1860 INFO pf_picker_tests odoo.modules.loading: 1 modules loaded in 0.01s, 0 queries (+0 extra) 
+2026-10-20 05:19:47,659 1860 INFO pf_picker_tests odoo.modules.loading: updating modules list 
+2026-10-20 05:19:47,663 1860 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.update_list on [] to user __system__ #1 via n/a 
+2026-10-20 05:19:49,372 1860 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.button_upgrade on ['PrintFlow: Gestión de Inventario'] to user __system__ #1 via n/a 
+2026-10-20 05:19:49,373 1860 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.update_list on ['PrintFlow: Gestión de Inventario'] to user __system__ #1 via n/a 
+2026-10-20 05:19:50,076 1860 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy: obteniendo sesion de Odoo para 'impreven 1.4' (intento 1/15)... 
+2026-10-20 05:19:50,134 1860 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy: sesion obtenida (1 cookies) 
+2026-10-20 05:19:50,134 1860 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy lanzado en hilo daemon 
+2026-10-20 05:19:50,138 1860 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy iniciado en 0.0.0.0:8079 -> 127.0.0.1:8070 [DB: impreven 1.4] 
+2026-10-20 05:19:50,309 1860 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.button_install on [] to user __system__ #1 via n/a 
+2026-10-20 05:19:50,352 1860 INFO pf_picker_tests odoo.modules.loading: loading 109 modules... 
+2026-10-20 05:19:51,850 1860 INFO pf_picker_tests odoo.modules.loading: Loading module printflow_gestion_inventario (108/109) 
+2026-10-20 05:19:52,062 1860 WARNING pf_picker_tests odoo.fields: Field mrp.technical.sheet.incident.wizard.incident_note: unknown parameter 'placeholder', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+2026-10-20 05:19:52,364 1860 WARNING pf_picker_tests odoo.fields: Field mrp.technical.sheet.incident.wizard.incident_note: unknown parameter 'placeholder', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+2026-10-20 05:19:52,425 1860 INFO pf_picker_tests odoo.modules.registry: module printflow_gestion_inventario: creating or updating database tables 
+2026-10-20 05:19:52,676 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (document_ref, name) of printflow.node.pending.line() have the same label: Documento. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,676 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (amount, existing_price) of mrp.quick.purchase.wizard() have the same label: Precio unitario. [Modules: x_product_dimensional_pricing and x_product_dimensional_pricing] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (amount, existing_price) of mrp.quick.purchase.wizard.line() have the same label: Precio unitario. [Modules: x_product_dimensional_pricing and x_product_dimensional_pricing] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (order_name, sale_order_id) of printflow.bom.archive.diagnostic.line() have the same label: Pedido. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (amount_total_display, amount_total) of printflow.order.diagnostic.wizard() have the same label: Total. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_sale_status, sale_status) of printflow.order.diagnostic.wizard() have the same label: Venta. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_stock_status, stock_status) of printflow.order.diagnostic.wizard() have the same label: Inventario. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_purchase_status, purchase_status) of printflow.order.diagnostic.wizard() have the same label: Compras. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_production_status, production_status) of printflow.order.diagnostic.wizard() have the same label: Fabricación. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_delivery_status, delivery_status) of printflow.order.diagnostic.wizard() have the same label: Entrega. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,677 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_root_cause_node, root_cause_node) of printflow.order.diagnostic.wizard() have the same label: Nodo de quiebre. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (component_count, child_line_ids) of printflow.order.diagnostic.wizard.line() have the same label: Componentes. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (status_note, failure_summary) of printflow.order.diagnostic.wizard.line() have the same label: Qué pasa. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (pf_chain_label, node) of printflow.order.diagnostic.failure() have the same label: Nodo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_id, lot_name) of printflow.flow.lot.tray() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_name, lot_id) of printflow.flow.lot.candidate() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (candidate_count, candidate_ids) of printflow.flow.lot.assign.bulk() have the same label: Lotes con existencia. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (own_lot_id, own_lot_name) of printflow.flow.lot.picker() have the same label: Lote propio. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (current_lot_id, lot_name_actual) of printflow.flow.lot.picker() have the same label: Lote actual. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (own_lot_summary, own_lot_name) of printflow.flow.lot.picker() have the same label: Lote propio. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (current_lot_summary, lot_name_actual) of printflow.flow.lot.picker() have the same label: Lote actual. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_name, lot_id) of printflow.flow.lot.exception.authorize() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (finding_label, finding_code) of printflow.finding.exception.authorize.line() have the same label: Hallazgo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (finding_label, finding_code) of printflow.finding.exception.authorize() have the same label: Hallazgo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (component_name, component_id) of printflow.flow.supply.tray() have the same label: Insumo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,678 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (location_name, location_id) of printflow.flow.supply.tray() have the same label: Almacén. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,679 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (state_label, state) of printflow.flow.supply.tray() have the same label: Estado. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,679 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_name, lot_id) of printflow.flow.failure.tray.line() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,679 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (document_ref, document_name) of printflow.flow.failure.tray.line() have the same label: Documento. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:19:52,952 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/security/ir.model.access.csv 
+2026-10-20 05:19:53,027 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/security/printflow_finding_exception_security.xml 
+2026-10-20 05:19:53,039 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_diagnostic_views.xml 
+2026-10-20 05:19:53,151 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 20,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,151 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-map-marker me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 25,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,153 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-list-ol me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 42,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,153 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-times-circle me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 46,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,153 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-triangle me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 50,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,154 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 56,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,154 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-triangle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 57,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,154 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 60,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,155 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-circle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 61,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,155 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 64,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,155 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-check-circle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 65,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,157 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_finding_views.xml 
+2026-10-20 05:19:53,167 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-list fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_finding_views.xml',
+ 'line': 9,
+ 'name': 'printflow.product.diagnostic.finding.form',
+ 'view': ir.ui.view(2014,),
+ 'view.model': 'printflow.product.diagnostic.finding',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_finding_view_form'} 
+2026-10-20 05:19:53,169 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_resolution_tray_views.xml 
+2026-10-20 05:19:53,209 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_bom_archive_diagnostic_views.xml 
+2026-10-20 05:19:53,218 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 15,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,219 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-cubes) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 19,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,219 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 31,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,220 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-triangle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 32,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,220 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 46,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,220 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-chain-broken me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 47,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,221 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 59,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,221 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-check-circle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 60,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,223 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/mrp_bom_views.xml 
+2026-10-20 05:19:53,249 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/product_views.xml 
+2026-10-20 05:19:53,296 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_resolution_plan_views.xml 
+2026-10-20 05:19:53,319 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_diagnostic_wizard_views.xml 
+2026-10-20 05:19:53,339 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 64,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,339 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-eraser me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 65,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,340 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 75,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,340 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-user-o) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 81,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,341 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exchange me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 84,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,341 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-truck me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 88,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,342 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 170,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,342 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-link me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 171,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:19:53,342 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_diagnostic_levels_views.xml 
+2026-10-20 05:19:53,342 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_diagnostic_evidence_views.xml 
+2026-10-20 05:19:53,360 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_order_blocking_reservation_views.xml 
+2026-10-20 05:19:53,374 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_resolution_plan_views.xml 
+2026-10-20 05:19:53,387 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 63,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,388 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-eraser me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 64,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,388 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 74,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,388 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-user-o) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 80,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,390 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exchange me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 83,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,390 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-truck me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 87,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,391 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 169,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,392 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-link me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 170,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:19:53,394 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_flow_views.xml 
+2026-10-20 05:19:53,406 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_flow_views.xml',
+ 'line': 60,
+ 'name': 'printflow.product.flow.form',
+ 'view': ir.ui.view(2027,),
+ 'view.model': 'printflow.product.flow',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_flow_view_form'} 
+2026-10-20 05:19:53,406 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-link me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_flow_views.xml',
+ 'line': 61,
+ 'name': 'printflow.product.flow.form',
+ 'view': ir.ui.view(2027,),
+ 'view.model': 'printflow.product.flow',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_flow_view_form'} 
+2026-10-20 05:19:53,407 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_quick_purchase_views.xml 
+2026-10-20 05:19:53,423 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_tray_views.xml 
+2026-10-20 05:19:53,458 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_picker_views.xml 
+2026-10-20 05:19:53,529 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_assign_bulk_views.xml 
+2026-10-20 05:19:53,542 1860 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_flow_lot_assign_bulk_views.xml',
+ 'line': 49,
+ 'name': 'printflow.flow.lot.assign.bulk.form',
+ 'view': ir.ui.view(2067,),
+ 'view.model': 'printflow.flow.lot.assign.bulk',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_flow_lot_assign_bulk_view_form'} 
+2026-10-20 05:19:53,544 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_assign_bulk_result_views.xml 
+2026-10-20 05:19:53,554 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_exception_authorize_views.xml 
+2026-10-20 05:19:53,562 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_exception_authorize_bulk_views.xml 
+2026-10-20 05:19:53,572 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_finding_exception_authorize_views.xml 
+2026-10-20 05:19:53,589 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_lot_risk_confirm_views.xml 
+2026-10-20 05:19:53,597 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_supply_tray_views.xml 
+2026-10-20 05:19:53,626 1860 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_inventory_health_views.xml 
+2026-10-20 05:19:53,714 1860 WARNING pf_picker_tests odoo.modules.loading: Transient module states were reset 
+2026-10-20 05:19:53,715 1860 ERROR pf_picker_tests odoo.modules.registry: Failed to load registry 
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 556, in _tag_root
+    f(rec)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 456, in _tag_record
+    record = model._load_records([data], self.mode == 'update')
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 5084, in _load_records
+    data['record']._load_records_write(data['values'])
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 5015, in _load_records_write
+    self.write(values)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_ui_menu.py", line 176, in write
+    return super(IrUiMenu, self).write(values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 4444, in write
+    field.write(self, value)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\fields.py", line 2495, in write
+    atts.write({'datas': value})
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 609, in write
+    return super(IrAttachment, self).write(vals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 4476, in write
+    fields[0].determine_inverse(real_recs)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\fields.py", line 1398, in determine_inverse
+    determine(self.inverse, records)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\fields.py", line 102, in determine
+    return needle(*args)
+           ^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 253, in _inverse_datas
+    self._set_attachment_data(lambda attach: base64.b64decode(attach.datas or b''))
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 259, in _set_attachment_data
+    vals = self._get_datas_related_values(bin_data, attach.mimetype)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 282, in _get_datas_related_values
+    values['store_fname'] = self._file_write(data, values['checksum'])
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 137, in _file_write
+    fname, full_path = self._get_path(bin_value, checksum)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 117, in _get_path
+    os.makedirs(dirname, exist_ok=True)
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 225, in makedirs
+PermissionError: [WinError 5] Acceso denegado: 'c:\\program files\\odoo 17.0.20250124\\sessions\\filestore\\pf_picker_tests'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\registry.py", line 110, in new
+    odoo.modules.load_modules(registry, force_demo, status, update_module)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 477, in load_modules
+    processed_modules += load_marked_modules(env, graph,
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 365, in load_marked_modules
+    loaded, processed = load_module_graph(
+                        ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 228, in load_module_graph
+    load_data(env, idref, mode, kind='data', package=package)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 72, in load_data
+    tools.convert_file(env, package.name, filename, idref, mode, noupdate, kind)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 627, in convert_file
+    convert_xml_import(env, module, fp, idref, mode, noupdate)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 693, in convert_xml_import
+    obj.parse(doc.getroot())
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 613, in parse
+    self._tag_root(de)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 569, in _tag_root
+    raise ParseError('while parsing %s:%s, somewhere inside\n%s' % (
+odoo.tools.convert.ParseError: while parsing file:/c:/odoo_custom/printflow_gestion_inventario/views/printflow_inventory_health_views.xml:260, somewhere inside
+<record id="menu_printflow_health_app" model="ir.ui.menu">
+        <field name="name">Salud de Inventario</field>
+        <field name="web_icon">printflow_gestion_inventario,static/description/icon.png</field>
+        <field name="sequence">46</field>
+        <field name="parent_id" eval="False"/>
+    </record>
+2026-10-20 05:19:53,737 1860 CRITICAL pf_picker_tests odoo.service.server: Failed to initialize database `pf_picker_tests`. 
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 556, in _tag_root
+    f(rec)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 456, in _tag_record
+    record = model._load_records([data], self.mode == 'update')
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 5084, in _load_records
+    data['record']._load_records_write(data['values'])
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 5015, in _load_records_write
+    self.write(values)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_ui_menu.py", line 176, in write
+    return super(IrUiMenu, self).write(values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 4444, in write
+    field.write(self, value)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\fields.py", line 2495, in write
+    atts.write({'datas': value})
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 609, in write
+    return super(IrAttachment, self).write(vals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\models.py", line 4476, in write
+    fields[0].determine_inverse(real_recs)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\fields.py", line 1398, in determine_inverse
+    determine(self.inverse, records)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\fields.py", line 102, in determine
+    return needle(*args)
+           ^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 253, in _inverse_datas
+    self._set_attachment_data(lambda attach: base64.b64decode(attach.datas or b''))
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 259, in _set_attachment_data
+    vals = self._get_datas_related_values(bin_data, attach.mimetype)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 282, in _get_datas_related_values
+    values['store_fname'] = self._file_write(data, values['checksum'])
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 137, in _file_write
+    fname, full_path = self._get_path(bin_value, checksum)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_attachment.py", line 117, in _get_path
+    os.makedirs(dirname, exist_ok=True)
+  File "<frozen os>", line 215, in makedirs
+  File "<frozen os>", line 225, in makedirs
+PermissionError: [WinError 5] Acceso denegado: 'c:\\program files\\odoo 17.0.20250124\\sessions\\filestore\\pf_picker_tests'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\service\server.py", line 1326, in preload_registries
+    registry = Registry.new(dbname, update_module=update_module)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\func.py", line 87, in locked
+    return func(inst, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\registry.py", line 110, in new
+    odoo.modules.load_modules(registry, force_demo, status, update_module)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 477, in load_modules
+    processed_modules += load_marked_modules(env, graph,
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 365, in load_marked_modules
+    loaded, processed = load_module_graph(
+                        ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 228, in load_module_graph
+    load_data(env, idref, mode, kind='data', package=package)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\modules\loading.py", line 72, in load_data
+    tools.convert_file(env, package.name, filename, idref, mode, noupdate, kind)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 627, in convert_file
+    convert_xml_import(env, module, fp, idref, mode, noupdate)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 693, in convert_xml_import
+    obj.parse(doc.getroot())
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 613, in parse
+    self._tag_root(de)
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 569, in _tag_root
+    raise ParseError('while parsing %s:%s, somewhere inside\n%s' % (
+odoo.tools.convert.ParseError: while parsing file:/c:/odoo_custom/printflow_gestion_inventario/views/printflow_inventory_health_views.xml:260, somewhere inside
+<record id="menu_printflow_health_app" model="ir.ui.menu">
+        <field name="name">Salud de Inventario</field>
+        <field name="web_icon">printflow_gestion_inventario,static/description/icon.png</field>
+        <field name="sequence">46</field>
+        <field name="parent_id" eval="False"/>
+    </record>
+2026-10-20 05:19:53,741 1860 INFO pf_picker_tests odoo.service.server: Initiating shutdown 
+2026-10-20 05:19:53,742 1860 INFO pf_picker_tests odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+2026-10-20 05:19:54,212 1860 INFO pf_picker_tests odoo.sql_db: ConnectionPool(used=0/count=0/max=64): Closed 1 connections  
+2026-10-20 05:20:48,903 9608 INFO ? odoo: Odoo version 17.0-20250124 
+2026-10-20 05:20:48,903 9608 INFO ? odoo: Using configuration file at C:\Program Files\Odoo 17.0.20250124\server\odoo.conf 
+2026-10-20 05:20:48,903 9608 INFO ? odoo: addons paths: ['C:\\Program Files\\Odoo 17.0.20250124\\server\\odoo\\addons', 'c:\\users\\user\\appdata\\local\\temp\\opencode\\odoo-test-data\\addons\\17.0', 'c:\\program files\\odoo 17.0.20250124\\server\\odoo\\addons', 'c:\\odoo_custom', 'c:\\odoo_custom\\odoo-venezuela-17.0'] 
+2026-10-20 05:20:48,903 9608 INFO ? odoo: database: prueba@localhost:5432 
+2026-10-20 05:20:49,093 9608 INFO ? odoo.addons.base.models.ir_actions_report: Will use the Wkhtmltopdf binary at C:\Program Files\Odoo 17.0.20250124\thirdparty\wkhtmltopdf.exe 
+2026-10-20 05:20:49,318 9608 WARNING ? odoo.modules.module: Missing `license` key in manifest for 'impreven_pagos_server', defaulting to LGPL-3 
+2026-10-20 05:20:49,353 9608 INFO ? odoo.service.server: HTTP service (werkzeug) running on DESKTOP-S46KLFN:8071 
+2026-10-20 05:20:49,394 9608 INFO pf_picker_tests odoo.modules.loading: loading 1 modules... 
+2026-10-20 05:20:49,400 9608 INFO pf_picker_tests odoo.modules.loading: 1 modules loaded in 0.01s, 0 queries (+0 extra) 
+2026-10-20 05:20:49,422 9608 INFO pf_picker_tests odoo.modules.loading: updating modules list 
+2026-10-20 05:20:49,425 9608 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.update_list on [] to user __system__ #1 via n/a 
+2026-10-20 05:20:50,982 9608 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.button_upgrade on ['PrintFlow: Gestión de Inventario'] to user __system__ #1 via n/a 
+2026-10-20 05:20:50,982 9608 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.update_list on ['PrintFlow: Gestión de Inventario'] to user __system__ #1 via n/a 
+2026-10-20 05:20:51,877 9608 INFO pf_picker_tests odoo.addons.base.models.ir_module: ALLOW access to module.button_install on [] to user __system__ #1 via n/a 
+2026-10-20 05:20:51,903 9608 INFO pf_picker_tests odoo.modules.loading: loading 109 modules... 
+2026-10-20 05:20:52,321 9608 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy: obteniendo sesion de Odoo para 'impreven 1.4' (intento 1/15)... 
+2026-10-20 05:20:52,423 9608 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy: sesion obtenida (1 cookies) 
+2026-10-20 05:20:52,423 9608 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy lanzado en hilo daemon 
+2026-10-20 05:20:52,435 9608 INFO ? odoo.addons.impreven_pagos_server.proxy: Proxy iniciado en 0.0.0.0:8079 -> 127.0.0.1:8070 [DB: impreven 1.4] 
+2026-10-20 05:20:53,253 9608 INFO pf_picker_tests odoo.modules.loading: Loading module printflow_gestion_inventario (108/109) 
+2026-10-20 05:20:53,425 9608 WARNING pf_picker_tests odoo.fields: Field mrp.technical.sheet.incident.wizard.incident_note: unknown parameter 'placeholder', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+2026-10-20 05:20:53,686 9608 WARNING pf_picker_tests odoo.fields: Field mrp.technical.sheet.incident.wizard.incident_note: unknown parameter 'placeholder', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+2026-10-20 05:20:53,734 9608 INFO pf_picker_tests odoo.modules.registry: module printflow_gestion_inventario: creating or updating database tables 
+2026-10-20 05:20:53,943 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (document_ref, name) of printflow.node.pending.line() have the same label: Documento. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,943 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (amount, existing_price) of mrp.quick.purchase.wizard() have the same label: Precio unitario. [Modules: x_product_dimensional_pricing and x_product_dimensional_pricing] 
+2026-10-20 05:20:53,943 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (amount, existing_price) of mrp.quick.purchase.wizard.line() have the same label: Precio unitario. [Modules: x_product_dimensional_pricing and x_product_dimensional_pricing] 
+2026-10-20 05:20:53,943 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (order_name, sale_order_id) of printflow.bom.archive.diagnostic.line() have the same label: Pedido. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (amount_total_display, amount_total) of printflow.order.diagnostic.wizard() have the same label: Total. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_sale_status, sale_status) of printflow.order.diagnostic.wizard() have the same label: Venta. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_stock_status, stock_status) of printflow.order.diagnostic.wizard() have the same label: Inventario. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_purchase_status, purchase_status) of printflow.order.diagnostic.wizard() have the same label: Compras. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_production_status, production_status) of printflow.order.diagnostic.wizard() have the same label: Fabricación. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_delivery_status, delivery_status) of printflow.order.diagnostic.wizard() have the same label: Entrega. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (focus_root_cause_node, root_cause_node) of printflow.order.diagnostic.wizard() have the same label: Nodo de quiebre. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (component_count, child_line_ids) of printflow.order.diagnostic.wizard.line() have the same label: Componentes. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (status_note, failure_summary) of printflow.order.diagnostic.wizard.line() have the same label: Qué pasa. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (pf_chain_label, node) of printflow.order.diagnostic.failure() have the same label: Nodo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_id, lot_name) of printflow.flow.lot.tray() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_name, lot_id) of printflow.flow.lot.candidate() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (candidate_count, candidate_ids) of printflow.flow.lot.assign.bulk() have the same label: Lotes con existencia. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,944 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (own_lot_id, own_lot_name) of printflow.flow.lot.picker() have the same label: Lote propio. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (current_lot_id, lot_name_actual) of printflow.flow.lot.picker() have the same label: Lote actual. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (own_lot_summary, own_lot_name) of printflow.flow.lot.picker() have the same label: Lote propio. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (current_lot_summary, lot_name_actual) of printflow.flow.lot.picker() have the same label: Lote actual. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_name, lot_id) of printflow.flow.lot.exception.authorize() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (finding_label, finding_code) of printflow.finding.exception.authorize.line() have the same label: Hallazgo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (finding_label, finding_code) of printflow.finding.exception.authorize() have the same label: Hallazgo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (component_name, component_id) of printflow.flow.supply.tray() have the same label: Insumo. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (location_name, location_id) of printflow.flow.supply.tray() have the same label: Almacén. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (state_label, state) of printflow.flow.supply.tray() have the same label: Estado. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (lot_name, lot_id) of printflow.flow.failure.tray.line() have the same label: Lote. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:53,945 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_model: Two fields (document_ref, document_name) of printflow.flow.failure.tray.line() have the same label: Documento. [Modules: printflow_gestion_inventario and printflow_gestion_inventario] 
+2026-10-20 05:20:54,243 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/security/ir.model.access.csv 
+2026-10-20 05:20:54,313 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/security/printflow_finding_exception_security.xml 
+2026-10-20 05:20:54,324 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_diagnostic_views.xml 
+2026-10-20 05:20:54,339 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 20,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,339 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-map-marker me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 25,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,340 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-list-ol me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 42,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,341 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-times-circle me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 46,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,341 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-triangle me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 50,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,341 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 56,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,341 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-triangle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 57,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,342 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 60,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,342 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-circle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 61,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,342 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 64,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,342 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-check-circle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_diagnostic_views.xml',
+ 'line': 65,
+ 'name': 'printflow.product.diagnostic.wizard.form',
+ 'view': ir.ui.view(2013,),
+ 'view.model': 'printflow.product.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,422 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_finding_views.xml 
+2026-10-20 05:20:54,438 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-list fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_finding_views.xml',
+ 'line': 9,
+ 'name': 'printflow.product.diagnostic.finding.form',
+ 'view': ir.ui.view(2014,),
+ 'view.model': 'printflow.product.diagnostic.finding',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_diagnostic_finding_view_form'} 
+2026-10-20 05:20:54,438 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_resolution_tray_views.xml 
+2026-10-20 05:20:54,473 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_bom_archive_diagnostic_views.xml 
+2026-10-20 05:20:54,481 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 15,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,482 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-cubes) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 19,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,482 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 31,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,482 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exclamation-triangle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 32,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,483 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 46,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,483 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-chain-broken me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 47,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,483 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 59,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,483 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-check-circle me-2 mt-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_bom_archive_diagnostic_views.xml',
+ 'line': 60,
+ 'name': 'printflow.bom.archive.diagnostic.wizard.form',
+ 'view': ir.ui.view(2018,),
+ 'view.model': 'printflow.bom.archive.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_bom_archive_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,485 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/mrp_bom_views.xml 
+2026-10-20 05:20:54,503 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/product_views.xml 
+2026-10-20 05:20:54,546 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_resolution_plan_views.xml 
+2026-10-20 05:20:54,558 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_diagnostic_wizard_views.xml 
+2026-10-20 05:20:54,577 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 64,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,578 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-eraser me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 65,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,578 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 75,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,578 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-user-o) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 81,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,579 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exchange me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 84,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,579 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-truck me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 88,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,580 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 170,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,580 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-link me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_diagnostic_wizard_views.xml',
+ 'line': 171,
+ 'name': 'printflow.order.diagnostic.wizard.form',
+ 'view': ir.ui.view(2023,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form'} 
+2026-10-20 05:20:54,581 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_diagnostic_levels_views.xml 
+2026-10-20 05:20:54,583 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_diagnostic_evidence_views.xml 
+2026-10-20 05:20:54,592 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_order_blocking_reservation_views.xml 
+2026-10-20 05:20:54,603 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_order_resolution_plan_views.xml 
+2026-10-20 05:20:54,612 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 63,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,612 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-eraser me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 64,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,612 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-stethoscope fa-lg text-primary) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 74,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,613 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-user-o) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 80,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,613 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-exchange me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 83,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,613 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-truck me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 87,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,614 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 169,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,615 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-link me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_order_resolution_plan_views.xml',
+ 'line': 170,
+ 'name': 'printflow.order.diagnostic.wizard.form.resolution',
+ 'view': ir.ui.view(2026,),
+ 'view.model': 'printflow.order.diagnostic.wizard',
+ 'view.parent': ir.ui.view(2023,),
+ 'xmlid': 'printflow_order_diagnostic_wizard_view_form_resolution'} 
+2026-10-20 05:20:54,616 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_product_flow_views.xml 
+2026-10-20 05:20:54,626 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_flow_views.xml',
+ 'line': 60,
+ 'name': 'printflow.product.flow.form',
+ 'view': ir.ui.view(2027,),
+ 'view.model': 'printflow.product.flow',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_flow_view_form'} 
+2026-10-20 05:20:54,626 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-link me-1) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_product_flow_views.xml',
+ 'line': 61,
+ 'name': 'printflow.product.flow.form',
+ 'view': ir.ui.view(2027,),
+ 'view.model': 'printflow.product.flow',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_product_flow_view_form'} 
+2026-10-20 05:20:54,627 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_quick_purchase_views.xml 
+2026-10-20 05:20:54,636 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_tray_views.xml 
+2026-10-20 05:20:54,669 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_picker_views.xml 
+2026-10-20 05:20:54,731 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_assign_bulk_views.xml 
+2026-10-20 05:20:54,743 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: An alert (class alert-*) must have an alert, alertdialog or status role or an alert-link class. Please use alert and alertdialog only for what expects to stop any activity to be read immediately.
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\wizard\\printflow_flow_lot_assign_bulk_views.xml',
+ 'line': 49,
+ 'name': 'printflow.flow.lot.assign.bulk.form',
+ 'view': ir.ui.view(2067,),
+ 'view.model': 'printflow.flow.lot.assign.bulk',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_flow_lot_assign_bulk_view_form'} 
+2026-10-20 05:20:54,745 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_assign_bulk_result_views.xml 
+2026-10-20 05:20:54,753 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_exception_authorize_views.xml 
+2026-10-20 05:20:54,753 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_lot_exception_authorize_bulk_views.xml 
+2026-10-20 05:20:54,762 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_finding_exception_authorize_views.xml 
+2026-10-20 05:20:54,783 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_lot_risk_confirm_views.xml 
+2026-10-20 05:20:54,795 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_supply_tray_views.xml 
+2026-10-20 05:20:54,817 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_inventory_health_views.xml 
+2026-10-20 05:20:54,913 9608 WARNING pf_picker_tests odoo.tools.convert: Skipping deletion for missing XML ID `'x_product_dimensional_pricing.menu_printflow_dashboards'` 
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 99, in lookup
+    r = d[key]
+        ~^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\func.py", line 87, in locked
+    return func(inst, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\lru.py", line 34, in __getitem__
+    a = self.d[obj]
+        ~~~~~~^^^^^
+KeyError: ('ir.model.data', <function IrModelData._xmlid_lookup at 0x000001A88F7379C0>, 'x_product_dimensional_pricing.menu_printflow_dashboards')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 268, in _tag_delete
+    records += records.browse(self.id_get(d_id))
+                              ^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 538, in id_get
+    res = self.model_id_get(id_str, raise_if_not_found)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 544, in model_id_get
+    return self.env['ir.model.data']._xmlid_to_res_model_res_id(id_str, raise_if_not_found=raise_if_not_found)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2205, in _xmlid_to_res_model_res_id
+    return self._xmlid_lookup(xmlid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 104, in lookup
+    value = d[key] = self.method(*args, **kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2198, in _xmlid_lookup
+    raise ValueError('External ID not found in the system: %s' % xmlid)
+ValueError: External ID not found in the system: x_product_dimensional_pricing.menu_printflow_dashboards
+2026-10-20 05:20:54,918 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/wizard/printflow_flow_failure_tray_views.xml 
+2026-10-20 05:20:54,958 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_node_pending_views.xml 
+2026-10-20 05:20:54,994 9608 WARNING pf_picker_tests odoo.tools.convert: Skipping deletion for missing XML ID `'x_product_dimensional_pricing.printflow_health_center_view_form'` 
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 99, in lookup
+    r = d[key]
+        ~^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\func.py", line 87, in locked
+    return func(inst, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\lru.py", line 34, in __getitem__
+    a = self.d[obj]
+        ~~~~~~^^^^^
+KeyError: ('ir.model.data', <function IrModelData._xmlid_lookup at 0x000001A88F7379C0>, 'x_product_dimensional_pricing.printflow_health_center_view_form')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 268, in _tag_delete
+    records += records.browse(self.id_get(d_id))
+                              ^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 538, in id_get
+    res = self.model_id_get(id_str, raise_if_not_found)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 544, in model_id_get
+    return self.env['ir.model.data']._xmlid_to_res_model_res_id(id_str, raise_if_not_found=raise_if_not_found)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2205, in _xmlid_to_res_model_res_id
+    return self._xmlid_lookup(xmlid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 104, in lookup
+    value = d[key] = self.method(*args, **kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2198, in _xmlid_lookup
+    raise ValueError('External ID not found in the system: %s' % xmlid)
+ValueError: External ID not found in the system: x_product_dimensional_pricing.printflow_health_center_view_form
+2026-10-20 05:20:54,995 9608 WARNING pf_picker_tests odoo.tools.convert: Skipping deletion for missing XML ID `'x_product_dimensional_pricing.printflow_health_center_view_list'` 
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 99, in lookup
+    r = d[key]
+        ~^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\func.py", line 87, in locked
+    return func(inst, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\lru.py", line 34, in __getitem__
+    a = self.d[obj]
+        ~~~~~~^^^^^
+KeyError: ('ir.model.data', <function IrModelData._xmlid_lookup at 0x000001A88F7379C0>, 'x_product_dimensional_pricing.printflow_health_center_view_list')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 268, in _tag_delete
+    records += records.browse(self.id_get(d_id))
+                              ^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 538, in id_get
+    res = self.model_id_get(id_str, raise_if_not_found)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 544, in model_id_get
+    return self.env['ir.model.data']._xmlid_to_res_model_res_id(id_str, raise_if_not_found=raise_if_not_found)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2205, in _xmlid_to_res_model_res_id
+    return self._xmlid_lookup(xmlid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 104, in lookup
+    value = d[key] = self.method(*args, **kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2198, in _xmlid_lookup
+    raise ValueError('External ID not found in the system: %s' % xmlid)
+ValueError: External ID not found in the system: x_product_dimensional_pricing.printflow_health_center_view_list
+2026-10-20 05:20:54,997 9608 WARNING pf_picker_tests odoo.tools.convert: Skipping deletion for missing XML ID `'x_product_dimensional_pricing.action_server_printflow_health_center'` 
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 99, in lookup
+    r = d[key]
+        ~^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\func.py", line 87, in locked
+    return func(inst, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\lru.py", line 34, in __getitem__
+    a = self.d[obj]
+        ~~~~~~^^^^^
+KeyError: ('ir.model.data', <function IrModelData._xmlid_lookup at 0x000001A88F7379C0>, 'x_product_dimensional_pricing.action_server_printflow_health_center')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 268, in _tag_delete
+    records += records.browse(self.id_get(d_id))
+                              ^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 538, in id_get
+    res = self.model_id_get(id_str, raise_if_not_found)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 544, in model_id_get
+    return self.env['ir.model.data']._xmlid_to_res_model_res_id(id_str, raise_if_not_found=raise_if_not_found)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2205, in _xmlid_to_res_model_res_id
+    return self._xmlid_lookup(xmlid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 104, in lookup
+    value = d[key] = self.method(*args, **kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2198, in _xmlid_lookup
+    raise ValueError('External ID not found in the system: %s' % xmlid)
+ValueError: External ID not found in the system: x_product_dimensional_pricing.action_server_printflow_health_center
+2026-10-20 05:20:54,998 9608 WARNING pf_picker_tests odoo.tools.convert: Skipping deletion for missing XML ID `'x_product_dimensional_pricing.menu_printflow_health_center'` 
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 99, in lookup
+    r = d[key]
+        ~^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\func.py", line 87, in locked
+    return func(inst, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\lru.py", line 34, in __getitem__
+    a = self.d[obj]
+        ~~~~~~^^^^^
+KeyError: ('ir.model.data', <function IrModelData._xmlid_lookup at 0x000001A88F7379C0>, 'x_product_dimensional_pricing.menu_printflow_health_center')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 268, in _tag_delete
+    records += records.browse(self.id_get(d_id))
+                              ^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 538, in id_get
+    res = self.model_id_get(id_str, raise_if_not_found)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\convert.py", line 544, in model_id_get
+    return self.env['ir.model.data']._xmlid_to_res_model_res_id(id_str, raise_if_not_found=raise_if_not_found)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2205, in _xmlid_to_res_model_res_id
+    return self._xmlid_lookup(xmlid)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\python\Lib\site-packages\decorator.py", line 232, in fun
+    return caller(func, *(extras + args), **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\tools\cache.py", line 104, in lookup
+    value = d[key] = self.method(*args, **kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Odoo 17.0.20250124\server\odoo\addons\base\models\ir_model.py", line 2198, in _xmlid_lookup
+    raise ValueError('External ID not found in the system: %s' % xmlid)
+ValueError: External ID not found in the system: x_product_dimensional_pricing.menu_printflow_health_center
+2026-10-20 05:20:54,999 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_inventory_catalog_views.xml 
+2026-10-20 05:20:55,017 9608 WARNING pf_picker_tests odoo.addons.base.models.ir_ui_view: A <i> with fa class (fa fa-clock-o) must have title in its tag, parents, descendants or have text
+View error context:
+{'file': 'c:\\odoo_custom\\printflow_gestion_inventario\\views\\printflow_inventory_catalog_views.xml',
+ 'line': 33,
+ 'name': 'printflow.inventory.catalog.kanban',
+ 'view': ir.ui.view(2041,),
+ 'view.model': 'printflow.inventory.catalog',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'printflow_inventory_catalog_view_kanban'} 
+2026-10-20 05:20:55,032 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_lot_exception_views.xml 
+2026-10-20 05:20:55,062 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/printflow_finding_exception_views.xml 
+2026-10-20 05:20:55,082 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/views/res_config_settings_views.xml 
+2026-10-20 05:20:55,163 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/data/ir_config_parameter_data.xml 
+2026-10-20 05:20:55,170 9608 INFO pf_picker_tests odoo.modules.loading: loading printflow_gestion_inventario/data/printflow_product_flow_server_action.xml 
+2026-10-20 05:20:55,322 9608 INFO pf_picker_tests odoo.modules.loading: Module printflow_gestion_inventario loaded in 2.07s, 1312 queries (+1312 other) 
+2026-10-20 05:20:55,322 9608 INFO pf_picker_tests odoo.modules.loading: 109 modules loaded in 3.42s, 1312 queries (+1312 extra) 
+2026-10-20 05:20:55,463 9608 WARNING pf_picker_tests odoo.fields: Field mrp.technical.sheet.incident.wizard.incident_note: unknown parameter 'placeholder', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+2026-10-20 05:20:55,648 9608 WARNING pf_picker_tests odoo.fields: Field mrp.technical.sheet.incident.wizard.incident_note: unknown parameter 'placeholder', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+2026-10-20 05:20:57,130 9608 INFO pf_picker_tests odoo.modules.loading: Modules loaded. 
+2026-10-20 05:20:57,153 9608 INFO pf_picker_tests odoo.modules.registry: Registry loaded in 7.810s 
+2026-10-20 05:20:57,153 9608 INFO pf_picker_tests odoo.service.server: Starting post tests 
+2026-10-20 05:20:57,243 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_actions_whitelist ... 
+2026-10-20 05:20:57,523 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_document_fields_populated_on_row ... 
+2026-10-20 05:20:57,807 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_fallback_quant_without_lines ... 
+2026-10-20 05:20:57,882 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_healthy_delivery_not_listed ... 
+2026-10-20 05:20:58,077 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_release_document_row_fixture ... 
+2026-10-20 05:20:58,303 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6197] 
+2026-10-20 05:20:58,374 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_rows_per_document_with_fields ... 
+2026-10-20 05:20:58,542 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_view_document_opens_picking_form ... 
+2026-10-20 05:20:58,726 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_by_document: Starting TestProductFlowFailureByDocument.test_view_document_opens_production_form ... 
+2026-10-20 05:20:59,008 9608 WARNING pf_picker_tests odoo.fields: Field mrp.technical.sheet.incident.wizard.incident_note: unknown parameter 'placeholder', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+2026-10-20 05:20:59,064 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 1 checked, 0 removed 
+2026-10-20 05:20:59,152 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca1_solution_with_product_opens_guided_tray ... 
+2026-10-20 05:20:59,363 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca1_solution_without_product_keeps_classic_tray ... 
+2026-10-20 05:20:59,533 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca2_action_run_reassign_executes_existing_saneo ... 
+2026-10-20 05:20:59,740 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6207, 6208] 
+2026-10-20 05:20:59,803 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca2_action_run_unknown_key_closes ... 
+2026-10-20 05:20:59,973 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca2_guided_tray_has_lot_rows_and_actions ... 
+2026-10-20 05:21:00,136 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca3_orphan_guided_tray_still_opens ... 
+2026-10-20 05:21:00,234 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca3_registry_keeps_previous_cases ... 
+2026-10-20 05:21:00,236 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca4_external_motor_reused_untouched ... 
+2026-10-20 05:21:00,236 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_lot_no_stock: Starting TestProductFlowFailureLotNoStock.test_ca4_new_file_has_no_raw_sql ... 
+2026-10-20 05:21:00,239 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 0 checked, 0 removed 
+2026-10-20 05:21:00,293 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_compensated_negative_quant_is_not_anomaly ... 
+2026-10-20 05:21:00,370 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_flow_solution_opens_guided_tray ... 
+2026-10-20 05:21:00,452 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_hanging_reservation_is_marked ... 
+2026-10-20 05:21:00,523 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_negative_quant_falls_to_negative_cause_and_adjust ... 
+2026-10-20 05:21:00,635 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_negative_quant_without_reservation_is_not_hanging ... 
+2026-10-20 05:21:00,705 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_order_solution_opens_guided_tray ... 
+2026-10-20 05:21:00,941 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_tray_execute_saneo_reassigns_by_rules ... 
+2026-10-20 05:21:01,282 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6214] 
+2026-10-20 05:21:01,370 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_over_reservation: Starting TestProductFlowFailureOverReservation.test_tray_populates_with_hanging_quant_and_actions ... 
+2026-10-20 05:21:01,448 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 0 checked, 0 removed 
+2026-10-20 05:21:01,452 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_permissions_split: Starting TestProductFlowFailurePermissionsSplit.test_operator_can_reconcile ... 
+2026-10-20 05:21:01,722 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_permissions_split: Starting TestProductFlowFailurePermissionsSplit.test_surface_no_longer_offers_reassign ... 
+2026-10-20 05:21:01,819 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 1 checked, 1 removed 
+2026-10-20 05:21:01,867 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_feedback: Starting TestProductFlowFailureTrayFeedback.test_cleanup_all_guard_only_for_reservation_fault ... 
+2026-10-20 05:21:01,932 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_feedback: Starting TestProductFlowFailureTrayFeedback.test_cleanup_all_reopens_the_tray_clean ... 
+2026-10-20 05:21:02,149 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6216, 6217] 
+2026-10-20 05:21:02,213 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted printflow.flow.failure.tray records with IDs: [172] 
+2026-10-20 05:21:02,213 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_feedback: Starting TestProductFlowFailureTrayFeedback.test_cleanup_all_warns_when_nothing_could_be_released ... 
+2026-10-20 05:21:02,304 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted printflow.flow.failure.tray records with IDs: [174] 
+2026-10-20 05:21:02,304 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_feedback: Starting TestProductFlowFailureTrayFeedback.test_document_ref_points_to_the_document ... 
+2026-10-20 05:21:02,549 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_feedback: Starting TestProductFlowFailureTrayFeedback.test_row_action_keeps_the_tray_open ... 
+2026-10-20 05:21:02,752 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6220] 
+2026-10-20 05:21:02,803 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted printflow.flow.failure.tray records with IDs: [178] 
+2026-10-20 05:21:02,831 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_feedback: Starting TestProductFlowFailureTrayFeedback.test_row_action_without_host_keeps_the_old_backup ... 
+2026-10-20 05:21:03,023 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6222] 
+2026-10-20 05:21:03,082 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 0 checked, 0 removed 
+2026-10-20 05:21:03,082 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_generic: Starting TestProductFlowFailureTrayGeneric.test_action_run_execute_reconciles ... 
+2026-10-20 05:21:03,203 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_generic: Starting TestProductFlowFailureTrayGeneric.test_action_run_whitelist ... 
+2026-10-20 05:21:03,303 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_generic: Starting TestProductFlowFailureTrayGeneric.test_populate_from_evidence ... 
+2026-10-20 05:21:03,399 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_failure_tray_generic: Starting TestProductFlowFailureTrayGeneric.test_wiring_prefers_guided_tray_with_product ... 
+2026-10-20 05:21:03,503 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 0 checked, 0 removed 
+2026-10-20 05:21:03,545 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_over_reservation_scoped: Starting TestProductFlowOverReservationScoped.test_ca4_engine_method_still_exists_and_intact ... 
+2026-10-20 05:21:03,549 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_over_reservation_scoped: Starting TestProductFlowOverReservationScoped.test_ca4_scoped_method_returns_engine_contract ... 
+2026-10-20 05:21:03,613 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_over_reservation_scoped: Starting TestProductFlowOverReservationScoped.test_ca4_scoped_saneo_preserves_healthy_delivery ... 
+2026-10-20 05:21:03,812 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6225] 
+2026-10-20 05:21:03,858 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_over_reservation_scoped: Starting TestProductFlowOverReservationScoped.test_ca4_scoped_saneo_through_tray_action ... 
+2026-10-20 05:21:04,075 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6227] 
+2026-10-20 05:21:04,133 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_over_reservation_scoped: Starting TestProductFlowOverReservationScoped.test_ca4_scoped_source_has_no_raw_sql ... 
+2026-10-20 05:21:04,136 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 0 checked, 0 removed 
+2026-10-20 05:21:04,173 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_stock_remedy_h060: Starting TestProductFlowStockRemedyH060.test_h060_empty_picking_guard_contract ... 
+2026-10-20 05:21:04,233 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_stock_remedy_h060: Starting TestProductFlowStockRemedyH060.test_h060_of_without_picking_no_usererror ... 
+2026-10-20 05:21:04,429 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6228] 
+2026-10-20 05:21:04,481 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_stock_remedy_h060: Starting TestProductFlowStockRemedyH060.test_h060_picked_hanging_line_is_released ... 
+2026-10-20 05:21:04,658 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6229] 
+2026-10-20 05:21:04,712 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_stock_remedy_h060: Starting TestProductFlowStockRemedyH060.test_h060_remedy_source_has_no_raw_sql ... 
+2026-10-20 05:21:04,713 9608 INFO pf_picker_tests odoo.addons.printflow_gestion_inventario.tests.test_product_flow_stock_remedy_h060: Starting TestProductFlowStockRemedyH060.test_h060_scope_lines_touches_only_that_document ... 
+2026-10-20 05:21:04,898 9608 INFO pf_picker_tests odoo.models.unlink: User #1 deleted stock.move.line records with IDs: [6230] 
+2026-10-20 05:21:04,949 9608 INFO pf_picker_tests odoo.addons.base.models.ir_attachment: filestore gc 0 checked, 0 removed 
+2026-10-20 05:21:04,949 9608 INFO pf_picker_tests odoo.service.server: 47 post-tests in 7.80s, 8176 queries 
+2026-10-20 05:21:04,950 9608 INFO pf_picker_tests odoo.tests.stats: printflow_gestion_inventario: 63 tests 7.76s 8176 queries 
+2026-10-20 05:21:04,950 9608 INFO pf_picker_tests odoo.tests.result: 0 failed, 0 error(s) of 47 tests when loading database 'pf_picker_tests' 
+2026-10-20 05:21:04,950 9608 INFO pf_picker_tests odoo.service.server: Initiating shutdown 
+2026-10-20 05:21:04,950 9608 INFO pf_picker_tests odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+2026-10-20 05:21:05,154 9608 INFO pf_picker_tests odoo.sql_db: ConnectionPool(used=0/count=0/max=64): Closed 1 connections  

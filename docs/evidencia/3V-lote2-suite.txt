@@ -1,0 +1,80 @@
+# §3.V · Lote 2 (T4–T5 [motor]) — Evidencia: suite completa y despliegue
+
+**Fecha:** 2026-10-20 · **Módulo:** `printflow_gestion_inventario` (ruta `C:\odoo_custom\printflow_gestion_inventario`)
+**BD de test (NUNCA la de producción):** `pf_picker_tests` · `--data-dir` temporal · `--no-http`
+**Motor `x_product_dimensional_pricing`:** SOLO LECTURA (huella abajo, idéntica).
+**Cero escrituras de datos reales:** todo corre en `TransactionCase` (rollback) sobre la BD de test.
+
+## 1) T4 · CA-7 (H-067) — la etiqueta dice el LOTE
+
+```text
+odoo-bin -c "C:\Program Files\Odoo 17.0.20250124\server\odoo.conf"
+  -d pf_picker_tests -u printflow_gestion_inventario
+  --data-dir <temp> --no-http --max-cron-threads=0 --test-enable
+  --test-tags /printflow_gestion_inventario:TestProductFlowLotExceptionLotTarget
+  --logfile <temp>/pf_3v_lote2_t4.log --stop-after-init
+EXIT=0 ⇒ 0 failed, 0 error(s) of 7 tests
+```
+
+`test_ca7_lot_exception_label_is_the_lot_name` (nuevo, 7.º de la clase):
+
+| Punto | Qué prueba |
+|---|---|
+| (a) fila | la fila de `lot_generic` pinta el DOCUMENTO (`Movimiento WH/OUT/…`) pero `_pf_formal_label()` devuelve el **nombre del lote** |
+| (b) por fila | `action_authorize_finding()` ⇒ `wizard.target_label == lot.name` y la excepción guardada (`target_model='stock.lot'`) queda con `target_label == lot.name` |
+| (c) en bloque | `action_authorize_selected_findings()` ⇒ la línea del wizard de bloque lleva `target_label == lot.name` (y `target_id == lot.id`) |
+| (d) sin regresión | un hallazgo de MOVIMIENTO (`lot_missing` → `stock.move`) conserva su rótulo de documento (`Movimiento …`) |
+
+## 2) T5 · Suite COMPLETA del módulo (delta 0)
+
+```text
+odoo-bin ... -d pf_picker_tests -u printflow_gestion_inventario --data-dir <temp>
+  --no-http --max-cron-threads=0 --test-enable
+  --test-tags /printflow_gestion_inventario --stop-after-init
+EXIT=1 ⇒ 7 failed, 1 error(s) of 718 tests
+odoo.tests.stats: printflow_gestion_inventario: 1004 tests 158.87s 163440 queries
+```
+
+**Los 8 rojos son EXACTAMENTE los del baseline conocido (B1/H-002 · H-035 · H-038) ⇒ delta 0:**
+
+| # | Test | Baseline |
+|---|---|---|
+| 1 | `test_diagnostic_delivery_orders.TestDiagnosticDeliveryOrders.test_bulk_validate_mixed_success_and_failure` | B1 (línea 200) |
+| 2 | `test_node_pending_enumeration.TestNodePendingEnumeration.test_limit_is_per_node` | B1 (H-002) |
+| 3 | `test_phase7_board_permissions.TestPhase7BoardPermissions.test_bulk_validate_runs_without_sudo` | B1 (línea 162) |
+| 4 | `test_product_flow_failure_negative_reserved.TestProductFlowFailureNegativeReserved.test_negative_reserved_rises_to_…` | H-035 (línea 97) |
+| 5 | `test_product_flow_lot_picker_ux.TestProductFlowLotPickerUx.test_own_and_current_lots_are_listed_and_labeled` | B1/H-002 (línea 143) |
+| 6 | `test_product_flow_lot_tray_ux.TestProductFlowLotTrayUx.test_tray_exposes_lot_quantities` | H-035/H-038 (línea 149) |
+| 7 | `test_product_flow_lot_tray_ux.TestProductFlowLotTrayUx.test_tree_exposes_document_and_conditional_quantities` | B1 (línea 218, conteo textual del arch) |
+| 8 | `test_product_flow_solution_single.TestProductFlowSolutionSingle.test_lot_row_args_include_origin_product_id` | B1 (ERROR, línea 139) |
+
+**Ningún rojo nuevo.** El conteo sube de 701 → 718 por los tests ADITIVOS de los lotes previos
+(§3.U Lote 1: 6 · §3.U Lote 2: 4 · §3.V Lote 1: 6 · §3.V Lote 2: 1); el conjunto de fallos no cambia.
+
+**El lote entero verde:** `TestProductFlowLotExceptionLotTarget` **7/7**.
+
+> Nota de entorno (no de código): los `KeyError/ValueError` de
+> `x_product_dimensional_pricing.menu_printflow_dashboards` y compañía son ruido de la BD de test
+> (el módulo **motor** no está instalado ahí); viajan en el baseline y no marcan ningún test.
+
+## 3) Huella del motor (SOLO LECTURA)
+
+```text
+SHA-256(x_product_dimensional_pricing/models/stock_move.py) =
+  22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B   (12.690 B)
+git -C x_product_dimensional_pricing status --porcelain | wc -l = 143
+```
+
+Idénticas al valor documentado en §3.U.5/§3.V `22293F95…106B` (12.690 B) · 143 ⇒ **motor sin tocar**.
+
+## 4) Despliegue (botón del proyecto)
+
+```text
+schtasks /run /tn "Odoo8071-printflow_gestion_inventario"
+Resultado ............ OK · tarea LastTaskResult = 0
+-u printflow_gestion_inventario ⇒ código de salida 0
+PID <antes> → <después> · puerto 8071 ESCUCHANDO
+write_date del módulo = <UTC>
+```
+
+Ver la línea consolidada en la **bitácora del `CONTEXT.md` (Sección 4)**.

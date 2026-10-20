@@ -1,0 +1,62 @@
+# §3.V · Lote 1 (T1–T3 [motor]) — Evidencia de pruebas
+
+**Fecha:** 2026-10-20 · **Módulo:** `printflow_gestion_inventario` (ruta `C:\odoo_custom\printflow_gestion_inventario`)
+**BD de test (NUNCA la de producción):** `pf_picker_tests` · `--data-dir` temporal · `--no-http`
+**Motor `x_product_dimensional_pricing`:** SOLO LECTURA (huella abajo, idéntica).
+**Cero escrituras de datos reales:** todo corre en `TransactionCase` (rollback) sobre la BD de test.
+
+## 1) Tests NUEVOS del lote (CA-1…CA-6)
+
+```text
+odoo-bin -c "C:\Program Files\Odoo 17.0.20250124\server\odoo.conf"
+  -d pf_picker_tests -u printflow_gestion_inventario
+  --data-dir <temp> --no-http --max-cron-threads=0 --test-enable
+  --test-tags /printflow_gestion_inventario:TestProductFlowLotExceptionLotTarget
+  --logfile <temp>/pf_3v_t1.log --stop-after-init
+EXIT=0 ⇒ 0 failed, 0 error(s) of 6 tests
+```
+
+| Test | CA | Qué prueba |
+|---|---|---|
+| `test_ca1_one_lot_authorized_keeps_lot_generic` | CA-1 | 2 lotes genéricos (2 movimientos, UdM `m`): autorizar UNO deja el estado en `lot_generic` (queda el otro lote) |
+| `test_ca2_both_lots_authorized_reaches_lot_ok` | CA-2 | autorizar los DOS (wizard en bloque desde la selección) ⇒ estado `lot_ok` y la bandeja queda vacía |
+| `test_ca3_lot_wizard_creates_formal_exception_on_lot` | CA-3 | el wizard "Autorizar lote" crea UNA excepción `lot_generic` con `target_model='stock.lot'`/`target_id=<lote>` **y conserva** `printflow.lot.exception` |
+| `test_ca4_move_targeted_exception_does_not_suppress_lot` | CA-4 | una excepción `lot_generic` con `target_model='stock.move'` (las 4 históricas del DTF) **no** aparece en `_pf_suppressed_targets('lot_generic')` y no apaga el hallazgo |
+| `test_ca5_tray_and_formal_path_point_to_lot` | CA-5 | la fila (que pinta `stock.move`) resuelve su destino FORMAL al LOTE; la vía formal por fila y la de bloque apuntan al lote |
+| `test_ca6_other_findings_untouched` | CA-6 | `lot_missing` (→ `stock.move`, sin lote, autorizable) y `lot_unassigned_finished` (→ `mrp.production`) sin regresión |
+
+## 2) Vector de regresión (clases vecinas: bandeja + excepciones + wizards)
+
+```text
+--test-tags TestFindingExceptionFormal, TestProductFlowLotTray,
+            TestTrayAuthorizeCurrentLot, TestProductFlowLotTrayAuthorizeBulk,
+            TestProductFlowLotTrayDocument, TestProductFlowLotTrayUx,
+            TestProductFlowLotTrayOrders
+EXIT=1 ⇒ 2 failed, 0 error(s) of 60 tests
+```
+
+**Los 2 rojos son PRE-EXISTENTES y AJENOS a este lote** (Python no los toca):
+
+1. `TestProductFlowLotTrayUx.test_tray_exposes_lot_quantities` (L149): `used_lot_available 3.0 != 5.0`
+   — la reserva del albarán del propio test suma 2 u sobre el quant (comportamiento de reserva, no de autorización);
+   está en el baseline como rojo del área de lotes (B1/H-002 · H-035/H-038).
+2. `TestProductFlowLotTrayUx.test_tree_exposes_document_and_conditional_quantities` (L218): `4 != 3`
+   — cuenta textual sobre el **arch de la vista** (`invisible="lot_action_mode != 'assign'"`); este lote **no
+   modifica ninguna vista** ⇒ ajeno por construcción.
+
+`TestFindingExceptionFormal` (13/13) verde: el acote por `target_model` de `_pf_suppressed_targets` no rompe
+ninguno de sus CA (incluye el `lot_missing` → `stock.move`).
+
+> Nota de entorno: una corrida previa **sin** `--data-dir` escribible dio 10 `error(s)` de
+> `PermissionError [WinError 5]` al escribir avatares en `C:\Program Files\...\sessions\filestore`;
+> son de entorno (filestore no escribible), desaparecen con `--data-dir` en temp (corrida de arriba).
+
+## 3) Huella del motor (SOLO LECTURA)
+
+```text
+SHA-256(x_product_dimensional_pricing/models/stock_move.py) =
+  22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B   (12.690 B)
+git -C x_product_dimensional_pricing status --porcelain | wc -l = 143
+```
+
+Idénticas al valor documentado en §3.U.5/§3.V `22293F95…106B` (12.690 B) · 143 ⇒ **motor sin tocar**.

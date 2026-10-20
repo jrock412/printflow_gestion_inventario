@@ -135,6 +135,10 @@
             <form string="Bandeja de fallas" create="false" edit="false"
                   delete="false">
                 <header>
+                    <button name="action_cleanup_all" type="object"
+                            string="SANEAR TODAS" class="btn-primary"
+                            invisible="code != 'data_anomaly'"
+                            title="Soltar y re-reservar TODAS las reservas colgadas de este producto"/>
                     <button name="action_close" type="object" string="Cerrar"
                             class="btn-secondary" icon="fa-times"/>
                 </header>
@@ -157,83 +161,22 @@
                         <field name="steps" nolabel="1"/>
                     </group>
                     <separator string="Evidencias"/>
-                    <field name="line_ids">
-                        <kanban create="false" delete="false" edit="false"
-                                quick_create="false" group_create="false">
-                            <field name="sequence"/>
-                            <field name="primary_label"/>
-                            <field name="res_model"/>
-                            <field name="res_id"/>
-                            <field name="product_id"/>
-                            <field name="lot_name"/>
-                            <field name="location_id"/>
-                            <field name="support_label"/>
-                            <field name="document_name"/>
-                            <field name="document_kind"/>
-                            <field name="partner_name"/>
-                            <field name="picked"/>
-                            <field name="reserved_by"/>
-                            <templates>
-                                <t t-name="kanban-box">
-                                    <div class="oe_kanban_card">
-                                        <div class="o_kanban_record_top">
-                                            <strong class="o_kanban_record_title">
-                                                <field name="lot_name"/>
-                                            </strong>
-                                            <span class="ms-2"><field name="location_id"/></span>
-                                        </div>
-                                        <div class="o_kanban_record_body">
-                                            <div t-if="record.document_name.raw_value or record.document_kind.raw_value or record.picked.raw_value">
-                                                <strong t-if="record.document_name.raw_value"><field name="document_name"/></strong>
-                                                <span t-if="record.document_kind.raw_value"
-                                                      class="badge text-bg-light border ms-1"><field name="document_kind"/></span>
-                                                <span t-if="record.picked.raw_value"
-                                                      class="badge text-bg-light border text-warning ms-1">En marcha</span>
-                                            </div>
-                                            <div t-if="record.partner_name.raw_value">
-                                                <span class="text-muted me-1">Socio</span>
-                                                <field name="partner_name"/>
-                                            </div>
-                                            <div t-if="record.reserved_by.raw_value">
-                                                <span class="text-muted me-1">Reservado por</span>
-                                                <field name="reserved_by"/>
-                                            </div>
-                                            <div>
-                                                <span class="text-muted me-1">Físico</span>
-                                                <field name="physical_qty"/>
-                                                <span class="text-muted me-1 ms-2">Reservado</span>
-                                                <field name="reserved_qty"/>
-                                            </div>
-                                            <div>
-                                                <span class="text-muted me-1">Respaldo</span>
-                                                <field name="support_qty"/>
-                                                <span class="text-muted me-1 ms-2">Delta</span>
-                                                <field name="delta_qty"/>
-                                            </div>
-                                            <div><field name="support_label"/></div>
-                                        </div>
-                                        <div class="o_kanban_record_bottom">
-                                            <div class="oe_kanban_bottom_left">
-                                                <button name="action_run_primary"
-                                                        type="object"
-                                                        class="btn btn-primary"
-                                                        invisible="not primary_label"
-                                                        title="Ejecutar la acción principal de esta evidencia">
-                                                    <span t-esc="record.primary_label.value"/>
-                                                </button>
-                                            </div>
-                                            <div class="oe_kanban_bottom_right">
-                                                <button name="action_open"
-                                                        type="object"
-                                                        class="btn btn-link"
-                                                        icon="fa-wrench"
-                                                        title="Ver el detalle y las acciones de navegación"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </t>
-                            </templates>
-                        </kanban>
+                    <field name="line_ids" nolabel="1">
+                        <tree string="Evidencias" create="false" delete="false"
+                              edit="false" decoration-danger="delta_qty &lt; 0">
+                            <field name="location_id" string="Ubicación"/>
+                            <field name="lot_name" string="Lote"/>
+                            <field name="physical_qty" string="A mano"/>
+                            <field name="reserved_qty" string="Reservado"/>
+                            <field name="delta_qty" string="Libre"/>
+                            <field name="document_ref" string="Documento"/>
+                            <field name="line_qty" string="Cantidad"/>
+                            <field name="primary_label" column_invisible="True"/>
+                            <button name="action_run_primary" type="object"
+                                    icon="fa-play" class="btn-link"
+                                    invisible="not primary_label"
+                                    title="Ejecutar la acción principal de esta fila (soltar la reserva del documento)"/>
+                        </tree>
                     </field>
                 </sheet>
             </form>

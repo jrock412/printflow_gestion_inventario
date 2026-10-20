@@ -108,6 +108,10 @@ from . import test_product_flow_failure_by_document
 # re-reserva por OF sin albarán + tachón de la línea colgada soltado BEFORE de
 # liberar + acote POR DOCUMENTO (`lines=...`) con el MISMO contrato de retorno.
 from . import test_product_flow_stock_remedy_h060
+# §3.U · Lote 1 (T1–T3): el documento como REFERENCIA nativa (`document_ref`),
+# el refresco en el sitio (H-062: la bandeja se repuebla y se reabre con el
+# resumen) y el saneo de TODAS (`action_cleanup_all`) con su guardia de código.
+from . import test_product_flow_failure_tray_feedback
 # Lote reservado SIN existencia (`lot_no_stock`) en la bandeja GUIADA: el
 # "Solucionar" con el producto explícito abre `printflow.flow.failure.tray`
 # (una fila por lote + saneo `reassign`); la clásica sigue como fallback
@@ -209,3 +213,11 @@ from . import test_stock_remedy
 # Excepciones FORMALES genéricas (F1–F5): modelo + registry + adaptador de
 # filtrado + wizard + inventario intacto (CA-1..CA-12).
 from . import test_finding_exception_formal
+# §3.V · Lote 1 (T1–T3 · H-065/H-066): la autorización del LOTE apunta al LOTE
+# (`_pf_formal_target` por registry) y `_pf_suppressed_targets` se acota por
+# `target_model` (CA-1..CA-6).
+from . import test_product_flow_lot_exception_lot_target
+# §3.U · Lote 2 (T4 · `[pantalla]`): el contrato de la BANDEJA DE FALLAS en el
+# arch de la vista — la lista de 7 columnas (sin kanban), el documento como
+# `document_ref`, el ▶ por fila y el masivo "SANEAR TODAS" solo de `data_anomaly`.
+from . import test_product_flow_failure_tray_view_arch

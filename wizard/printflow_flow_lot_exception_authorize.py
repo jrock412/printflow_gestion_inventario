@@ -46,6 +46,11 @@ class PrintflowFlowLotExceptionAuthorize(models.TransientModel):
     source_model = fields.Char(string='Modelo origen', readonly=True)
     source_id = fields.Integer(string='Id origen', readonly=True)
     source_label = fields.Char(string='Documento origen', readonly=True)
+    finding_code = fields.Char(
+        string='Hallazgo', readonly=True,
+        help='Clave del hallazgo formal de la fila (registry de GI). Si su '
+             'destino declarado es el LOTE, al confirmar se autoriza TAMBIÉN ese '
+             'hallazgo sobre el lote, además de la excepción de mezcla.')
 
     def action_authorize(self):
         """Autoriza el lote (guardia + motivo + escritura en el motor)."""
@@ -58,6 +63,15 @@ class PrintflowFlowLotExceptionAuthorize(models.TransientModel):
         self.env['printflow.stock.health']._pf_authorize_lot_exception(
             self.lot_id,
             reason=self.reason,
+            source_model=self.source_model or '',
+            source_id=self.source_id or 0,
+            source_label=self.source_label or '')
+        # ADEMÁS: el hallazgo FORMAL del lote (genérico/sin existencia/mezcla) se
+        # autoriza sobre el LOTE, que es lo que declara el registry. Sin esto, la
+        # escritura de arriba solo apaga la MEZCLA en el motor y el nodo Entrega
+        # sigue pintado (H-065).
+        self.env['printflow.finding.exception']._pf_authorize_lot_finding(
+            self.finding_code, self.lot_id, reason=self.reason,
             source_model=self.source_model or '',
             source_id=self.source_id or 0,
             source_label=self.source_label or '')

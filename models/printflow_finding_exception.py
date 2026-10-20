@@ -142,15 +142,26 @@ class PrintflowFindingException(models.Model):
     def _pf_suppressed_targets(self, finding_code, company=None):
         """Set de ids de destino autorizados para un hallazgo (UNA consulta).
 
+        Se acota por el ``target_model`` que declara el registry: los ids de
+        ``stock.move`` y de ``stock.lot`` son secuencias distintas, así que sin
+        este filtro un id de movimiento apagaría el lote equivocado (H-066).
+
         La búsqueda por defecto excluye las archivadas (``active = False``), así
         que solo devuelve las autorizaciones VIGENTES.
+
         :rtype: set[int]
         """
         if not finding_code:
             return set()
+        target_model = self.env[
+            'printflow.finding.exception.registry']._pf_target_model(
+                finding_code)
+        if not target_model:
+            return set()
         company = company or self.env.company
         exceptions = self.sudo().search([
             ('finding_code', '=', finding_code),
+            ('target_model', '=', target_model),
             ('company_id', '=', company.id),
         ])
         return set(exceptions.mapped('target_id'))
@@ -223,6 +234,34 @@ class PrintflowFindingException(models.Model):
             record = Exception.create(vals)
         record._pf_post_audit_note()
         return record
+
+    @api.model
+    def _pf_authorize_lot_finding(self, finding_code, lot, reason=None,
+                                  source_model=None, source_id=None,
+                                  source_label=None):
+        """Autoriza el hallazgo FORMAL de un lote, si su destino es el lote.
+
+        Es la puerta ÚNICA de la vía "Autorizar lote" (la del operador). El
+        registry declara que ``lot_generic`` / ``lot_no_stock`` / ``lot_mixed``
+        viven sobre ``stock.lot``; sin esta autorización, la escritura en
+        ``printflow.lot.exception`` (que apaga la MEZCLA en el motor) NO apaga el
+        hallazgo y el nodo Entrega sigue pintado (H-065).
+
+        Si no hay código, no hay lote, o el destino declarado NO es el lote, no
+        hace nada: el comportamiento anterior queda intacto.
+
+        :return: la excepción formal (recordset vacío si no aplica).
+        """
+        if not (finding_code and lot):
+            return self.browse()
+        lot.ensure_one()
+        Registry = self.env['printflow.finding.exception.registry']
+        if Registry._pf_target_model(finding_code) != 'stock.lot':
+            return self.browse()
+        return self._pf_authorize(
+            finding_code, 'stock.lot', lot.id, reason=reason,
+            target_label=lot.name, lot_id=lot.id, source_model=source_model,
+            source_id=source_id, source_label=source_label)
 
     def _pf_post_audit_note(self):
         """Bitácora SECUNDARIA en el documento afectado (best effort).

@@ -11,6 +11,8 @@ Diseño (OOP):
   * ``_pf_populate(host, code, product)``: puebla la bandeja bajo demanda;
   * ``action_run(line_id, action_key)``: despacha por LISTA BLANCA la acción de
     la fila (solo ``execute``/``navigate``/``close`` declarados por la falla);
+  * ``action_cleanup_all()``: "SANEAR TODAS" — delega en el saneo que ya existe
+    y REABRE la bandeja con el resumen del después;
   * las acciones con EFECTO las ejecuta la falla (``_pf_fault_execute``); las de
     ``navigate`` las resuelve aquí; ``close`` cierra.
 
@@ -29,6 +31,7 @@ Contrato::
 """
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 # Umbral de comparación de cantidades (mismo que el motor y el tablero).
 _EPS = 1e-6
@@ -159,7 +162,54 @@ class PrintflowFlowFailureTray(models.TransientModel):
         # kind == 'execute': la ejecuta la falla (con su guardia interna).
         message = self._pf_failure()._pf_fault_execute(
             action.key, self._pf_build_ctx(line))
-        return self._pf_notify(message or _('Acción aplicada.'))
+        return self._pf_refresh(message or _('Acción aplicada.'))
+
+    def action_cleanup_all(self):
+        """Sanea (suelta + re-reserva) TODAS las reservas colgadas del producto.
+
+        Método PÚBLICO (botón de cabecera "SANEAR TODAS", solo en ``data_anomaly``).
+        NO reinventa el saneo: llama a la MISMA puerta que la fila de salud
+        (``printflow.stock.health._pf_cleanup_products``) detrás del MISMO guardia
+        (``_pf_assert_can_clean``). Después REPUEBLA la bandeja en el sitio y
+        devuelve el resumen en palabras de cuántos documentos quedan colgados
+        (H-062: el operador no pierde la ventana ni rearma el camino).
+        """
+        self.ensure_one()
+        if self.code != 'data_anomaly':
+            # La vista esconde el botón (3 fallas comparten pantalla): el método
+            # NO se fía de la vista y revalida el código.
+            raise UserError(_('Este saneo es de la reserva colgada.'))
+        self.env['printflow.stock.remedy']._pf_assert_can_clean()
+        before = len(self.line_ids)
+        result = self.env['printflow.stock.health']._pf_cleanup_products(
+            self.product_id)
+        tray, next_action = self._pf_reopen()
+        if not tray:
+            # Sin host no hay bandeja que repoblar: cierra con el aviso de hoy.
+            cleaned = result['pickings']
+            return self._pf_notify(
+                _('Saneamiento: %(pickings)s albarán(es) re-asignado(s).')
+                % {'pickings': cleaned},
+                'success' if cleaned else 'warning',
+                {'type': 'ir.actions.act_window_close'})
+        left = len(tray.line_ids)
+        if left == 0:
+            message = _(
+                'Reserva colgada saneada: el producto quedó limpio '
+                '(0 documentos colgados; %(pickings)s albarán(es) '
+                're-asignado(s)).') % {'pickings': result['pickings']}
+            ntype = 'success'
+        elif left < before:
+            message = _(
+                'Saneo parcial: quedan %(left)s documento(s) colgado(s) de '
+                '%(before)s.') % {'left': left, 'before': before}
+            ntype = 'warning'
+        else:
+            message = _(
+                'No se pudo soltar ninguna reserva: siguen %(left)s '
+                'documento(s) colgados.') % {'left': left}
+            ntype = 'warning'
+        return self._pf_notify(message, ntype, next_action)
 
     def action_close(self):
         """Cierra la bandeja (acción de cabecera)."""
@@ -285,8 +335,48 @@ class PrintflowFlowFailureTray(models.TransientModel):
             return 'mrp.production', production.id
         return '', 0
 
-    def _pf_notify(self, message, ntype='success'):
-        """Notificación estándar del resultado de una acción con efecto."""
+    def _pf_reopen(self):
+        """REPUEBLA la bandeja en el sitio y devuelve ``(bandeja, acción)``.
+
+        Captura ``code``/``product`` ANTES de llamar a ``_pf_populate`` porque
+        ese poblado BORRA la bandeja vieja (es el dueño transitorio) y con ella
+        ``self``. Sin host de origen no hay diagrama que repoblar: devuelve
+        ``(vacío, None)`` y el llamador cae al comportamiento de siempre.
+        """
+        self.ensure_one()
+        host = self._pf_host()
+        if host is None:
+            return self.env['printflow.flow.failure.tray'], None
+        code = self.code
+        product = self.product_id
+        tray = self.env['printflow.flow.failure.tray']._pf_populate(
+            host, code, product)
+        return tray, {
+            'type': 'ir.actions.act_window',
+            'name': _('Bandeja de fallas'),
+            'res_model': 'printflow.flow.failure.tray',
+            'res_id': tray.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def _pf_refresh(self, message, ntype='success'):
+        """Avisa el resultado y REABRE la bandeja repoblada (H-062).
+
+        Antes la bandeja se cerraba tras accionar: el operador quedaba sin el
+        "después" ni el resumen. Ahora el aviso ENCADENA la bandeja nueva; si no
+        hay host que repoblar, se conserva el respaldo de siempre (``reload``).
+        """
+        self.ensure_one()
+        _tray, next_action = self._pf_reopen()
+        return self._pf_notify(message, ntype, next_action)
+
+    def _pf_notify(self, message, ntype='success', next_action=None):
+        """Notificación estándar del resultado de una acción con efecto.
+
+        ``next_action`` es lo que el cliente ejecuta al cerrar el aviso; por
+        defecto RECARGA la vista (comportamiento histórico de la casa).
+        """
         self.ensure_one()
         return {
             'type': 'ir.actions.client',
@@ -294,6 +384,7 @@ class PrintflowFlowFailureTray(models.TransientModel):
             'params': {
                 'type': ntype, 'title': _('PrintFlow'), 'message': message,
                 'sticky': False,
-                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+                'next': next_action or {'type': 'ir.actions.client',
+                                        'tag': 'reload'},
             },
         }

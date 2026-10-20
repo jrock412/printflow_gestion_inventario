@@ -15,6 +15,14 @@ quedan vacíos en las fallas que no los rellenan.
 
 from odoo import _, api, fields, models
 
+# Documentos que una fila de evidencia puede ENLAZAR. Fuente única del campo
+# ``document_ref`` y de su compute (no se desincronizan).
+DOCUMENT_REF_SELECTION = [
+    ('stock.picking', 'Albarán'),
+    ('mrp.production', 'Orden de fabricación'),
+]
+_DOCUMENT_MODELS = tuple(model for model, _label in DOCUMENT_REF_SELECTION)
+
 
 class PrintflowFlowFailureTrayLine(models.TransientModel):
     """Una fila de evidencia de la falla (solo lectura)."""
@@ -64,6 +72,11 @@ class PrintflowFlowFailureTrayLine(models.TransientModel):
              "'mrp.production'.")
     document_res_id = fields.Integer(
         string='Id del documento', readonly=True)
+    document_ref = fields.Reference(
+        selection=DOCUMENT_REF_SELECTION,
+        string='Documento', compute='_compute_document_ref',
+        help='Enlace al documento que sostiene la reserva (se abre al '
+             'pincharlo).')
     document_kind = fields.Selection(
         [('picking', 'Entrega'),
          ('production', 'Orden de fabricación'),
@@ -105,6 +118,21 @@ class PrintflowFlowFailureTrayLine(models.TransientModel):
         for line in self:
             action = line.action_ids.filtered(lambda act: act.primary)[:1]
             line.primary_label = action.label if action else False
+
+    @api.depends('document_model', 'document_res_id')
+    def _compute_document_ref(self):
+        """Referencia NATIVA al documento de la fila (para abrirlo al pincharlo).
+
+        Solo hay enlace cuando la fila apunta a un albarán u OF real: las filas
+        de respaldo (``document_kind='quant'``, sin movimiento activo) quedan
+        SIN enlace y su ficha dice "sin documento".
+        """
+        for line in self:
+            model = line.document_model
+            if model in _DOCUMENT_MODELS and line.document_res_id:
+                line.document_ref = f'{model},{line.document_res_id}'
+            else:
+                line.document_ref = False
 
     def action_open(self):
         """Abre ESTA fila en un diálogo (para ver el detalle y las acciones).
