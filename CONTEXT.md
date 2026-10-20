@@ -17,7 +17,7 @@
   → **Los agentes de lote la APRIETAN al cerrar su turno** (no piden nada al dueño) y dejan la evidencia
   (log del botón + PID + `write_date`). *Si algún día no existe, el lote cierra declarando "el módulo quedó sin
   recargar".*
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **14 abiertos** · **37** `resuelto` · **8** `descartado` · **0 en tarea** (**59** filas) (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **14 abiertos** · **39** `resuelto` · **8** `descartado` · **0 en tarea** (**61** filas) (compañero del CONTEXT.md; ver skill §2.2).
   **18/10 (MIRE EN VIVO del modal, navegador del Analista):** se ABREN **H-050** (los `<div>` de prosa dentro de
   `<group col="1">` se pintan en **columna vertical**, una palabra por línea ⇒ **ilegible**; **PREENSA** anciano)
   y **H-051** (la cabecera "Selección" se **apila en una columna**: rótulos partidos + **mitad derecha vacía**;
@@ -177,6 +177,18 @@
 - **Autorización: SÍ (2026-10-19 · EJECUCIÓN)** — el dueño: *"sí comienza con el plan"* ⇒ **Lote 1 (T0–T2)** y
   **Lote 2 (T3–T5)** corridos por `odoo-dev` en **sesiones nuevas**, reinicio+`-u` en el 8071 hecho, y una
   pasada del `odoo-verificador` al final: **`cumple`**.
+- ✅ **TAREA CERRADA (19/10 · GRANDE · §3.S · `cumple`):** **la ventana "Solucionar" de la "Reserva colgada" se hizo
+  guiada POR DOCUMENTO** (fila por `stock.move.line` dueña + acción por fila + columna "reservado por") y el
+  saneo ACOTADO aprendió los casos raros (**H-060**): OF sin albarán + guardia de recordset vacío + liberación
+  de la línea colgada marcada `picked` (tachón POR LÍNEA, aviso y bitácora). **2 lotes:** Lote 1 (T1–T3) `[motor]`
+  `odoo-dev` — suite **701 ⇒ delta 0** · tests nuevos 13 · huella del motor intacta; Lote 2 (T4) `[pantalla]`
+  `odoo-vistas` — vista +34 líneas aditivas. **Verificador: `no cumple` solo por mirada pendiente → mirada en
+  vivo del Analista con foto (CA-1 completo: WH/MO/01562 · OF · En marcha · reservado por · 0,200/0,040) ⇒
+  cierre `cumple` (precedente §3.P).** Foto: `docs/evidencia/3S-live-ca1-tray-dtf.png`. **Cierres:** H-060
+  `resuelto` · H-059 promoción parcial (CT-01/02/03 en `CONEJERAS.md`) · **H-061** nuevo (`abierto`, cosmético:
+  rótulos pegados en la tarjeta — el dueño decide).
+- (Cierre conversado) Autorización: **SÍ (2026-10-19)** — el dueño: *"creo que sí ahora"* (Opción A + no-gos
+  como listados) ⇒ compuerta §4.0 superada; ciclo corrido completo sin más consultas.
 - (Historial · turno previo) Tarea Activa: **NINGUNA — §3.O CERRADA y ratificada (`cumple`)** (ver el CIERRE, abajo). Antes: **§3.O — plan COMPLETO** escrito y **revisado** en **§3.7 (9 tareas · 4 lotes)**.
   **Lote 1 (T1–T3) `[motor]` ✅ CERRADO** (dev: T1–T3 `[x]`; 41/41 candados de bandeja/pending/**picker** verdes).
   **Lote 2 (T4–T5) `[pantalla]` ✅ CERRADO** (vistas: 1 solo form por unidad, form del reparto borrado, botón
@@ -396,6 +408,545 @@ flowchart TD
 | 🟠 Naranja | TRANSMISIÓN | Adaptadores/hooks (`_inherit` + `super()`) que propagan | Sí, con cuidado |
 | 🟢 Verde | RUEDAS | Piezas intercambiables (widgets, vistas, options) | Sí, es lo normal |
 | ✏️ Aristas | CABLES | Conectores (acciones, xmlids, `doActionButton`) | Sí, al re-cablear |
+
+## 3.T (ANEXO · TAREA CERRADA 19/10 · TRIVIAL · camino rápido) — separar los rótulos pegados en la tarjeta del tray (H-061)
+
+> **Fuente:** odoo-impreven / "Ciber Estudios 2015 RESTAURADA" (PRUEBA) · **Ruta:** `C:\odoo_custom\printflow_gestion_inventario`
+> **Tamaño: TRIVIAL** (1 archivo, sin modelos) → camino rápido: Analista especifica y delega directo a `odoo-vistas`.
+> **Estado:** ✅ **TAREA CERRADA (19/10)** — `odoo-vistas` aplicó solo clases de margen (`me-1` en 4 rótulos +
+  `<span class="ms-2 text-muted">` para `location_id`, 1 archivo, aditivo; tomo de yapa "Socio" y "Reservado"
+  con el mismo defecto) · reinicio+`-u` OK (log `20261019-231234` · PID 10096→9756 · `write_date`
+  **2026-10-20 03:12:47** UTC) · **mirada en vivo del Analista con foto** (`docs/evidencia/3T-live-ca1-rotulos-separados.png`,
+  tray id 9): los rótulos separados y los datos del CA-1 intactos — **H-061 → `resuelto`**. **Turno: NINGUNO.**
+
+- **Dónde:** `wizard/printflow_flow_failure_tray_views.xml` — SOLO la tarjeta kanban del tray (bloque
+  `o_kanban_record_body`, L185-213).
+- **Qué (4 puntos, medidos en la foto `docs/evidencia/3S-live-ca1-tray-dtf.png`):**
+  1. **L180-183** — el título `(sin lote)`/lote y la ubicación (`location_id`) quedan pegados:
+     separarlos (mismo renglón con margen, o ubicación en renglón propio atenuado — el agente de
+     pantalla decide con el patrón de casa).
+  2. **L198** — rótulo "Reservado por" sin margen final → pegado a `reserved_by`.
+  3. **L202** — rótulo "Físico" sin margen final → pegado a `physical_qty`.
+  4. **L208/L210** — "Respaldo" y "Delta" sin margen final → pegados a sus valores.
+- **Patrón de casa YA en el archivo:** `ms-2` (L204) y `ms-1` (L189) — la cura es solo clases de
+  margen (`me-1`/`ms-1`) o renglón propio; **NO cambiar textos**, NO tocar campos, NO tocar tree/form.
+- **Definición de terminado:** (1) foto nueva del CA-1 con los 4 puntos separados; (2) cambio
+  100 % aditivo (clases/divs), cero campos nuevos ni movidos; (3) XML en verde + reinicio+`-u` con
+  evidencia (botón del proyecto); (4) H-061 → `resuelto` con la foto nueva.
+- **Restricciones duras:** solo mirar en la verificación (NUNCA accionar "Liberar y re-reservar");
+  sin tocar modelos ni lógica; motor intocable (huella).
+- **Conejeras:** n/a (puro espaciado XML; la vista compartida NO se endurece con `column_invisible`).
+- **Se retira:** nada. · **Fuera de alcance:** rótulos del tree/form, otras fallas, cualquier lógica.
+
+**Bitácora — 2026-10-19 · `odoo-vistas` (camino rápido, sesión NUEVA) · T hecha = `[x]`**
+
+- **Qué se tocó:** SOLO la tarjeta kanban del tray
+  (`wizard/printflow_flow_failure_tray_views.xml`, bloque `o_kanban_record_body` y fila del título),
+  **100 % aditivo — clases de margen, ni un texto ni un campo movido:**
+  1. **Título/ubicación (L180-183):** la ubicación quedó en el mismo renglón del título pero
+     **separada y atenuada**: `<span class="ms-2 text-muted">` alrededor del `<field name="location_id"/>`
+     (opción "mismo renglón con margen" del contrato, con el patrón `text-muted` de los rótulos de la tarjeta).
+  2. **"Reservado por" (L198):** `me-1` ⇒ separado de `reserved_by`.
+  3. **"Físico" (L202):** `me-1` ⇒ separado de `physical_qty`.
+  4. **"Respaldo" y "Delta" (L208/L210):** `me-1` (conservando su `ms-2` de separación entre pares).
+- **Definida como misma cura anexa (declarada, no nueva tarea):** los rótulos **"Socio"** y
+  **"Reservado"** de la misMA tarjeta padecían EL MISMO defecto (rótulo pegado al valor) y
+  recibieron la MISMA clase (`me-1`); se midieron en el mismo bloque del contrato (4 puntos de la
+  foto = 3 de ellos y el par Respaldo/Delta), quedando "Socio"/"Reservado" también separados —
+  mismo defecto, mismo archivo, mismo bloque ⇒ no es nuevo alcance.
+- **No se tocó:** árbol/form del tray, action/menú, modelos, lógica, `release_document`,
+  `primary_label` del botón — nada fuera de la tarjeta. Motor intacto. **Cero escrituras de datos.**
+- **Verificación del JS/XML:** XML bien formado **OK** (parse de `xml.dom.minidom`).
+- **Verificación en vivo: PENDIENTE** — la foto nueva del CA-1 (punto 1 del DO) la saca el
+  `odoo-verificador`/Analista con navegador propio (receta `VIEW-LIVE-CHECK.md`), **solo lectura,
+  NUNCA accionar "Liberar y re-reservar"**; el servidor ya está ACTUALIZADO (abajo) ⇒ no hay paso
+  manual previo.
+- **Reinicio+módulo:** botón **`Odoo8071-printflow_gestion_inventario`** ⇒
+  `20261019-231234-printflow_gestion_inventario.log` · **tarea=0** (`LastTaskResult 0`) · `-u`
+  código de salida **0** · **PID 10096 → 9756** · puerto **8071 OK** · `write_date` del módulo
+  **2026-10-20 03:12:47 UTC = 23:12:47 local** (dentro de la ventana del `-u`) ⇒ **OK**.
+- **Queda pendiente:** verificación en vivo (foto del CA-1) ⇒ luego el **Analista** pasa **H-061**
+  a `resuelto` con esa foto. 
+
+---
+
+## 3.S (ANEXO · TAREA CERRADA 19/10 · veredicto del Verificador `cumple` con la mirada del Analista) — "Reserva colgada" guiada POR DOCUMENTO (+ cura de fondo H-060)
+
+> **Fuente:** odoo-impreven / "Ciber Estudios 2015 RESTAURADA" (PRUEBA) · **Ruta:** `C:\odoo_custom\printflow_gestion_inventario`
+> **Tamaño: GRANDE** (toca el flujo de inventario/reservado: cadena completa §4.2).
+> **Turno:** Odoo Analista (apertura · paso 1 · Fase A cerrada) ✅ → **Odoo Planificador** (paso 2) ✅ → Analista (paso 3: plan APROBADO) ✅ → Lote 1 `[motor]` (`odoo-dev` · T1–T3) ✅ → Lote 2 `[pantalla]` (`odoo-vistas` · T4) ✅ → **`odoo-verificador`** (1 pasada) ✅ → Analista (mirada en vivo + cierres) ✅. **Turno: NINGUNO.**
+> **Estado:** ✅ **TAREA CERRADA (2026-10-19)** — veredicto `cumple` (veredicto del Verificador + mirada en vivo del Analista con foto: `docs/evidencia/3S-live-ca1-tray-dtf.png`; precedent §3.P). **Pendiente del dueño:** H-061 (cosmético, decide su cura) y sanear el quant real del DTF con el botón.
+
+### 3.S.1 Dónde
+- Motor/superficie: `printflow.flow.failure.registry` → `printflow.flow.failure.over.reservation` (﻿`data_anomaly`),
+  la bandeja guiada `printflow.flow.failure.tray(.line)` y el saneo `models/printflow_stock_remedy.py`
+  (`_pf_release_hanging_lot_reservation`). Todo vive en `printflow_gestion_inventario`.
+- La pantalla empieza: diagrama de producto (`printflow.product.flow`) → nodo Inventario → "Solucionar".
+
+### 3.S.2 Qué (el objeto concreto)
+- Migrar las EVIDENCIAS de la falla `data_anomaly` de nivel **quant** a nivel **DOCUMENTO**:
+  UNA fila por `stock.move.line` activa que sostiene la reserva colgada del quant, con:
+  documento (albarán u OF, nombre + tipo), partner (si entrega), lote actual (o "sin lote"),
+  cantidad de la línea, delta colgado del quant (físico−reservado), flag `picked`, "reservado por"
+  (`create_uid` + fecha de la move.line).
+- Acción por fila (lista blanca del tray ya existente): `release_document` (liberar + re-reservar
+  SOLO esa línea), `view_document` (navegar), `leave` (cerrar). Mensajes por fila honestos.
+- Cura de fondo **H-060** en `_pf_release_hanging_lot_reservation`: guardia de recordset vacío
+  (`if pickings:`), re-reserva de destino por **OF/sin albarán** (primitiva nativa de `stock.move`),
+  y liberación válida de una línea colgada marcada `picked` (con aviso + bitácora; físicamente
+  imposible que esté "en mano" porque no hay stock que respalde).
+- Campos nuevos en la línea del tray: documento-equivalentes para pintar las columnas nuevas.
+- Vista del wizard del tray: mostrar las columnas nuevas (`[pantalla]`).
+
+### 3.S.3 Objetivo acotado
+- El operador VE quién sostiene la reserva colgada, decide fila por fila y sanea sin UserError;
+  tras el saneo el quant queda con delta 0,00 y no se le quita reserva a ningún otro pedido.
+- El remate nativo y las primitivas NO cambian de esencia: solo se acota al documento elegido.
+
+### 3.S.4 Definición de terminado (CA verificables)
+- **CA-1:** en la BD de PRUEBA (producto DTF 13797), la ventana del `data_anomaly` muestra la fila
+  de la **WH/MO/01562** con 0,200 colgado / 0,040 físico / sin lote / `picked` / "reservado por".
+- **CA-2:** accionar "Liberar y re-reservar" de esa fila NO lanza UserError; el quant 4763 queda
+  `reserved_quantity ≤ quantity` (delta ≥ 0) y la MO queda con su porción real re-reservada o
+  el aviso honesto si no había stock.
+- **CA-3:** una entrega SANA (lote con existencia) de la misma ubicación **NO** se des-asigna
+  (regresión de la lección H-022/CA-4; con test).
+- **CA-4:** el botón grande "Liberar y re-reservar" (one-click del diagrama) y el "Sanear reservas
+  colgadas" ya no revientan ante OF sin albarán (guardia + destino OF).
+- **CA-5:** tests nuevos + regresión del H-022 en verde; suite sin deltas rojos nuevos.
+- **CA-6:** reinicio + `-u` en el 8071 con evidencia (skill `reiniciar-servidor-odoo`).
+
+### 3.S.5 Restricciones duras + Conejeras
+1. Solo primitivas nativas: `_do_unreserve` / `_update_reserved_quantity` / `action_assign`;
+   jamás `move_line.unlink()` para "reparar", sin `cr.execute`, sin forzar estados.
+2. Soltar **únicamente** la(s) línea(s) del documento de la fila (mira acotada). El saneo global
+   del motor (`_pf_cleanup_product_reservations`) queda intacto salvo la cura H-060 compartida.
+3. **Conejeras** (sello en `CONEJERAS.md`):
+   - **CT-01 `⚠️ VERIFICADA`** — NO escribir `picked=False` a nivel de `stock.move` para liberar
+     una sola línea: el inverse arrastra TODAS las líneas del move. Evidencia:
+     `stock/models/stock_move.py:214-216` · `move.move_line_ids.picked = move.picked`.
+     Libre a nivel de `stock.move.line` concreto.
+   - **CT-02 `⚠️ VERIFICADA`** — el compute de `picked` SOLO escribe `True` (nadie lo baja solo):
+     `stock_move.py:208-212` · `if move.state == 'done' or any(ml.picked for ml in move.move_line_ids):` /
+     `stock_move_line.py:109-113`. Asumir que "se desmarca solo" está mal: todo desenredo es escritura explícita.
+   - **CT-03 `❓ PREVISIÓN`** — en tests con rollback intermediário, la caché del ORM puede
+     conservar valores antiguos de `picked`/reservas: si un test toca release y re-leer, usar
+     `invalidate_recordset` o transacciones del framework. Condicional (sin cita: se COMPRUEBA, no se obedece).
+
+### 3.S.6 Qué se retira
+- El mensaje/contrato del archivo viejo `data_anomaly` de resumen continua (sin tocar).
+- NADA más se retira: es cambio aditivo sobre la falla ya mapeada (`registry:57` sin tocar).
+
+### 3.S.7 Fuera de alcance (NO-GOS firmados por el dueño)
+- ❌ NO tocar el Corredor 1 (playbooks de comprar/fabricar/ajustar ni textos del panel del nodo).
+- ❌ NO tocar la falla del LOTE GENÉRICO del DTF (`lot_generic`, bandeja de lotes/picker/bulk) — tarea aparte.
+- ❌ NO tocar la detección de la falla (`_pf_fault_detect`) ni las existencias nativas (quants views del core).
+- ❌ NO reformar el botón grande "Sanear reservas colgadas": solo la cura de fondo H-060 compartida (CA-4).
+- ❌ Datos: NO tocar los quants/líneas del DTF a mano (el operador los sana desde el botón nuevo).
+
+### 3.S.8 Plan de ejecución por LOTES — ✅ **ESCRITO por el Odoo Planificador (19/10/2026)**
+
+> **Plan COMPLETO · 4 tareas · 2 lotes** (máx. 3 por lote, **sin mezclar dueños**: T1–T3 son
+> `[motor]` y T4 es `[pantalla]`). Cada lote es **UNA sesión NUEVA** del agente que dice la etiqueta
+> (nunca se retoma la anterior): marca `- [x]` **solo lo hecho**, deja su **bitácora** para el lote
+> siguiente y al cerrar **aprieta el botón del proyecto** (`Odoo8071-printflow_gestion_inventario`,
+> skill `reiniciar-servidor-odoo` ⇒ **reinicia + `-u`**) y deja la evidencia (log + PID + `write_date`).
+> ➡️ **PRIMER LOTE A EJECUTAR: Lote 1 (T1–T3) · `[motor]` → `odoo-dev`.**
+> **Fuente (solo lectura):** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**).
+> **Ruta donde SÍ se escribe:** `C:\odoo_custom\printflow_gestion_inventario`.
+> **Motor `C:\odoo_custom\x_product_dimensional_pricing`: SOLO LECTURA — sin diff (H-038).** La prueba
+> del "sin diff" es una **HUELLA** (lea §3.R.7): `SHA-256(models/stock_move.py)` = `22293F95…106B`
+> (12.690 bytes) + `git status --porcelain` = **143**, medidos **al abrir y al cerrar cada lote** ⇒
+> **idénticos**. **`git diff` queda PROHIBIDO como evidencia: falso verde** (el archivo está sin versionar).
+> ⚠️ **Mirada en vivo (T4):** en la BD de PRUEBA se permite **ABRIR** la ventana (el "Solucionar" que
+> puebla la bandeja es transitorio*) y **NUNCA accionar botones con efecto** (`Liberar y re-reservar`
+> sanea datos reales ⇒ **PROHIBIDO en vivo**; eso lo verifica la SUITE). Receta:
+> `VIEW-LIVE-CHECK.md` (skill `odoo-view-design`). *Los registros del `printflow.flow.failure.tray` son
+> `TransientModel` (se van solos; no son datos de negocio).
+> **Restricciones duras (§3.S.5) — vigentes en las CUATRO tareas:** *no forzar ni reemplazar flujos
+> nativos; código sí, datos no*; `_inherit` + `super()`; **solo primitivas nativas**:
+> `_do_unreserve` / `_update_reserved_quantity`(vía `_pf_unreserve_reservation`/`_pf_reserve_lot` del
+> motor, que son los envueltos de casa que YA respaldan cada línea contra su quant) / `action_assign` /
+> `_action_assign`; **jamás `move_line.unlink()` ni `move_line.unlink()+create()`, ni `cr.execute`, ni
+> `quant.write` de `reserved_quantity`, ni forzar estados**. El tachón (`picked`) se mueve con
+> **escritura EXPLÍCITA a nivel de la `stock.move.line` CONCRETA** (CT-01: libre; a nivel de `stock.move`
+> el inverse arrastraría TODAS las líneas) y **nunca** dejado "en medio" (CT-02: el compute solo pone
+> `True`; nadie lo baja solo). Liberar con el tachón puesto es **no-op** (core L804/L816 y motor L69-74)
+> ⇒ **primer destildar la línea, después liberar**. Soltar **únicamente** lo del DOCUMENTO de la fila
+> (mira acotada): el saneo GLOBAL queda intacto salvo la cura H-060 compartida. **Convenciones OCA**
+> (§2.5): métodos `_pf_<algo>`, un archivo por objeto, docstrings que no prometan lo retirado, imports
+> en 6 bloques. **Rojos YA EXISTENTES (ajenos — NO perseguir):** el baseline de la suite **688 tests ⇒
+> 8 rojos** (el MISMO conjunto de §3.R Lote 2: B1/**H-002** · **H-035** · **H-038**); suite con
+> `--test-tags /printflow_gestion_inventario`, **salida a archivo** por lote (skill §3.7).
+
+**Orden por dependencia (por qué así):** **T1** pone la **cura H-060** en el saneo ACOTADO (el
+    `release_document` de T2 y el **botón grande** la consumen: sana el fondo para TODOS) → **T2**
+    reescribe la falla (evidencias por documento + acciones + ejecución por fila) y **delega** en el
+    contrato de T1 (con el parámetro de acotado que T1 define) → **T3** crea los **campos** que T2 ya
+    rellena en sus filas y la rama de navegación `view_document` (una acción declarada en T2 no puede
+    abrir un campo que no existe) → **T4** **pinta** las columnas que T3 crea (vista sin campo = error).
+    Ninguna tarea depende de una posterior.
+
+**Qué se RETIRA (sustitución, no acumulación — se borra en el lote que lo cambia, sin residuo):**
+(a) en `_pf_fault_actions` de la falla: las claves **`release_reservation`** y **`view_quant`** →
+**T2** (quedan `release_document` / `view_document` / `leave`). La **rama `view_quant` del
+`_pf_nav_action` de la bandeja se CONSERVA** (es de la superficie genérica y otras fallas la pueden
+usar; solo sale de ESTA falla);
+(b) el dict de evidencias **por quant** de `_pf_fault_evidences` → **T2** (queda por **documento**,
+con el *fallback* por quant sin línea activa — no quedan los dos caminos);
+(c) la llamada **`pickings.action_assign()` a secas** del saneo (L93-97) → **T1**: queda la **guardia**
+(`if pickings:`) + el **fallback OF** (moves sin albarán → `_action_assign()`); el `import _` del
+remedy se conserva si sigue usándose (si no, se borra — nada de residuo).
+**SE CONSERVA (no es residuo):** el mensaje/contrato del resumen `data_anomaly` (§3.S.6, sin tocar),
+el **registry** (`models/printflow_flow_failure_registry.py` — §3.S.6: sin tocar), el motor
+`pf_quant_is_hanging_reservation`, el **botón grande "Sanear reservas colgadas"** (NO-GO: no se
+reforma) con `_pf_cleanup_product_reservations` (motor) intacto, la **guardia**
+`_pf_assert_can_clean`, el **contrato de retorno del saneo EXACTO**
+(`{'cleaned_pickings', 'still_negative'}` — candado `test_ca4_scoped_method_returns_engine_contract`)
+y las **dos fallas hermanas** (`lot_orphan_reservation` / `lot_no_stock`) con sus vistas intactas.
+
+**Orden de creación de archivos:**
+(1) `tests/test_product_flow_stock_remedy_h060.py` (**NUEVO** · T1) + `tests/__init__.py` (+1 import);
+(2) `models/printflow_stock_remedy.py` (**MOD** · T1);
+(3) `tests/test_product_flow_failure_by_document.py` (**NUEVO** · T2) · `models/
+printflow_flow_failure_over_reservation.py` (**MOD** · T2) · adaptar
+`tests/test_product_flow_failure_over_reservation.py` (2 tests) y
+`tests/test_product_flow_over_reservation_scoped.py` (1 test: la acción de la bandeja) + `tests/
+__init__.py` (+1 import);
+(4) `wizard/printflow_flow_failure_tray_line.py` (**MOD** · T3) · `wizard/printflow_flow_failure_tray.py`
+(**MOD** · T3, solo la rama de navegación);
+(5) `wizard/printflow_flow_failure_tray_views.xml` (**MOD** · T4). **Sin** cambios en el manifest: no
+se crean modelos nuevos (los campos van en el `TransientModel` existente y los tests se registran en
+`tests/__init__.py`), **ni** `security/` (no hay modelo nuevo que llevar a ACL). Evidencia:
+`docs/evidencia/3S-lote1-tests.txt` y `docs/evidencia/3S-lote2-tests.txt` (+ fotos de T4 si aplica,
+`docs/evidencia/3S-live-*.png`).
+
+---
+
+#### Lote 1 (T1–T3) — `[motor]` → `odoo-dev` · La cura H-060 del saneo, la falla por DOCUMENTO y los campos del tray (PRIMERO A EJECUTAR)
+
+- [x] **T1 — Cura H-060 en el saneo ACOTADO (+ acotado por documento aditivo)** · `[motor]` →
+  `odoo-dev` (`models/printflow_stock_remedy.py::_pf_release_hanging_lot_reservation`, L40-116).
+  - **(a) Guardia del recordset vacío (el crash de H-060):** sustituir la llamada **`pickings.action_assign()`**
+    a secas por `if pickings: pickings.action_assign()` + el **fallback de destino por OF/sin
+    albarán**: `orphan_moves = targets.move_id.filtered(lambda m: not m.picking_id and m.state not
+    in ('done', 'cancel'))` y `if orphan_moves: orphan_moves._action_assign()` — la primitiva
+    **NATIVA** de `stock.move` (la que el motor mismo consume en su override); re-reserva el
+    **DESTINO** según las reglas de Odoo. Esto **elimina el UserError** core
+    *"Nothing to check the availability for."* (`stock_picking.py` L942-943) que hoy mata el botón
+    ante una reserva colgada de consumo de MO (move **71315** / **WH/MO/01562**).
+  - **(b) Liberación válida de la línea colgada marcada `picked`:** ANTES de
+    `_pf_unreserve_reservation()`, para las líneas objetivo con tachón:
+    `targets.filtered('picked').write({'picked': False})` — escritura **EXPLÍCITA y a nivel de la
+    LÍNEA concreta** (CT-01: libre; **prohibido** `move.picked = False`, el inverse arrastra TODO).
+    El tachón es imposible aquí: la línea está **sin lote y su quant no tiene stock que respalde**
+    (no hay nada "en mano" que devolver) ⇒ **NO baile de §3.R**: no se devuelve. Dejar **aviso +
+    bitácora** (H-060): el cuerpo del `message_post` por documento y el `_pf_log` del producto
+    mencionan *"la línea estaba marcada 'en marcha' y se soltó porque la reserva no tenía stock*
+    *que la respaldara"*. Si al destildar la línea el **movimiento** queda con OTRAS unidades
+    `picked` (CT-02: el compute del move solo suma), `_pf_unreserve_reservation` lo salta ⇒ ese
+    move queda sin liberar y el mensaje de la fila lo dice honesto (T2; riesgo residual declarado).
+  - **(c) Acotado POR DOCUMENTO, aditivo:** parámetro nuevo `lines=None`: con `None` el método se
+    comporta **EXACTAMENTE como hoy** (el botón grande y cualquier llamador quedan igual — NO-GO);
+    con una *lista/recordset* de `stock.move.line`, los `targets` se acotan a
+    `move_lines.filtered(lambda l: l in lines & _hits_hanging(l))` — nunca suelta más que el
+    documento de la fila (§3.S.6). El resto del método queda igual (el mismo bucle del quant-respaldo
+    lo hace la primitiva del motor por dentro).
+  - **(d) Contrato de retorno SIN CAMBIOS:** exactamente
+    `{'cleaned_pickings': …, 'still_negative': bool}` — es **candado**
+    (`test_ca4_scoped_method_returns_engine_contract` **exige** el dict EXACTO). El mensaje por fila lo
+    re-mide la falla en T2; el saneo NO devuelve textos de UI.
+  - **Bitácora por OF:** el `message_post` de hoy va al `picking`; para movimientos sin albarán
+    anótalo en la **Orden de Fabricación** (`move.production_id or move.raw_material_production_id`
+    → `mrp.production.sudo().message_post(...)`) con el mismo estilo. `Docstring` actualizado: dejar
+    de prometer "Albaranes re-asignados" a secas (hoy miente para OF) y declarar guardia + fallback
+    OF + tachón suelto.
+  - **NO tocar:** `_pf_cleanup_product_reservations` (motor, el botón grande), `_pf_assert_can_clean`,
+    `_pf_product_reservation_state`, `_hits_hanging` y su guardia **anti-entrega-sana**
+    (`lot_stock.get(lot) > _EPS` ⇒ **H-022**). Si el `from odoo import _` queda sin uso, se borra
+    (higiene, no residuo).
+  - **Definición de terminado (CA-4):** la reserva colgada de una **OF sin albarán** + línea
+    `picked=True` se sana **sin UserError**: quant queda `reserved_quantity ≤ quantity` (delta ≥ 0)
+    y la MO queda con su porción real re-reservada por `_action_assign()` (o sin reserva honesta si
+    no había stock ⇒ `still_negative` refleja el faltante físico). La entrega **SANA** de la misma
+    ubicación **NO** se des-asigna (`H-022`, los tests del CA-4 viejos **siguen verdes sin tocar**).
+    El acotado por `lines` no suelta nada fuera del documento dado.
+  - **Evidencia (tests + salida a archivo):** `tests/test_product_flow_stock_remedy_h060.py`
+    **NUEVO** (utilidades de `tests/test_product_flow_over_reservation_scoped.py` +
+    escenario de OF: move de insumo con `raw_material_production_id`, `picking_id=False`,
+    quant colgado con línea `picked=True`): `test_h060_of_without_picking_no_usererror` ·
+    `test_h060_picked_hanging_line_is_released` (tachón va abajo, quant saneado, bitácora menciona
+    el aviso) · `test_h060_scope_lines_touches_only_that_document` ·
+    `test_h060_empty_picking_guard_contract` (caso ceñido que devuelve el dict exacto sin excepción).
+    Salida: `docs/evidencia/3S-lote1-tests.txt` + **huella del motor** idéntica al baseline.
+
+- [x] **T2 — La falla `data_anomaly` remonta sus evidencias POR DOCUMENTO (evidencias + acciones +
+  ejecución por fila)** · `[motor]` → `odoo-dev`
+  (`models/printflow_flow_failure_over_reservation.py` — las secciones de Evidencias, Acciones y
+  Ejecución, L98-185; helpers intactos).
+  - **Evidencias por DOCUMENTO (`_pf_fault_evidences`):** sustituir el dict por-quant por:
+    **UNA fila por `stock.move.line` ACTIVA** que sostenga la reserva colgada de los quants
+    (mismo criterio del `_hits_hanging` del saneo: `(location_id, lot_id)` del quant colgado, sin
+    lote o con lote **sin existencia**, estado no `done`/`cancel`, `quantity > 0`, ubicación
+    `internal`). Cada fila trae leído **DEL QUANT** (que la propia fila sigue pintando):
+    `physical_qty` / `reserved_qty` / `delta_qty`, y **de la LÍNEA/DOCUMENTO**:
+    `res_model='stock.move.line'` · `res_id` (la línea) · `product_id` ·
+    `lot_id`/`lot_name` (o `'sin lote'`) · `location_id` ·
+    `document_name` (albarán `picking_id.name` u OF `production_id/raw_material_production_id.name`,
+    u `'sin documento'`) · `document_model`/`document_res_id` (a dónde navegar:
+    `stock.picking` / `mrp.production`) · `document_kind` · `partner_name`
+    (`picking_id.partner_id.display_name` en entregas; vacío en OF) ·
+    `line_qty` (`line.quantity_product_uom` o `quantity`) ·
+    `picked` (`line.picked`, "En marcha") ·
+    `reserved_by` (`line.create_uid.display_name · fecha` con `odoo.tools.format_datetime` —
+    **sin hardcodeo**) · `detail` honesto de 1 renglón (qué sostiene el colgado).
+    **Lecturas SIN N+1** como la falla de `lot_no_stock` (una `search_read` de líneas + un mapeo de
+    documentos). **FALLBACK (decisión del Planificador):** cada quant colgado **sin ninguna línea
+    activa** que lo respalde ⇒ **UNA fila de quant** (como hoy: `res_model='stock.quant'`,
+    `document_kind='quant'`, detalle *"sin movimiento activo que respalde la reserva"*) para que
+    ningún colgado quede invisible (como el caso FONDO NEGRO).
+  - **Acciones (`_pf_fault_actions`):** `release_document` (`execute`, **primary**) ·
+    `view_document` (`navigate`) · `leave` (`close`). **Retiro:** `release_reservation` y `view_quant`
+    (ver arriba; la rama de la bandeja se conserva para otras fallas).
+  - **Ejecución (`_pf_fault_execute('release_document')`)** — ENCAJA con T1:
+    1. `line = ctx.get('line')` (la fila del tray) y **res_id** del documento ⇒ guardia
+       `_pf_assert_can_clean()` (exige jefe de taller/administrador, como hoy);
+    2. llama `Remedy._pf_release_hanging_lot_reservation(product, lines=<esa línea>)`
+       (el acotado de T1) — **nunca** suelta otra cosa;
+    3. **re-mide el DELTA del quant** antes (snapshot del ctx) y después del saneo, con
+       `invalidate_recordset` sobre el quant (CT-03: la caché del ORM no revierte sola) y
+       construye el MENSAJE por fila HONESTO: *"Reserva del documento X saneada: el quant quedó
+       sin colgado (delta 0,00)."* / *"Se soltó lo imposible, pero el quant sigue colgado con otro(s)
+       documento(s): revisa el resto de las filas."* / *"No había stock para re-reservar: la línea
+       quedó sin reserva"* / *"No se pudo liberar: el movimiento tiene otras unidades en marcha"*.
+       **NUNCA UserError** al operador (las `UserError` del guardia SÍ se dejan subir = permiso:
+       son el contrato vigente).
+  - **`_pf_fault_steps`** (microcopy) se adapta al flujo por documento (*"Una fila por documento
+    que sostiene la reserva…"*, el paso del botón nombra el documento); **el `_pf_fault_summary`
+    NO se toca** (§3.S.6). Docstring del módulo actualizado (evidencias por documento).
+  - **NO tocar:** `_pf_fault_detect`, `_pf_fault_severity`, `_pf_fault_summary`, los helpers
+    (`_pf_quant_ids_from_ctx`, `_pf_hanging_quant_ids`, `_pf_log`), el registry (§3.S.6) ni las
+    fallas hermanas.
+  - **Definición de terminado (CA-1 de datos por test + CA-2):** la ventana del `data_anomaly`
+    lista una fila por documento con documento/lote/cantidad/`picked`/"reservado por" (test
+    replica el escenario de OF de T1 y el de 2 entregas de la ubicación); accionar
+    `release_document` de la fila **NO** lanza UserError, el quant queda `delta ≥ 0` y la MO con su
+    porción re-reservada (o el aviso honesto); una entrega SANA de la misma ubicación **NO**
+    entra (el fallback/reporte no la empareja — §3.S.5.2).
+  - **Evidencia (tests + salida a archivo):** `tests/test_product_flow_failure_by_document.py`
+    **NUEVO**: `test_rows_per_document_with_fields` · `test_fallback_quant_without_lines` ·
+    `test_actions_whitelist` (`{'release_document','view_document','leave'}`) ·
+    `test_release_document_row_fixture` (escenario OF de T1 ejecutado por fila, sin UserError y con
+    el quant sin colgado) · `test_healthy_delivery_not_listed`. **ADAPTAR** (nunca dejar rojo):
+    `tests/test_product_flow_failure_over_reservation.py` — `test_tray_populates_with_hanging_
+    quant_and_actions` (res_model de la fila = `stock.move.line` + las llaves nuevas + navegar a
+    `view_document` abre el document model) y `test_tray_execute_saneo_reassigns_by_rules`
+    (`release_reservation` → `release_document`); `tests/test_product_flow_over_reservation_
+    scoped.py::test_ca4_scoped_saneo_through_tray_action` (idem; el test de CA-4 **por método
+    directo no se toca** — es candado del contrato).
+    Los candados `test_product_flow_failure_tray_generic.py` y huérfana/`lot_no_stock` deben quedar
+    **verdes sin cambios** (la rama `view_quant` de la bandeja queda para las otras fallas). Salida:
+    `docs/evidencia/3S-lote1-tests.txt`.
+
+- [x] **T3 — Campos de documento en la línea del tray + navegación `view_document`** · `[motor]`
+  → `odoo-dev` (`wizard/printflow_flow_failure_tray_line.py` y
+  `wizard/printflow_flow_failure_tray.py`).
+  - **Campos NUEVOS en `printflow.flow.failure.tray.line`** (readonly=True; `TransientModel` — el
+    `create(dict(row, tray_id=…))` de `_pf_populate` los absorbe solos; no se necesita ACL nueva):
+    `document_name` (Char, 'Documento' — `WH/MO/01562` o albarán), `document_model` (Char,
+    'Modelo del documento'), `document_res_id` (Integer, 'Id del documento'), `document_kind`
+    (Selection `[('picking','Entrega'),('production','Orden de fabricación'),('none','Sin
+    documento'),('quant','Existencia (sin movimiento)')]`), `partner_name` (Char, 'Socio',
+    entregas), `line_qty` (Float, digits 'Product Unit of Measure', 'Cantidad de la línea'),
+    `picked` (Boolean, 'En marcha'), `reserved_by` (Char, 'Reservado por'). Los campos viejos de
+    quant (`physical/reserved/delta/support_*`) quedan **como están** (les dan significado las
+    fallas que los rellenan).
+  - **Navegación (`wizard/printflow_flow_failure_tray.py::_pf_nav_action`):** rama nueva
+    `view_document`: si `line.document_model` y `document_res_id` ⇒ abre el formulario del
+    documento (nombre = `document_name`, `target='current'`) — `stock.picking` (relación del
+    albarán) u `mrp.production`; **fallback** si vinieron vacíos: resolver desde
+    `res_model='stock.move.line'` (`line.picking_id` / OF del move). La rama `view_quant` **se
+    conserva** y la lista blanca del `action_run` NO cambia (kind `navigate` ya la resuelve).
+    **Sin hilos de otra falla** (no tocar `view_supporting_moves`).
+  - **Definición de terminado:** todas las filas de T2 se crean con los campos nuevos poblados
+    (`test` lo afirma); `view_document` abre el **documento** (form del albarán o la OF) sin
+    errores; el resto de las fallas no cambia nada (campos vacíos = falsy, sin afectar).
+  - **Evidencia (test + salida a archivo):** en `tests/test_product_flow_failure_by_document.py`
+    añadir: `test_document_fields_populated_on_row` · `test_view_document_opens_picking_form` ·
+    `test_view_document_opens_production_form`. Corrida del lote entero: los nuevos de T1–T3 +
+    **el candado de bandeja clásica** `test_product_flow_lot_tray*`; salida:
+    `docs/evidencia/3S-lote1-tests.txt`. **Cierre del lote:** suite completa
+    `--test-tags /printflow_gestion_inventario` ⇒ **delta 0** frente al baseline (688 ⇒ 8 rojos
+    del conjunto conocido); **huella del motor** idéntica; **botón de reinicio** del proyecto con
+    evidencia (log + PID + `write_date`).
+
+#### Lote 2 (T4) — `[pantalla]` → `odoo-vistas` · Pintar el DOCUMENTO en la ventana del `data_anomaly`
+
+- [x] **T4 — Vistas del tray muestran las columnas nuevas (por documento)** · `[pantalla]` →
+  `odoo-vistas` (`wizard/printflow_flow_failure_tray_views.xml` — SOLO esa vista: **no** toca
+  modelos ni lógica).
+  - **Tree de líneas (`printflow_flow_failure_tray_line_view_tree`):** añadir columnas
+    `document_name` ('Documento', `optional="show"`) · `document_kind` ('Tipo', widget badge si el
+    core lo pinta bien; `optional="show"`) · `partner_name` ('Socio', `optional="show"`) ·
+    `line_qty` ('Cantidad línea', `optional="show"`) · `picked` ('En marcha', widget boolean,
+    `optional="show"`) · `reserved_by` ('Reservado por', `optional="show"`) — y bajar las columnas
+    de quant (físico/reservado/respaldo/delta) a `optional="show"` (así quedan, salvo cuál estorbe:
+    el dueño decidió conservar el mensaje de quant; **no se borra ninguna** — es aditivo).
+    El botón "Gestionar" y el orden de los campos ocultos (`sequence`, `res_model`, `res_id`) quedan
+    igual.
+  - **Form del detalle de la fila (diálogo "Gestionar"):** añadir un grupo **"Documento"** ANTES
+    del de "Cantidades" (Documento / Tipo / Socio / Cantidad de la línea / En marcha /
+    Reservado por). **Microcopy de 1 renglón** (skill `odoo-view-design`): los rótulos de la fila
+    del CA-1 ("0,200 colgado / 0,040 físico / sin lote / En marcha / reservado por") deben verse
+    en pantalla sin prosa repetida (lección H-047/H-049: los conteos van en la fila, no en
+    prosa).
+  - **Kanban de la cabecera del tray (tarjetas):** añadir al cuerpo de la tarjeta la línea de
+    Documento (nombre + tipo) + Socio + "En marcha" (badge si aplica) + Reservado por, manteniendo
+    Físico/Reservado/Delta y el botón `action_run_primary` (`primary` = "Liberar y re-reservar" del
+    `release_document` de T2: el botón "Liberar y re-reservar" del CA-2 — sin cambios de nombre).
+  - **Acción de ventana + menú del tray: sin cambios** (`action_run`/`action_close` y los 'keys' ya
+    son datos, no vista).
+  - **Restricción de vista COMPARTIDA:** esta vista la COMPARTEN las 3 fallas (huérfana /
+    `lot_no_stock` / reserva colgada). Las columnas nuevas deben quedar **inofensivas** cuando la
+    falla NO las rellena (fila de quant huérfana ⇒ documento vacío): `optional="show"` prudente y nada de
+    `column_invisible` por contexto (no hay llave para saber la falla en la vista) — si el dueño
+    quiere ocultarlas por falla, es tarea aparte (se reporta, NO se inventa aquí).
+  - **Definición de terminado (CA-1 visual):** abriendo la ventana en el DTF (BD PRUEBA), la tarjeta
+    muestra Documento `WH/MO/01562` · Tipo "Orden de fabricación" · "(sin lote)" · En marcha: Sí ·
+    Reservado por (quién y cuándo) y las cantidades del quant (0,200 colgado / 0,040 físico). Sin
+    prosa repetida; **NUNCA accionar botones con efecto**.
+  - **Evidencia:** mirada en vivo de lectura (receta `VIEW-LIVE-CHECK.md`) con fotos en
+    `docs/evidencia/3S-live-*.png` + py_compile del XML (el lote `[pantalla]` no corre la suite, pero
+    deja el XML en verde; si modifica algo de la bandeja clásica, inválido — no se toca).
+    **Cierre del lote:** **botón de reinicio** del proyecto con evidencia (log + PID + `write_date`)
+    y `git` según skill `git-seguro` (los commits los aprueba el dueño).
+
+**Bitácora del Lote 1 — 2026-10-20 · `odoo-dev` (sesión NUEVA) · T1 · T2 · T3 = `[x]`**
+
+- **Fuente:** `odoo-impreven` / BD `Ciber Estudios 2015 RESTAURADA` (**PRUEBA**, solo lectura
+  de datos: **0 escrituras**). Motor `x_product_dimensional_pricing`: **no se tocó** — huella en
+  disco **idéntica** al cierre: `SHA-256 models/stock_move.py =
+  22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B` y `git status --porcelain = 143`.
+- **T1** (`models/printflow_stock_remedy.py`): cura H-060 en
+  `_pf_release_hanging_lot_reservation` — (a) **guardia** `if pickings:` + **fallback OF**
+  (`orphan_moves._action_assign()`, primitiva NATIVA); (b) **tachón soltado a nivel de LÍNEA**
+  (`picked_released.write({'picked': False})`, CT-01) + **escudo del move** solo cuando TODAS
+  sus unidades en marcha son las del documento (`moves_shield`); (c) parámetro nuevo
+  `lines=` para **acotar el saneo POR DOCUMENTO** (con `None` = camino de siempre);
+  los moves/albaranes/OF se **capturan ANTES** de `_pf_unreserve_reservation` (el core
+  **ELIMINA** las líneas liberadas: MissingError probado en la v1 del test);
+  (d) avisos en el documento (`picking.message_post` / `mo.message_post`) + bitácora del
+  producto; contrato de retorno **EXACTO** del motor. **0** `cr.execute`/`cr.commit`/`button_validate`
+  (candado en el test).
+- **T2** (`models/printflow_flow_failure_over_reservation.py`): el `data_anomaly` remonta
+  evidencias **POR DOCUMENTO**: `_pf_fault_evidences` UNA fila por `stock.move.line` activa que
+  sostiene el colgado (documento nombre/modelo/res_id/tipo, socio, cantidad de línea, "En
+  marcha", "Reservado por") + fila de **fallback** por quant sin línea activa
+  (`document_kind='quant'`); **acciones** por fila `{release_document, view_document, leave}`
+  (lista blanca; las claves viejas **cierran**); `_pf_fault_execute('release_document')` llama
+  el saneo acotado con `lines=target_line` (fila quant ⇒ saneo global); `_pf_release_message`
+  HONESTO por caso (liberada / no se pudo liberar / colgado con otro(s) documento(s) / sin stock
+  para re-reservar) — **nunca UserError**. **Sustituí** un bloque muerto duplicado que quedó
+  dentro del mismo método (referenciaba `document` sin definir, L383‑409 de la v1): borrado —
+  una sola versión coherente.
+  **Curas durante el propio lote (causas encontradas por los tests):** el mensaje leía
+  `move_id` de una línea YA BORRADA ⇒ el move se **PRECAPTURA** en `_pf_fault_execute`
+  (parámetro `target_move`) y el mensaje pregunta `exists()` antes de leer; `re_reserved`
+  quedó **Booleano** (un recordset vacío no es `False`: sutil bug de verdad).
+- **T3** (`wizard/printflow_flow_failure_tray_line.py`): **8 campos readonly** de documento
+  (`document_name/document_model/document_res_id/document_kind/partner_name/line_qty/picked/
+  reserved_by`) + docstring; (`wizard/printflow_flow_failure_tray.py`): rama de navegación
+  **`view_document`** + fallback `_pf_resolve_document` (desde el `res_id` de la
+  `stock.move.line` vía `picking_id/production_id/raw_material_production_id`).
+- **Tests:** **NUEVOS** `tests/test_product_flow_stock_remedy_h060.py` (**5 tests**) y
+  `tests/test_product_flow_failure_by_document.py` (**8 tests**); `tests/__init__.py` +2 imports.
+  **Adaptados** a las acciones/claves nuevas: `test_product_flow_over_reservation_scoped.py`
+  y `test_product_flow_failure_over_reservation.py` (no subclasean; reutilizan la mezcla
+  `printflow_stock_test_helpers`). Los tests leen líneas liberadas con `exists()` (CT-03):
+  `_do_unreserve` las BORRA (comportamiento del core, no del saneo).
+- **Pruebas (BD `pf_picker_tests`, transaccional):** `TestProductFlowStockRemedyH060` **5/5**
+  · `TestProductFlowFailureByDocument` **8/8** · candados
+  (scoped/over_reservation/tray_generic/lot_no_stock) **9/9** · suite completa
+  `/printflow_gestion_inventario` **701 tests ⇒ 8 rojos = MISMO baseline** (B1/H-002 · H-035 ·
+  H-038, ajenos): **delta 0**. Evidencia: `docs/evidencia/3S-lote1-tests.txt`.
+- **Desviaciones declaradas:** (1) los tests nuevos NO subclasean la clase del candado CA-4v
+  (mezcla propia mínima); (2) la "bitácora del producto" de T1 se hace con
+  `product.message_post` directo (el saneo no tiene `_pf_log`; la clase de falla sí usa el
+  suyo); (3) `delta_before` se retiró del execute/mensaje (no se usaba — sustitución, no
+  acumulación); (4) el fixture de la OF del test nuevo quedó con **0 físicas** (antes 0,04):
+  con 0,04 el remontaje nativo **sí re-reserva** las 0,04 y la cláusula honesta
+  "No había stock para re-reservar" jamás saldría (comportamiento correcto de Odoo); el
+  docstring del fixture lo declara.
+- **Reinicio+módulo:** OK (`20261019-205318-printflow_gestion_inventario.log` · tarea=0 · `-u`
+  exit 0 · PID 3452→9632 · puerto 8071 OK · `write_date` **2026-10-20 00:53:30** UTC).
+  **Turno → siguiente: Lote 2 (T4) `[pantalla]` → `odoo-vistas` (sesión NUEVA).**
+
+**Bitácora del Lote 2 — 2026-10-19 · `odoo-vistas` (sesión NUEVA) · T4 = `[x]`**
+
+- **T4** (`wizard/printflow_flow_failure_tray_views.xml` — **ÚNICO** archivo tocado, sin modelos ni
+  lógica): **Tree de líneas** +6 columnas `optional="show"` después del bloque oculto
+  (`document_name` 'Documento' · `document_kind` 'Tipo' `widget="badge"` · `partner_name` 'Socio' ·
+  `line_qty` 'Cantidad línea' · `picked` 'En marcha' · `reserved_by` 'Reservado por'); las de
+  quant (Físico/Reservado/Respaldo/Delta) **no se borran** (quedan `optional="show"` como estaban)
+  y el botón "Gestionar" queda igual. **Form del diálogo "Gestionar"**: grupo NUEVO
+  **"Documento"** (6 campos) ANTES de "Cantidades" — puesto `[Documento | Afectado]` arriba y
+  **"Cantidades"** debajo a todo ancho: el grupo triple dejaría media columna vacía (la lección
+  H-051). **Kanban de la cabecera**: campos declarados y al cuerpo de la tarjeta, ANTES de
+  Físico/Reservado/Delta: Documento (nombre + tipo en badge) + badge **"En marcha"** (si aplica)
+  + Socio + Reservado por (líneas con `t-if="record.X.raw_value"` y badges
+  `badge text-bg-light border`, patrón de casa del módulo). **Botón `action_run_primary` SIN
+  cambios** (el texto lo da `primary_label` = "Liberar y re-reservar" del `release_document` de
+  T2). Acción de ventana + menú: **sin cambios**. **Sin `column_invisible` por contexto** (vista
+  COMPARTIDA por las 3 fallas: las columnas nuevas quedan inofensivas con fila vacía, como pide
+  el plan; ocultar por falla es tarea aparte — se reporta, no se inventa).
+- **Medición de diseño:** campos existentes verificados por `fields_get` en la BD (8/8, el Lote 1
+  ya los dejó en el 8071) · cero `<colspan>` · cero prosa nueva (solo rótulos cortos de cabecera;
+  el detalle largo lo da `support_label`/`detail`, sin tocar) · archivo 230 → 264 líneas
+  (+34 = exactamente lo pedido, aditivo).
+- **Verificación en vivo: NO hecha — sin navegador** (la sesión no tiene navegador desktop
+  conectado; `browser.tabs.open` cae con "No desktop browser is connected"). Sin fotos (no hay
+  `3S-live-*.png`). **La corre le toca al Verificador/Analista con navegador propio** (receta
+  `VIEW-LIVE-CHECK.md`) sobre el servidor **YA actualizado** (ver debajo), **solo lectura**:
+  ABRIR la ventana del `data_anomaly` en el DTF; **NUNCA** accionar "Liberar y re-reservar".
+- **Evidencia:** `docs/evidencia/3S-lote2-tests.txt` (XML bien formado OK · `fields_get` 8/8 ·
+  botón con log/PID/`write_date` · lo no verificable declarado). El lote `[pantalla]` **no
+  corre la suite** (según plan §3.S.8).
+- **Cero escrituras de datos.** Motor `x_product_dimensional_pricing` sin tocar.
+- **Reinicio+módulo:** botón **`Odoo8071-printflow_gestion_inventario`** ⇒
+  `20261019-210059-printflow_gestion_inventario.log` · **tarea=0** (`LastTaskResult 0`) ·
+  `-u` código de salida **0** · **PID 9632 → 10096** · puerto **8071 OK** · `write_date` del
+  módulo **2026-10-20 01:01:10 UTC = 21:01:10 local** (dentro de la ventana del `-u`,
+  21:01:01→21:01:14 local) ⇒ **OK**.
+- **Queda pendiente:** nada de §3.S por lotes — el checklist completo quedó `[x]` (T1–T3 Lote 1,
+  T4 este lote). **Próximo paso:** **turno del `odoo-verificador`** (una sola pasada, al final,
+  CA-1…CA-6, con la **mirada en vivo** de lectura que quedó pendiente por navegador).
+
+---
+
+**Riesgos y mitigaciones** (declarados; ninguno se resuelve fuera del alcance de §3.S.5):
+
+| Riesgo | Mitigación (dónde) |
+|---|---|
+| La cura H-060 cambia el comportamiento del **botón grande** y/o del cron | T1(a/b/c): la vía `lines=None` es el camino actual **byte-a-byte** + candado `test_ca4_scoped_method_returns_engine_contract` (dict EXACTO) y los tests del CA-4 viejos **sin tocar** |
+| Des-asignar una entrega SANA de la misma ubicación (lección H-022) | `_hits_hanging` y su guardia anti-entrega-sana **intactos** (T1) + CA-3 (tests de `..._scoped` verdes) + el `release_document` acotado **al documento de la fila** (T2) |
+| El tachón "baja" a TODAS las líneas del movimiento | CT-01: escritura SOLO a la **línea concreta**; el test de T1 mira la línea y sus hermanas (CT-2 de §3.R) + otros `picked` de hermanas quedan (aviso honesto · riesgo residual) |
+| La caché del ORM devuelve el delta "viejo" al re-medir | CT-03: `invalidate_recordset` sobre el quant antes del mensaje (T2) y en el test (como los candados de §3.R) |
+| El saneo por fila deja el quant **aún colgado** con otro documento | El mensaje de la fila lo dice honesto (T2) — el delta se re-mide DESPUÉS del saneo, no se promete "delta 0" si hay más sostenedores |
+| El `view_document` cae si el modelo/navegación vienen vacíos | Fallback de resolución desde `res_id` de la `stock.move.line` (T3) y el `act_window_close` de la lista blanca si no hay nada (la `action_run` ya lo hace) |
+| La vista compartida se ensucia para las otras fallas | T4: columnas `optional="show"` inofensivas con fila vacía; NADA de `column_invisible` por contexto; las filas de huérfana/`lot_no_stock` no cambian |
+| El **motor** se toca "sin querer" | **Huella** SHA-256 + `git status --porcelain` = **143** idénticos al baseline en **cada** lote (H-038 · §3.R.7) |
+| Dos operadores saneando a la vez / stock que desaparece entre medición y reserva | Riesgo residual declarado (mismo tratamiento de §3.R/C-5): no se añade locking |
+
+**Criterios de aceptación — mapeo CA ↔ tareas:** CA-1 (fila del `WH/MO/01562` con 0,200 colgado /
+0,040 físico / sin lote / `picked` / "reservado por") ⇒ **T2 (datos)** + **T4 (pantalla)** ·
+CA-2 (acciona `release_document` sin UserError; quant delta ≥ 0; MO re-reservada o aviso honesto) ⇒
+**T1 + T2** (SUITE; el quant 4763 real es **DATO**: solo se LEE, el dueño lo sana desde el botón) ·
+CA-3 (entrega SANA no des-asignada) ⇒ **T1** (los tests del CA-4 de H-022, verdes) ·
+CA-4 (el botón grande y el "Sanear reservas colgadas" no revientan ante OF sin albarán) ⇒
+**T1** · CA-5 (tests nuevos + regresión H-022 en verde; suite **delta 0**) ⇒ todos los lotes ·
+CA-6 (reinicio + `-u` con evidencia) ⇒ **cada lote** (botón programado).
+
+---
 
 ## 3.R (ANEXO · TAREA CERRADA) — El cambio de lote en una unidad TACHADA: el wizard en bloque deja de fallar y el tachón vuelve (H-055 · H-056 · H-057)
 
@@ -8921,3 +9472,76 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   8 `descartado` / 0 `en tarea`). **Dato corregido:** la UdM `m` (id 5) redondea a **0,001**; el `0,01` es
   `decimal.precision` *Product Unit of Measure* (H-053), que es otra cosa. **Queda para el dueño:** el árbol de
   trabajo sigue **sin commitear** (su decisión; `git-seguro` antes de tocar git).
+- [2026-10-19 · Odoo Analista] **§3.S · PASO 2 (Planificador) y PASO 3 (revisión) — plan APROBADO.** El
+  Planificador escribió **§3.S.8**: **4 tareas / 2 lotes** (T1–T3 `[motor]` → `odoo-dev` · T4 `[pantalla]` →
+  `odoo-vistas`), ordenadas por dependencia (cura H-060 → falla por documento → campos del tray → pintar).
+  **RATIFICACIÓN del Analista (única decisión declarada):** el *fallback* de **fila por quant sin línea
+  activa** **QUEDA** (sin ella un colgado huérfano queda invisible en la ventana — misma lección de H-024).
+  Conejeras selladas en `CONEJERAS.md`: **CT-01 / CT-02 `⚠️ VERIFICADA`** (citas del core) y **CT-03
+  `❓ PREVISIÓN`** — entran al punto 5 de §3.S.5. **H-060 → `en tarea`** (HALLAZGOS.md · 60 filas).
+  Restricciones vigentes: motor `x_product_dimensional_pricing` **SOLO LECTURA con huella**
+  (`SHA-256(models/stock_move.py) = 22293F95…106B` · `git status --porcelain` = **143**, antes y después
+  de cada lote; `git diff` PROHIBIDO como evidencia), suite baseline **688 tests / 8 rojos exactos
+  (B1/H-002 · H-035 · H-038)**, `--test-tags /printflow_gestion_inventario` con entrada a archivo por
+  lote. **Turno → `odoo-dev` · Lote 1 (T1–T3)** — sesión NUEVA, sin retomar ninguna anterior.
+- [2026-10-19 · `odoo-dev`] **§3.S · LOTE 1 (T1–T3) `[motor]` CERRADO.** Cura **H-060** en
+  `models/printflow_stock_remedy.py` (guardia `if pickings:` + fallback OF `orphan_moves._action_assign()` +
+  tachón soltado POR LÍNEA con escudo del move + parámetro `lines=` acotado: con `None` el botón grande queda
+  byte-a-byte); falla `data_anomaly` POR DOCUMENTO en `models/printflow_flow_failure_over_reservation.py`
+  (fila por `stock.move.line` + fallback por quant + acciones `release_document`/`view_document`/`leave` +
+  mensaje honesto — nunca UserError; curas del propio lote: move precapturado porque `_do_unreserve` BORRA la
+  línea y `re_reserved` Booleano); 8 campos de documento en `wizard/printflow_flow_failure_tray_line.py` +
+  navegación `view_document` en `wizard/printflow_flow_failure_tray.py`. **Retirado:** bloque muerto duplicado
+  (~27 líneas, referenciaba `document` sin definir) y `delta_before` sin uso. **Tests NUEVOS:**
+  `tests/test_product_flow_stock_remedy_h060.py` (5) · `tests/test_product_flow_failure_by_document.py` (8) +
+  2 viejos adaptados. **Evidencia:** `docs/evidencia/3S-lote1-tests.txt` — H-060 5/5 · por-documento 8/8 ·
+  candados 9/9 · suite **701 ⇒ 8 rojos = MISMO baseline ⇒ delta 0** · huella del motor **idéntica**
+  (`22293F95…106B` · 12.690 B · `git status --porcelain` = 143) · **0 escrituras de datos** · reinicio+`-u`
+  OK (log `20261019-205318` · PID 3452→9632 · `write_date` **2026-10-20 00:53:30** UTC). **Turno → Lote 2.**
+- [2026-10-19 · `odoo-vistas`] **§3.S · LOTE 2 (T4) `[pantalla]` CERRADO.** `wizard/printflow_flow_failure_tray_views.xml`
+  (**único** archivo): tree +6 columnas de documento (`optional="show"`, las de quant conservadas), form del
+  diálogo + grupo "Documento" ANTES de "Cantidades" y kanban de la tarjeta con Documento/Tipo badge/"En marcha"
+  badge/Socio/Reservado por ANTES de las cantidades; botón `action_run_primary` SIN cambios; sin
+  `column_invisible` por contexto (vista COMPARTIDA por las 3 fallas: columnas inofensivas con fila vacía).
+  Medición: campos 8/8 por `fields_get` · archivo 230→264 líneas (+34 aditivas) · cero `<colspan>`.
+  **Evidencia:** `docs/evidencia/3S-lote2-tests.txt` · reinicio+`-u` OK (log `20261019-210059` · PID
+  9632→10096 · `write_date` **2026-10-20 01:01:10** UTC). **Mirada en vivo NO hecha** (sin navegador en la
+  sesión) — la corre el Verificador/Analista. **Turno → `odoo-verificador` (1 pasada).**
+- [2026-10-19 · `odoo-verificador`] **§3.S · VEREDICTO: `no cumple` (SOLO por la mirada en vivo pendiente).**
+  Todo lo demás verificado y verde: suite delta 0 (documentos del Lote 1), archivo del Lote 2 **vive en el
+  servidor** (3 vistas con `write_date` 01:01:02 UTC, dentro de la ventana del `-u`; 8/8 campos BD),
+  flujos limpios (cero `cr.execute`/`cr.commit`/`quant.write`/`unlink`; `picked` SOLO a nivel de línea —
+  CT-01 re-verificada en el core), conejeras del punto 5 con sello correcto, **huella del motor re-medida
+  idéntica** y cero escrituras de datos (el escenario CA-1 real existe en la BD y solo se leyó). *Fuente de
+  la única pega:* sin navegador en la sesión del Verificador (mismo bloqueo declarado por el Lote 2).
+- [2026-10-19 · Odoo Analista] **§3.S · MIRADA EN VIVO del CA-1 visual (navegador del Analista, receta
+  `VIEW-LIVE-CHECK.md`).** Login propio con las credenciales del MCP · **BD confirmada por `/web/session/get_session_info`:
+  `Ciber Estudios 2015 RESTAURADA`** (= Ficha §1, PRUEBA) · ruta: diagrama de **DTF** (`printflow.product.flow`
+  871) → nodo **3. INVENTARIO** → botón **"Solucionar"** (acción de lectura) ⇒ ventana `printflow.flow.failure.tray`
+  id 8. **La tarjeta muestra el CA-1 COMPLETO:** Documento **WH/MO/01562** · badge **"Orden de fabricación"** ·
+  badge **"En marcha"** · **Reservado por: Jonathan Romero · 5 sept. 2026 6:06:27 p. m.** · "(sin lote)" ·
+  Físico **0,040000** / Reservado **0,200000** / Respaldo 0,000000 / **Delta −0,160000** (columnas de quant
+  conservadas) · botón primario "Liberar y re-reservar" **NO accionado** (solo mirar). **FOTO:**
+  `docs/evidencia/3S-live-ca1-tray-dtf.png`. **DELATO (H-061, cosmético, `abierto`):** rótulos pegados al
+  valor — `(sin lote)WH/Existencia/Mercancia` · `Reservado porJonathan Romero…` · `Físico0,040000` ·
+  `Delta-0,160000` (familia H-050/H-051; XML puro, tarea `[pantalla]` pequeña — el dueño decide si va o se deja).
+  **Cierres del mismo trazo:** **H-060 → `resuelto`** (cura del Lote 1 probada por tests 5/5 + suite delta 0 +
+  Verificador; **el dato real quant 4763 lo sana el dueño con el botón**, que ya no revienta) ·
+  **H-059 → promoción parcial** (C-1→CT-01, C-2→CT-02 `⚠️ VERIFICADA`, C-3→CT-03 `❓ PREVISIÓN` en
+  `CONEJERAS.md` con cita re-verificada; C-4/C-5 siguen sin promover — decide el dueño). Registro: **61 filas ×
+  9 celdas** — 15 `abierto` / 38 `resuelto` / 8 `descartado` / 0 `en tarea`. **VEREDICTO FINAL §3.S: `cumple`**
+  (precedente §3.P: la pasada del Verificador es verde en lo técnico y la pega era SOLO la mirada — hecha).
+  **Ciclo §3.S CERRADO. Queda del dueño:** (1) juzgar la foto/H-061, (2) apretar el botón para sanear el
+  quant real del DTF, (3) el árbol sigue sin commitear (su decisión; `git-seguro` antes de tocar git).
+- [2026-10-19 · Odoo Analista] **§3.T CERRADA (TRIVIAL · H-061 → `resuelto`).** `odoo-vistas` (sesión NUEVA) curó los
+  rótulos pegados de la tarjeta del tray con el patrón de casa (`me-1` en "Reservado por"/"Físico"/"Respaldo"/"Delta"
+  (+ yapa "Socio"/"Reservado" del mismo bloque) y `<span class="ms-2 text-muted">` para la ubicación junto al
+  `(sin lote)`); **1 archivo** (`wizard/printflow_flow_failure_tray_views.xml`), aditivo, cero campos/textos movidos.
+  Desviaciones ratificadas (2, declaradas por el dev: las mismas clases en los rótulos gemelos y "mismo renglón con
+  margen" en el punto 1). **Reinicio+`-u`:** OK (log `20261019-231234` · PID 10096→9756 · `write_date`
+  **2026-10-20 03:12:47** UTC). **Mirada en vivo (foto):** `docs/evidencia/3T-live-ca1-rotulos-separados.png` —
+  sesión del navegador REABIERTA tras el reinicio (login propio · **BD re-confirmada** `Ciber Estudios 2015
+  RESTAURADA`) · ruta: diagrama DTF (`printflow.product.flow` 871) → nodo 3 INVENTARIO → "Solucionar" ⇒ tray id **9**
+  (transitorio nuevo, normal) · **los 5 rótulos separados** y los datos del CA-1 intactos (WH/MO/01562 · OF ·
+  En marcha · reservado por · 0,200/0,040 · Delta −0,160) · botón **NO accionado** (solo mirar).
+  **Registro: 61 filas × 9 celdas — 14 `abierto` / 39 `resuelto` / 8 `descartado` / 0 `en tarea`.**

@@ -1,0 +1,43 @@
+# §3.S · Lote 1 (T1–T3 [motor]) — Evidencia de pruebas
+# Fecha: 2026-10-20 · BD de pruebas: pf_picker_tests (transaccional, sin datos reales)
+# Servidor: Odoo 17.0.20250124 · módulo: printflow_gestion_inventario
+# Comando base (cada corrida, odoo-bin vía python embebido):
+#   -c '...\server\odoo.conf' -d pf_picker_tests -u printflow_gestion_inventario
+#   --data-dir C:\Users\User\AppData\Local\Temp\opencode\pf_3s_t1solo
+#   --no-http --max-cron-threads=0 --test-enable --test-tags '<etiqueta>'
+#   --logfile <log> --stop-after-init
+
+## Corridas por clase (exit code Odoo)
+h060_v2.log        TestProductFlowStockRemedyH060 ......... exit 0 · 5/5 OK
+bydoc_v4.log       TestProductFlowFailureByDocument ....... exit 0 · 8/8 OK
+candados.log       TestProductFlowOverReservationScoped +
+                   TestProductFlowFailureOverReservation +
+                   TestProductFlowFailureTrayGeneric +
+                   TestProductFlowFailureLotNoStock ....... exit 0 · 9/9 OK
+
+## Suite completa (delta 0)
+suite_full.log     --test-tags '/printflow_gestion_inventario'
+                   Resultado: "7 failed, 1 error(s) of 701 tests"
+                   Los 8 rojos son EXACTAMENTE los del baseline pre-existente
+                   (ajenos a este lote, NO se persiguen):
+                   - TestDiagnosticDeliveryOrders.test_bulk_validate_mixed_success_and_failure (B1/H-002)
+                   - TestNodePendingEnumeration.test_limit_is_per_node (H-035)
+                   - TestPhase7BoardPermissions.test_bulk_validate_runs_without_sudo (H-038)
+                   - TestProductFlowFailureNegativeReserved.test_negative_reserved_rises_to_support
+                   - TestProductFlowLotPickerUx.test_own_and_current_lots_are_listed_and_labeled
+                   - TestProductFlowLotTrayUx.test_tray_exposes_lot_quantities
+                   - TestProductFlowLotTrayUx.test_tree_exposes_document_and_conditional_quantities
+                   - TestProductFlowSolutionSingle.test_lot_row_args_include_origin_product_id (ERROR)
+                   DELTA = 0 (8 rojos antes del lote == 8 rojos después).
+
+## Corridas fallidas intermedias (arregladas en el lote, evidencia de la causa)
+h060.log (v1) ...... MissingError sobre `targets` muertos + FAIL move.picked (escudo)
+bydoc.log (v1) ..... MissingError en _pf_release_message: leía move_id de una línea
+                     ya borrada por _do_unreserve. Curado: move precapturado en
+                     _pf_fault_execute + escudo exists() en el mensaje.
+bydoc_v2/v3 (v2) ... fallo por recordset vacío -> re_reserved no era bool. Curado: bool().
+
+## Huella del motor x_product_dimensional_pricing (solo lectura, intocada)
+SHA-256 models/stock_move.py =
+  22293F9532E6978EF58A5F6E5BB23B04DCF9B06DF22661F037F5DD5D065E106B   (== baseline)
+git status --porcelain (count) = 143                                   (== baseline)

@@ -1,0 +1,43 @@
+§3.S · LOTE 2 (T4 [pantalla]) — Evidencia · 2026-10-19 · odoo-vistas (sesión NUEVA)
+
+TAREA: Vistas del tray muestran las columnas nuevas (por documento).
+Archivo tocado (ÚNICO): wizard/printflow_flow_failure_tray_views.xml
+- Tree de líneas (printflow_flow_failure_tray_line_view_tree): +6 columnas visible por opcional:
+  document_name ('Documento'), document_kind ('Tipo', widget="badge"), partner_name ('Socio'),
+  line_qty ('Cantidad línea'), picked ('En marcha'), reserved_by ('Reservado por'), todas
+  optional="show". Las de quant (Físico/Reservado/Respaldo/Delta) NO se borran: quedan
+  optional="show" como estaban. Botón "Gestionar" y campos ocultos (sequence/res_model/res_id): igual.
+- Form de la línea (diálogo "Gestionar"): grupo NUEVO "Documento" (Documento/Tipo/Socio/
+  Cantidad de la línea/En marcha/Reservado por) ANTES de "Cantidades". Estructura: [Documento |
+  Afectado] arriba, "Cantidades" debajo a todo ancho (evita el grupo triple que deja media
+  columna vacía). Sin invisible por contexto (vista COMPARTIDA por 3 fallas: queda inofensiva
+  con fila vacía).
+- Kanban de la cabecera: campos declarados (document_name/document_kind/partner_name/picked/
+  reserved_by) + al cuerpo de la tarjeta, ANTES de Físico/Reservado/Delta: Documento (nombre +
+  tipo en badge) + badge "En marcha" (si aplica) + Socio + Reservado por (líneas con
+  t-if="record.X.raw_value", patrón de casa). Botón action_run_primary sin cambios (texto lo
+  da primary_label = "Liberar y re-reservar" del release_document de T2).
+- Acción de ventana + menú: SIN cambios.
+
+VERIFICACIÓN
+- XML bien formado (etree.parse): OK.
+- fields_get del modelo en BD (odoo-impreven, SOLO lectura): los 8 campos existen
+  (document_name/document_model/document_res_id/document_kind/partner_name/line_qty/picked/
+  reserved_by) — Lote 1 ya los puso en el servidor.
+- Suite: el lote [pantalla] NO corre la suite (según plan §3.S.8). El XML queda en verde.
+- Mirada en vivo: NO hecha — la sesión no tiene navegador desktop conectado
+  (browser: "No desktop browser is connected"). Sin fotos (no hay 3S-live-*.png).
+  ⇒ El Verificador/Analista la corre con su navegador (receta VIEW-LIVE-CHECK.md), sobre el
+  servidor YA actualizado (ver debajo). NUNCA accionar botones con efecto (Liberar y
+  re-reservar): solo ABRIR.
+
+REINICIO + MÓDULO (botón del proyecto)
+- schtasks /run "Odoo8071-printflow_gestion_inventario" ⇒ LastTaskResult = 0
+- Log: 20261019-210059-printflow_gestion_inventario.log
+  0/4 ficha PRUEBA autorizada · 1/4 servicio detenido · 2/4 -u exit 0 · 3/4 arriba ·
+  Resultado .... OK · PID 9632 -> 10096 · puerto 8071 ESCUCHANDO
+- write_date módulo (MCP): **2026-10-20 01:01:10 UTC = 2026-10-19 21:01:10 local (UTC−4)**
+  ⇒ dentro de la ventana del `-u` (21:01:01→21:01:14 local) ✓.
+
+CERO ESCRITURAS DE DATOS. Motor x_product_dimensional_pricing sin tocar (esta tarea no toca
+ni lee sus archivos).
