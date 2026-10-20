@@ -221,6 +221,24 @@ class PrintflowFlowFailureTray(models.TransientModel):
                 'view_mode': 'form',
                 'target': 'current',
             }
+        if action_key == 'view_document':
+            # §3.S: navega al DOCUMENTO de la fila (albarán u OF, solo lectura).
+            model = line.document_model
+            res_id = line.document_res_id
+            if not model or not res_id:
+                model, res_id = self._pf_resolve_document(line)
+            if not model or not res_id:
+                return {'type': 'ir.actions.act_window_close'}
+            return {
+                'type': 'ir.actions.act_window',
+                'name': (line.document_name
+                         or line.product_id.display_name
+                         or _('Documento')),
+                'res_model': model,
+                'res_id': res_id,
+                'view_mode': 'form',
+                'target': 'current',
+            }
         if action_key == 'view_supporting_moves':
             domain = [
                 ('product_id', '=', line.product_id.id),
@@ -241,6 +259,31 @@ class PrintflowFlowFailureTray(models.TransientModel):
                 'target': 'current',
             }
         return {'type': 'ir.actions.act_window_close'}
+
+    def _pf_resolve_document(self, line):
+        """Resuelve el documento desde la línea de evidencia (fallback §3.S).
+
+        Si el ``document_model``/``document_res_id`` vinieron vacíos, se
+        deducen desde la ``stock.move.line`` de la fila: su albarán
+        (``picking_id``) o la OF del movimiento
+        (``production_id``/``raw_material_production_id``).
+        """
+        self.ensure_one()
+        if line.res_model != 'stock.move.line' or not line.res_id:
+            return '', 0
+        move_line = self.env['stock.move.line'].sudo().browse(
+            line.res_id).exists()
+        if not move_line:
+            return '', 0
+        picking = move_line.picking_id
+        if picking:
+            return 'stock.picking', picking.id
+        production = (
+            move_line.move_id.production_id
+            or move_line.move_id.raw_material_production_id)
+        if production:
+            return 'mrp.production', production.id
+        return '', 0
 
     def _pf_notify(self, message, ntype='success'):
         """Notificación estándar del resultado de una acción con efecto."""

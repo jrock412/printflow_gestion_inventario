@@ -2,11 +2,15 @@
 """Línea de evidencia de la bandeja genérica de fallas (PrintFlow · Fase 1).
 
 ``TransientModel`` de SOLO LECTURA: UNA fila por evidencia que la falla describe
-(para la reserva huérfana, un quant afectado). Solo se crea desde
+(para la reserva colgada, un DOCUMENTO — ``stock.move.line`` del albarán u OF —
+y para las demás fallas el ítem afectado). Solo se crea desde
 ``printflow.flow.failure.tray._pf_populate`` (la superficie no la puebla a mano).
 
-Campos técnicos: ``res_model``/``res_id`` apuntan al registro afectado (el quant)
-para poder NAVEGAR a él; ``action_ids`` cuelga las acciones guiadas por fila.
+Campos técnicos: ``res_model``/``res_id`` apuntan al registro afectado (la
+línea de movimiento o el quant) para poder NAVEGAR a él; ``action_ids`` cuelga
+las acciones guiadas por fila. Los campos ``document_*`` y ``partner_name``/
+``line_qty``/``picked``/``reserved_by`` describen el DOCUMENTO de la fila (§3.S);
+quedan vacíos en las fallas que no los rellenan.
 """
 
 from odoo import _, api, fields, models
@@ -48,6 +52,40 @@ class PrintflowFlowFailureTrayLine(models.TransientModel):
         help='Documentos (albaranes/movimientos) que respaldan el reservado, o '
              '"(sin respaldo)" si ninguno.')
     detail = fields.Char(string='Detalle', readonly=True)
+
+    # ── Documento que sostiene la evidencia (§3.S · fila por documento) ──
+    document_name = fields.Char(
+        string='Documento', readonly=True,
+        help='Albarán (WH/OUT/…) u Orden de Fabricación (WH/MO/…) que '
+             'sostiene la reserva.')
+    document_model = fields.Char(
+        string='Modelo del documento', readonly=True,
+        help="Modelo técnico para la navegación: 'stock.picking' u "
+             "'mrp.production'.")
+    document_res_id = fields.Integer(
+        string='Id del documento', readonly=True)
+    document_kind = fields.Selection(
+        [('picking', 'Entrega'),
+         ('production', 'Orden de fabricación'),
+         ('none', 'Sin documento'),
+         ('quant', 'Existencia (sin movimiento)')],
+        string='Tipo de documento', readonly=True,
+        help='Naturaleza del documento de la fila. "Existencia (sin '
+             'movimiento)" marca la fila de quant del fallback (ninguna '
+             'línea activa respalda la reserva).')
+    partner_name = fields.Char(
+        string='Socio', readonly=True,
+        help='Cliente de la entrega (vacío en OF y en filas de quant).')
+    line_qty = fields.Float(
+        string='Cantidad de la línea', readonly=True,
+        digits='Product Unit of Measure',
+        help='Cantidad de la línea de movimiento que sostiene la reserva.')
+    picked = fields.Boolean(
+        string='En marcha', readonly=True,
+        help='La línea está marcada "en marcha" (tachón del flujo POS/uom).')
+    reserved_by = fields.Char(
+        string='Reservado por', readonly=True,
+        help='Usuario que creó la línea de reserva y cuándo.')
 
     # ── Acciones guiadas por fila ───────────────────────────────────────
     action_ids = fields.One2many(
