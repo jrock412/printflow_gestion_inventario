@@ -17,15 +17,17 @@
   → **Los agentes de lote la APRIETAN al cerrar su turno** (no piden nada al dueño) y dejan la evidencia
   (log del botón + PID + `write_date`). *Si algún día no existe, el lote cierra declarando "el módulo quedó sin
   recargar".*
-- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **16 abiertos** · **44** `resuelto` · **8** `descartado` · **0 en tarea** (**68** filas) (compañero del CONTEXT.md; ver skill §2.2).
+- Registro de Hallazgos: [`HALLAZGOS.md`](HALLAZGOS.md) — **15 abiertos** · **45** `resuelto` · **8** `descartado` · **0 en tarea** (**68** filas) (compañero del CONTEXT.md; ver skill §2.2).
   **20/10 (cierre §3.U):** **H-062 · H-064 ⇒ `resuelto`** (lista de 7 columnas con el documento como referencia
   nativa, "SANEAR TODAS" y refresco con resumen; Verificador `cumple` en código + mirada en vivo del dueño).
-  Queda **H-063** `abierto` (tope del tablero: lo cura el **dueño** con `pf_reservation_cleanup_limit = 0`).
+  **H-063 ⇒ `resuelto`** el **20/10** (el dueño ordenó el cambio): el parámetro
+  `x_product_dimensional_pricing.pf_reservation_cleanup_limit` quedó en **0** (`set_param`, 50 → 0) ⇒ el tablero
+  ya no corta en 50 y muestra las **81** alertas.
   **20/10 (§3.V · autorización del LOTE):** se ABREN **H-065** (el nodo Entrega del DTF queda en `lot_generic` y
   **ninguna** de las dos autorizaciones de la bandeja lo apaga: "Autorizar lote" escribe en `printflow.lot.exception`
   —que el motor solo lee para MEZCLA— y "Autorizar excepción" apunta al **MOVIMIENTO**, no al lote) y **H-066**
   (`_pf_suppressed_targets` ignora `target_model` ⇒ colisión de ids movimiento↔lote). Ambos entran `en tarea` a §3.V.
-  **20/10 (Fase A · "Reserva colgada"):** se ABREN **H-062** (tras accionar una corrección la bandeja **se cierra**: sin "después" ni resumen) · **H-063** (el tablero corta en **50 de 81** alertas y no deja llegar a las reservas del producto) · **H-064** (el botón de la **llave** no dice qué hace: el operador cree que abre el documento). **H-062 · H-064 ⇒ `en tarea`** (los cura **§3.U**); **H-063 ⇒ `abierto`** (cura = parámetro `pf_reservation_cleanup_limit = 0` en Ajustes, lo deja el **dueño**; no es código).
+  **20/10 (Fase A · "Reserva colgada"):** se ABREN **H-062** (tras accionar una corrección la bandeja **se cierra**: sin "después" ni resumen) · **H-063** (el tablero corta en **50 de 81** alertas y no deja llegar a las reservas del producto) · **H-064** (el botón de la **llave** no dice qué hace: el operador cree que abre el documento). **H-062 · H-064 ⇒ `en tarea`** (los cura **§3.U**); **H-063 ⇒ `abierto`** (cura = parámetro `pf_reservation_cleanup_limit = 0` en Ajustes, lo deja el **dueño**; no es código) → **`resuelto` el 20/10** (el dueño ordenó el cambio; aplicado `set_param`, 50 → 0).
   **18/10 (MIRE EN VIVO del modal, navegador del Analista):** se ABREN **H-050** (los `<div>` de prosa dentro de
   `<group col="1">` se pintan en **columna vertical**, una palabra por línea ⇒ **ilegible**; **PREENSA** anciano)
   y **H-051** (la cabecera "Selección" se **apila en una columna**: rótulos partidos + **mitad derecha vacía**;
@@ -98,7 +100,7 @@
   Reservado · Libre · Documento · Cantidad), el **Documento** se pinta como **referencia nativa clickeable**
   (`WH/PDV/06699`, `WH/MO/01562`) que abre el albarán o la OF, se añade **"SANEAR TODAS"** (reusa
   `_pf_cleanup_products`) y, tras accionar, la bandeja **se repuebla y se reabre con un resumen en palabras**
-  (**H-062**). Ataca **H-062 · H-064**; **H-063** queda `abierto` (parámetro del dueño).
+  (**H-062**). Ataca **H-062 · H-064**; **H-063** quedó `resuelto` el 20/10 (parámetro en 0, por orden del dueño).
   **Autorización del dueño: SÍ (2026-10-20)** — *"si"* al diseño mínimo dibujado (lista + documento clickeable +
   saneo masivo + resumen + tope en 0). **NO** toca la lógica del saneo (la reusa) ni el motor.
   **Plan (ejecutado):** **Lote 1 `[motor]`** (T1–T3) → **Lote 2 `[pantalla]`** (T4) → `odoo-verificador` (1 pasada) →
@@ -109,7 +111,7 @@
   masivo sin `cr.execute` ni escritura de `reserved_quantity`, botón masivo solo en `data_anomaly`, motor intacto.
   Única salvedad: el Verificador **no tiene navegador** ⇒ la **mirada en vivo la hizo el dueño** ese mismo día y
   declaró *"ya verifiqué y está bien"* (sin foto en el repo: no se inventa evidencia). **H-062 · H-064 ⇒ `resuelto`**;
-  **H-063** sigue `abierto` (lo cura el dueño con `pf_reservation_cleanup_limit = 0` en Ajustes, no es código).
+  **H-063 ⇒ `resuelto`** el **20/10**: el dueño ordenó el cambio y se aplicó el parámetro `= 0` (`set_param`, 50 → 0).
   **NADA COMMITEADO** (el `CONTEXT.md` mezcla §3.U y §3.V: no se puede separar limpio ⇒ decide el dueño).
   Ojo: el `-u` de 01:29 cargó también el **código parcial de §3.V** que estaba en disco (no es de §3.U).
 - **NOTA DE INCIDENCIA (ABIERTA — 17/10/2026-c · turno Analista):** el dueño reporta **por 3.ª vez** *"asigno un
@@ -613,7 +615,8 @@ flowchart TD
 > **Estado:** ✅ **CERRADA (20/10/2026)** — **T1–T4 `[x]`**, veredicto del Verificador **`cumple`** en código y
 > **mirada en vivo hecha por el dueño** (declaró *"ya verifiqué y está bien"*; no hay foto en el repo porque el
 > Verificador no tiene navegador y el Analista no inventa evidencia). **H-062 · H-064 ⇒ `resuelto`**; **H-063**
-> queda `abierto` (parámetro del dueño). **Sin commit** (decide el dueño).
+> ⇒ `resuelto` el **20/10** (el dueño ordenó dejar el parámetro `pf_reservation_cleanup_limit` en **0**; aplicado
+> con `set_param`, 50 → 0). **Sin commit** (decide el dueño).
 
 ### 3.U.1 Dónde
 - **La ventana:** `wizard/printflow_flow_failure_tray_views.xml` — form de `printflow.flow.failure.tray`:
@@ -709,6 +712,9 @@ flowchart TD
 - ❌ **NO** corregir la **causa** POS de las reservas colgadas (por qué el POS las deja): tarea futura aparte.
 - ❌ **NO** escribir el parámetro `pf_reservation_cleanup_limit`: lo deja el **dueño** en Ajustes en **0**
   (H-063; es configuración, no código). El agente **no** escribe datos.
+  → **20/10 (cumplido):** el dueño **ordenó explícitamente** el cambio de configuración y el Analista lo aplicó
+  por MCP (`set_param`, 50 → 0). No fue iniciativa del agente ni tocó datos de negocio: **una sola clave de
+  configuración**, y quedó registrado en `HALLAZGOS.md` (H-063) y en la bitácora.
 - ❌ **NO** accionar "SANEAR TODAS" durante la mirada en vivo (solo mirar y abrir el documento).
 
 ### 3.U.8 Plan de ejecución por LOTES
@@ -10152,8 +10158,9 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   bloqueada porque la **ventana del navegador estaba minimizada** (`document.visibilityState = "hidden"`: Odoo no
   monta el cliente y `browser.screenshot` exige pestaña visible). La **hizo el dueño** en su navegador y declaró
   *"ya verifiqué y está bien"*. **No hay foto archivada** — se declara, **no se simula**.
-  **Cierres:** **H-062 · H-064 ⇒ `resuelto`** (evidencia del Verificador + la mirada del dueño); **H-063** sigue
-  **`abierto`** (no es código: el dueño deja `pf_reservation_cleanup_limit = 0` en Ajustes).
+  **Cierres:** **H-062 · H-064 ⇒ `resuelto`** (evidencia del Verificador + la mirada del dueño); **H-063 ⇒
+  `resuelto`** el 20/10: el dueño **ordenó** dejar `pf_reservation_cleanup_limit = 0` y se aplicó por MCP
+  (`set_param`, 50 → 0; `write_date` 06:50:59 UTC) ⇒ el tablero ya no corta en 50.
   **Conejeras:** **CT-01** y **CT-02** (`⚠️ VERIFICADA`: `picked` a nivel de movimiento arrastra todas las líneas)
   citadas en `HEAD` y **respetadas** — el masivo **no** destilda nada, solo llama al saneo; **CT-03**
   (`❓ PREVISIÓN`) queda condicional y se cumplió en los tests (`invalidate_recordset()` antes de re-leer el quant).
@@ -10162,3 +10169,19 @@ code, el conteo N/N y, si falla, la asercion + cola del traceback.
   **Estado git:** **NADA COMMITEADO** (el `CONTEXT.md` mezcla §3.U y §3.V: no se puede separar limpio) ⇒ commit a
   decisión del dueño. **Turno → siguiente:** este módulo **sin tarea abierta**; espera decisión del dueño
   (commit · dejar el tope en 0 · tarea futura de la causa POS).
+- [2026-10-20 · Odoo Analista] **Cierre de los 2 pendientes (orden del dueño: "ejecuta los dos pendientes")**:
+  1. **H-063 aplicado:** `x_product_dimensional_pricing.pf_reservation_cleanup_limit` = **0** por MCP
+     (`ir.config_parameter.set_param`; era **50**; `write_date` **06:50:59 UTC**). El tablero de salud ya no
+     recorta la lista (81 alertas). **No** se tocó ningún dato de negocio: una sola clave de configuración.
+     No hizo falta `-u` (el parámetro se lee en cada corrida).
+  2. **Commit + push únicos** (protocolo `git-seguro`: `status` · `branch` · `log` · `fetch --all --prune` ·
+     `diff --stat` antes de tocar nada; `add` por archivo con lista explícita; `diff --cached --stat` leído;
+     sin `--force`, sin `rebase`, sin `reset`): **`05b62cb`** — *"feat: cierre §3.U (bandeja por documento) y
+     §3.V (DTF)"* — 17 archivos (**+3.742 / −99**), con `CONTEXT.md`, `HALLAZGOS.md`, los 3 tests nuevos y las
+     4 evidencias de suite; se normalizaron los nombres de la evidencia a `3U-lote{1,2}-tests.txt`. Subido a
+     `origin/main` (`19d9e52..05b62cb`) y verificado en la nube (`0/0`). **Nota honesta:** el `CONTEXT.md` mezcla
+     §3.U y §3.V, así que va **un solo commit** (referenciado en el mensaje); separarlo exigiría trocear el
+     mismo archivo por hunks de dos tareas cerradas — no valía el riesgo.
+  **Turno → siguiente:** módulo **cerrado y sincronizado**; sin tarea abierta. Pendientes opcionales del dueño:
+  la **causa POS** de las reservas colgadas (tarea futura) y el "Ver las reservas" en la fila de salud (no-go
+  actual). **H-063 · H-062 · H-064 ⇒ `resuelto`**.
